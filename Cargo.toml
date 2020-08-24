@@ -5,12 +5,6 @@ authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
 edition = "2018"
 
-[workspace]
-members = []
-exclude = [
-    "num-hyperdual-python"
-]
-
 [dependencies]
 ndarray = "0.13"
 num-integer = "0.1"
