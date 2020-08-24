@@ -1,5 +1,6 @@
 use crate::DualNum;
 use num_traits::{Float, Inv, One, Zero};
+use std::iter::{Product, Sum};
 use std::ops::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
@@ -904,5 +905,42 @@ impl<T: Float> Inv for &HD3<T> {
     type Output = HD3<T>;
     fn inv(self) -> HD3<T> {
         self.recip()
+    }
+}
+
+/* iterator methods */
+impl<T: Float> Sum for HD3<T> {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self::zero(), |acc, c| acc + c)
+    }
+}
+
+impl<'a, T: 'a + Float> Sum<&'a HD3<T>> for HD3<T> {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a HD3<T>>,
+    {
+        iter.fold(Self::zero(), |acc, c| acc + c)
+    }
+}
+
+impl<T: Float> Product for HD3<T> {
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self::one(), |acc, c| acc * c)
+    }
+}
+
+impl<'a, T: 'a + Float> Product<&'a HD3<T>> for HD3<T> {
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a HD3<T>>,
+    {
+        iter.fold(Self::one(), |acc, c| acc * c)
     }
 }
