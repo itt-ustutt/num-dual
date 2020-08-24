@@ -1,7 +1,8 @@
 use crate::DualNum;
 use num_integer::binomial;
-use num_traits::{Float, One, Zero, Inv};
+use num_traits::{Float, Inv, One, Zero};
 use smallvec::{smallvec, Array, SmallVec};
+use std::iter::{Product, Sum};
 use std::ops::*;
 
 pub trait Derivative<T: Float>: PartialEq + Clone {
@@ -1197,5 +1198,42 @@ impl<T: Float, D: Derivative<T>> Inv for &HDScal<T, D> {
     type Output = HDScal<T, D>;
     fn inv(self) -> HDScal<T, D> {
         self.recip()
+    }
+}
+
+/* iterator methods */
+impl<T: Float, D: Derivative<T>> Sum for HDScal<T, D> {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self::zero(), |acc, c| acc + c)
+    }
+}
+
+impl<'a, T: 'a + Float, D: Derivative<T>> Sum<&'a HDScal<T, D>> for HDScal<T, D> {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a HDScal<T, D>>,
+    {
+        iter.fold(Self::zero(), |acc, c| acc + c)
+    }
+}
+
+impl<T: Float, D: Derivative<T>> Product for HDScal<T, D> {
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self::one(), |acc, c| acc * c)
+    }
+}
+
+impl<'a, T: 'a + Float, D: Derivative<T>> Product<&'a HDScal<T, D>> for HDScal<T, D> {
+    fn product<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = &'a HDScal<T, D>>,
+    {
+        iter.fold(Self::one(), |acc, c| acc * c)
     }
 }

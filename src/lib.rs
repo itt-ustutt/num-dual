@@ -2,6 +2,7 @@
 // extern crate test;
 
 use num_traits::{Inv, One, Zero};
+use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 pub mod array;
 pub mod dual;
@@ -50,7 +51,15 @@ impl<T, D, Base> DualRefNum<T, Base> for D where
 }
 
 pub trait DualNum<T>:
-    PartialEq + Clone + Zero + One + DualNumOps<T> + Neg<Output = Self> + Inv<Output = Self>
+    PartialEq
+    + Clone
+    + Zero
+    + One
+    + DualNumOps<T>
+    + Neg<Output = Self>
+    + Inv<Output = Self>
+    + Sum
+    + Product
 {
     fn re(&self) -> T;
 
