@@ -1,5 +1,5 @@
 use crate::DualNum;
-use num_traits::{Float, Num, One, Zero, Inv};
+use num_traits::{Float, Inv, Num, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -899,7 +899,7 @@ impl<T: Clone + Num> Div<HyperDual<T>> for HyperDual<T> {
                     + self.eps1.clone() * other.eps2.clone()
                     + self.eps2.clone() * other.eps1.clone())
                     * inv2.clone()
-                - (T::one() + T::one())
+                + (T::one() + T::one())
                     * self.re.clone()
                     * other.eps1.clone()
                     * other.eps2.clone()
