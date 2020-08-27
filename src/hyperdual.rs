@@ -1,4 +1,4 @@
-use crate::DualNum;
+use crate::DualNumMethods;
 use num_traits::{Float, Inv, Num, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -34,7 +34,7 @@ impl<T: Clone + Num> HyperDual<T> {
     }
 }
 
-impl<T: Float> DualNum<T> for HyperDual<T> {
+impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     fn re(&self) -> T {
         self.re
     }
@@ -42,7 +42,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Returns `1/self`
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).recip();
     /// assert!((res.re - 0.833333333333333).abs() < 1e-10);
     /// assert!((res.eps1 - -0.694444444444445).abs() < 1e-10);
@@ -68,7 +68,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes `e^(self)`, where `e` is the base of the natural logarithm.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).exp();
     /// assert!((res.re - 3.32011692273655).abs() < 1e-10);
     /// assert!((res.eps1 - 3.32011692273655).abs() < 1e-10);
@@ -89,7 +89,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes `e^(self)-1` in a way that is accurate even if the number is close to zero.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).exp_m1();
     /// assert!((res.re - 2.32011692273655).abs() < 1e-10);
     /// assert!((res.eps1 - 3.32011692273655).abs() < 1e-10);
@@ -111,7 +111,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes `2^(self)`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).exp2();
     /// assert!((res.re - 2.29739670999407).abs() < 1e-10);
     /// assert!((res.eps1 - 1.59243405216008).abs() < 1e-10);
@@ -134,7 +134,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of natural logarithm of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).ln();
     /// assert!((res.re - 0.182321556793955).abs() < 1e-10);
     /// assert!((res.eps1 - 0.833333333333333).abs() < 1e-10);
@@ -156,7 +156,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Returns the logarithm of `self` with respect to an arbitrary base.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).log(4.2);
     /// assert!((res.re - 0.127045866345188).abs() < 1e-10);
     /// assert!((res.eps1 - 0.580685888982970).abs() < 1e-10);
@@ -179,7 +179,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes `ln(1+n)` more accurately than if the operations were performed separately.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).ln_1p();
     /// assert!((res.re - 0.788457360364270).abs() < 1e-10);
     /// assert!((res.eps1 - 0.454545454545455).abs() < 1e-10);
@@ -201,7 +201,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of logarithm of `self` with basis 2.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).log2();
     /// assert!((res.re - 0.263034405833794).abs() < 1e-10);
     /// assert!((res.eps1 - 1.20224586740747).abs() < 1e-10);
@@ -224,7 +224,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of logarithm of `self` with basis 10.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).log10();
     /// assert!((res.re - 0.0791812460476248).abs() < 1e-10);
     /// assert!((res.eps1 - 0.361912068252710).abs() < 1e-10);
@@ -247,7 +247,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of the square root of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sqrt();
     /// assert!((res.re - 1.09544511501033).abs() < 1e-10);
     /// assert!((res.eps1 - 0.456435464587638).abs() < 1e-10);
@@ -271,7 +271,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of the cubic root of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).cbrt();
     /// assert!((res.re - 1.06265856918261).abs() < 1e-10);
     /// assert!((res.eps1 - 0.295182935884059).abs() < 1e-10);
@@ -295,7 +295,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Raises `self` to a floating point power.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).powf(4.2);
     /// assert!((res.re - 2.15060788316847).abs() < 1e-10);
     /// assert!((res.eps1 - 7.52712759108966).abs() < 1e-10);
@@ -318,7 +318,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Raises `self` to an integer power.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).powi(4);
     /// assert!((res.re - 2.07360000000000).abs() < 1e-10);
     /// assert!((res.eps1 - 6.91200000000000).abs() < 1e-10);
@@ -344,7 +344,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the sine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sin();
     /// assert!((res.re - 0.932039085967226).abs() < 1e-10);
     /// assert!((res.eps1 - 0.362357754476674).abs() < 1e-10);
@@ -365,7 +365,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the cosine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).cos();
     /// assert!((res.re - 0.362357754476674).abs() < 1e-10);
     /// assert!((res.eps1 - -0.932039085967226).abs() < 1e-10);
@@ -387,7 +387,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the sine and the cosine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let (res_sin, res_cos) = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sin_cos();
     /// assert!((res_sin.re - 0.932039085967226).abs() < 1e-10);
     /// assert!((res_sin.eps1 - 0.362357754476674).abs() < 1e-10);
@@ -420,7 +420,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the tangent of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).tan();
     /// assert!((res.re - 2.57215162212632).abs() < 1e-10);
     /// assert!((res.eps1 - 7.61596396720705).abs() < 1e-10);
@@ -442,7 +442,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of the inverse sine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(0.2, 1.0, 1.0, 0.0).asin();
     /// assert!((res.re - 0.201357920790331).abs() < 1e-10);
     /// assert!((res.eps1 - 1.02062072615966).abs() < 1e-10);
@@ -464,7 +464,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of the inverse cosine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(0.2, 1.0, 1.0, 0.0).acos();
     /// assert!((res.re - 1.36943840600457).abs() < 1e-10);
     /// assert!((res.eps1 - -1.02062072615966).abs() < 1e-10);
@@ -486,7 +486,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of the inverse tangent of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(0.2, 1.0, 1.0, 0.0).atan();
     /// assert!((res.re - 0.197395559849881).abs() < 1e-10);
     /// assert!((res.eps1 - 0.961538461538461).abs() < 1e-10);
@@ -508,7 +508,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the hyperbolic sine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sinh();
     /// assert!((res.re - 1.50946135541217).abs() < 1e-10);
     /// assert!((res.eps1 - 1.81065556732437).abs() < 1e-10);
@@ -530,7 +530,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the hyperbolic cosine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).cosh();
     /// assert!((res.re - 1.81065556732437).abs() < 1e-10);
     /// assert!((res.eps1 - 1.50946135541217).abs() < 1e-10);
@@ -552,7 +552,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the hyperbolic tangent of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).tanh();
     /// assert!((res.re - 0.833654607012155).abs() < 1e-10);
     /// assert!((res.eps1 - 0.305019996207409).abs() < 1e-10);
@@ -574,7 +574,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of inverse hyperbolic sine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).asinh();
     /// assert!((res.re - 1.01597313417969).abs() < 1e-10);
     /// assert!((res.eps1 - 0.640184399664480).abs() < 1e-10);
@@ -596,7 +596,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of inverse hyperbolic cosine of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).acosh();
     /// assert!((res.re - 0.622362503714779).abs() < 1e-10);
     /// assert!((res.eps1 - 1.50755672288882).abs() < 1e-10);
@@ -618,7 +618,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the principal value of inverse hyperbolic tangent of `self`.
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(0.2, 1.0, 1.0, 0.0).atanh();
     /// assert!((res.re - 0.202732554054082).abs() < 1e-10);
     /// assert!((res.eps1 - 1.04166666666667).abs() < 1e-10);
@@ -640,7 +640,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the zeroth order spherical bessel function `j0(x)`
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sph_j0();
     /// assert!((res.re - 0.776699238306022).abs() < 1e-10);
     /// assert!((res.eps1 - -0.345284569857790).abs() < 1e-10);
@@ -675,7 +675,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the first order spherical bessel function `j1(x)`
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sph_j1();
     /// assert!((res.re - 0.345284569857790).abs() < 1e-10);
     /// assert!((res.eps1 - 0.201224955209705).abs() < 1e-10);
@@ -708,7 +708,7 @@ impl<T: Float> DualNum<T> for HyperDual<T> {
     /// Computes the second order spherical bessel function `j2(x)`
     /// ```
     /// # use num_hyperdual::hyperdual::HyperDual64;
-    /// # use num_hyperdual::DualNum;
+    /// # use num_hyperdual::DualNumMethods;
     /// let res = HyperDual64::new(1.2, 1.0, 1.0, 0.0).sph_j2();
     /// assert!((res.re - 0.0865121863384538).abs() < 1e-10);
     /// assert!((res.eps1 - 0.129004104011656).abs() < 1e-10);
