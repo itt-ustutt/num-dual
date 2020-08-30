@@ -51,7 +51,7 @@ impl<T, D, Base> DualRefNum<T, Base> for D where
 }
 
 pub trait DualNum<T>:
-    DualNumMethods<T> + Copy + Zero + One + Neg<Output = Self> + Inv<Output = Self> + Sum + Product
+    DualNumMethods<T> + Copy + Zero + One + Neg<Output = Self> + Inv<Output = Self> + Sum + Product + From<T>
 {
 }
 impl<T, D> DualNum<T> for D where
