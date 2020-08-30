@@ -63,6 +63,7 @@ impl<T, D> DualNum<T> for D where
         + Inv<Output = Self>
         + Sum
         + Product
+        + From<T>
 {
 }
 
