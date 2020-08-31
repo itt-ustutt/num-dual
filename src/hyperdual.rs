@@ -1105,7 +1105,7 @@ impl<T: Clone + Num> One for HyperDual<T> {
 /* string conversions */
 impl<T> fmt::Display for HyperDual<T>
 where
-    T: fmt::Display + Num + PartialOrd + Clone,
+    T: fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
