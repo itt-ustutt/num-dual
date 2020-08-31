@@ -824,7 +824,7 @@ impl<T: Clone + Num> One for Dual<T> {
 /* string conversions */
 impl<T> fmt::Display for Dual<T>
 where
-    T: fmt::Display + Num + PartialOrd + Clone,
+    T: fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}ε", self.re, self.eps)

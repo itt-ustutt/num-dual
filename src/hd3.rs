@@ -1,5 +1,6 @@
 use crate::DualNumMethods;
 use num_traits::{Float, Inv, One, Zero};
+use std::fmt;
 use std::iter::{Product, Sum};
 use std::ops::*;
 
@@ -942,5 +943,19 @@ impl<'a, T: 'a + Float> Product<&'a HD3<T>> for HD3<T> {
         I: Iterator<Item = &'a HD3<T>>,
     {
         iter.fold(Self::one(), |acc, c| acc * c)
+    }
+}
+
+/* string conversions */
+impl<T> fmt::Display for HD3<T>
+where
+    T: fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "re: {}, dx: {}, dx2: {}, dx3: {}",
+            self.0[0], self.0[1], self.0[2], self.0[3]
+        )
     }
 }
