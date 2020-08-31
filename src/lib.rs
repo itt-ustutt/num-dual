@@ -242,239 +242,232 @@ macro_rules! impl_dual_num_float {
 impl_dual_num_float!(f32);
 impl_dual_num_float!(f64);
 
-// #[cfg(test)]
-// mod bench {
-//     use super::dual::Dual64;
-//     use super::hd3::HD3_64;
-//     use super::hd_scal::*;
-//     use super::hyperdual::HyperDual64;
-//     use super::*;
-//     use ndarray::*;
-//     // use test::Bencher;
+#[cfg(test)]
+mod bench {
+    use super::dual::Dual64;
+    use super::hd3::HD3_64;
+    use super::hyperdual::HyperDual64;
+    use super::*;
+    use ndarray::*;
+    // use test::Bencher;
 
-//     trait HelmholtzEnergy {
-//         fn helmholtz_energy<T: DualNum<f64>>(
-//             &self,
-//             temperature: T,
-//             volume: T,
-//             moles: &Array1<T>,
-//         ) -> T;
-//     }
+    trait HelmholtzEnergy {
+        fn helmholtz_energy<T: DualNum<f64>>(
+            &self,
+            temperature: T,
+            volume: T,
+            moles: &Array1<T>,
+        ) -> T;
+    }
 
-//     struct HSContribution {
-//         m: Array1<f64>,
-//         sigma: Array1<f64>,
-//         epsilon_k: Array1<f64>,
-//     }
+    struct HSContribution {
+        m: Array1<f64>,
+        sigma: Array1<f64>,
+        epsilon_k: Array1<f64>,
+    }
 
-//     impl HelmholtzEnergy for HSContribution {
-//         fn helmholtz_energy<T: DualNum<f64>>(
-//             &self,
-//             temperature: T,
-//             volume: T,
-//             moles: &Array1<T>,
-//         ) -> T {
-//             // temperature * volume
-//             // temperature.recip()
-//             // temperature / volume
-//             // temperature.ln_1p()
-//             let vi = volume.recip();
-//             let density = moles.mapv(|m| m * vi);
-//             let ti = temperature.recip() * -3.0;
-//             // let d = Array::from_shape_fn(self.m.len(), |i| (&ti * self.epsilon_k[i]).exp());
-//             let d = Array::from_shape_fn(self.m.len(), |i| {
-//                 -((ti * self.epsilon_k[i]).exp() * 0.12 - 1.0) * self.sigma[i]
-//             });
-//             // density[0].clone()
-//             let mut zeta: [T; 4] = [T::zero(), T::zero(), T::zero(), T::zero()];
-//             let mut m_rho: T = T::zero();
-//             for i in 0..self.m.len() {
-//                 for k in 0..4 {
-//                     zeta[k] = zeta[k]
-//                         + density[i]
-//                             * d[i].powi(k as i32)
-//                             * (std::f64::consts::PI / 6.0 * self.m[i]);
-//                 }
-//                 m_rho = m_rho + density[i] * self.m[i];
-//             }
-//             let frac_1mz3 = -(zeta[3] - 1.0).recip();
-//             let frac_z3 = zeta[3].recip();
-//             volume
-//                 * m_rho
-//                 * zeta[0].recip()
-//                 * (zeta[1] * zeta[2] * frac_z3 * 3.0
-//                     + zeta[2].powi(3) * frac_1mz3.powi(2) * frac_z3
-//                     + (zeta[2].powi(3) * frac_z3.powi(2) - zeta[0]) * (zeta[3] * (-1.0)).ln_1p())
-//         }
-//     }
+    impl HelmholtzEnergy for HSContribution {
+        fn helmholtz_energy<T: DualNum<f64>>(
+            &self,
+            temperature: T,
+            volume: T,
+            moles: &Array1<T>,
+        ) -> T {
+            let vi = volume.recip();
+            let density = moles.mapv(|m| m * vi);
+            let ti = temperature.recip() * -3.0;
+            let d = Array::from_shape_fn(self.m.len(), |i| {
+                -((ti * self.epsilon_k[i]).exp() * 0.12 - 1.0) * self.sigma[i]
+            });
+            let mut zeta: [T; 4] = [T::zero(), T::zero(), T::zero(), T::zero()];
+            let mut m_rho: T = T::zero();
+            for i in 0..self.m.len() {
+                for k in 0..4 {
+                    zeta[k] = zeta[k]
+                        + density[i]
+                            * d[i].powi(k as i32)
+                            * (std::f64::consts::PI / 6.0 * self.m[i]);
+                }
+                m_rho = m_rho + density[i] * self.m[i];
+            }
+            let frac_1mz3 = -(zeta[3] - 1.0).recip();
+            let frac_z3 = zeta[3].recip();
+            volume
+                * m_rho
+                * zeta[0].recip()
+                * (zeta[1] * zeta[2] * frac_z3 * 3.0
+                    + zeta[2].powi(3) * frac_1mz3.powi(2) * frac_z3
+                    + (zeta[2].powi(3) * frac_z3.powi(2) - zeta[0]) * (zeta[3] * (-1.0)).ln_1p())
+        }
+    }
 
-//     fn init_state<T: Clone + From<f64>>() -> (T, T, Array1<T>) {
-//         let temperature = T::from(300.0);
-//         let volume = T::from(1.0);
-//         let moles = arr1(&[T::from(0.001), T::from(0.005)]);
-//         (temperature, volume, moles)
-//     }
+    fn init_state<T: Clone + From<f64>>() -> (T, T, Array1<T>) {
+        let temperature = T::from(300.0);
+        let volume = T::from(1.0);
+        let moles = arr1(&[T::from(0.001), T::from(0.005)]);
+        (temperature, volume, moles)
+    }
 
-//     #[test]
-//     fn test_first_derivative() {
-//         let (mut t_d, v_d, m_d) = init_state::<Dual64>();
-//         t_d.eps = 1.0;
-//         let (mut t_hd, v_hd, m_hd) = init_state::<HyperDual64>();
-//         t_hd.eps1 = 1.0;
-//         let (mut t_hds, v_hds, m_hds) = init_state::<HDScal64<D1>>();
-//         t_hds = t_hds.derive();
-//         let (mut t_hd3, v_hd3, m_hd3) = init_state::<HD3_64>();
-//         t_hd3 = t_hd3.derive();
+    #[test]
+    fn test_first_derivative() {
+        let (mut t_d, v_d, m_d) = init_state::<Dual64>();
+        t_d.eps = 1.0;
+        let (mut t_hd, v_hd, m_hd) = init_state::<HyperDual64>();
+        t_hd.eps1 = 1.0;
+        // let (mut t_hds, v_hds, m_hds) = init_state::<HDScal64<D1>>();
+        // t_hds = t_hds.derive();
+        let (mut t_hd3, v_hd3, m_hd3) = init_state::<HD3_64>();
+        t_hd3 = t_hd3.derive();
 
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
+        let hs = HSContribution {
+            m: arr1(&[1.0, 2.5]),
+            sigma: arr1(&[3.2, 3.5]),
+            epsilon_k: arr1(&[150., 220.]),
+        };
 
-//         let r_d = hs.helmholtz_energy(t_d, v_d, &m_d);
-//         let r_hd = hs.helmholtz_energy(t_hd, v_hd, &m_hd);
-//         // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
-//         let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
-//         assert_eq!(r_d.eps, r_hd.eps1);
-//         // assert_eq!(r_d.eps, r_hds.0[1]);
-//         assert_eq!(r_d.eps, r_hd3.0[1]);
-//     }
+        let r_d = hs.helmholtz_energy(t_d, v_d, &m_d);
+        let r_hd = hs.helmholtz_energy(t_hd, v_hd, &m_hd);
+        // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
+        let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
+        assert_eq!(r_d.eps, r_hd.eps1);
+        // assert_eq!(r_d.eps, r_hds.0[1]);
+        assert_eq!(r_d.eps, r_hd3.0[1]);
+    }
 
-//     #[test]
-//     fn test_second_derivative() {
-//         let (t_hd, mut v_hd, m_hd) = init_state::<HyperDual64>();
-//         v_hd.eps1 = 1.0;
-//         v_hd.eps2 = 1.0;
-//         let (t_hds, mut v_hds, m_hds) = init_state::<HDScal64<D2>>();
-//         v_hds = v_hds.derive();
-//         let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
-//         v_hd3 = v_hd3.derive();
+    #[test]
+    fn test_second_derivative() {
+        let (t_hd, mut v_hd, m_hd) = init_state::<HyperDual64>();
+        v_hd.eps1 = 1.0;
+        v_hd.eps2 = 1.0;
+        // let (t_hds, mut v_hds, m_hds) = init_state::<HDScal64<D2>>();
+        // v_hds = v_hds.derive();
+        let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
+        v_hd3 = v_hd3.derive();
 
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
+        let hs = HSContribution {
+            m: arr1(&[1.0, 2.5]),
+            sigma: arr1(&[3.2, 3.5]),
+            epsilon_k: arr1(&[150., 220.]),
+        };
 
-//         let r_hd = hs.helmholtz_energy(t_hd, v_hd, &m_hd);
-//         // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
-//         let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
-//         // assert!((r_hd.eps1eps2 - r_hds.0[2]).abs() < 1e-10);
-//         assert!((r_hd.eps1eps2 - r_hd3.0[2]).abs() < 1e-10);
-//     }
+        let r_hd = hs.helmholtz_energy(t_hd, v_hd, &m_hd);
+        // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
+        let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
+        // assert!((r_hd.eps1eps2 - r_hds.0[2]).abs() < 1e-10);
+        assert!((r_hd.eps1eps2 - r_hd3.0[2]).abs() < 1e-10);
+    }
 
-//     #[test]
-//     fn test_third_derivative() {
-//         let (t_hds, mut v_hds, m_hds) = init_state::<HDScal64<D2>>();
-//         v_hds = v_hds.derive();
-//         let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
-//         v_hd3 = v_hd3.derive();
+    // #[test]
+    // fn test_third_derivative() {
+    //     // let (t_hds, mut v_hds, m_hds) = init_state::<HDScal64<D2>>();
+    //     // v_hds = v_hds.derive();
+    //     let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
+    //     v_hd3 = v_hd3.derive();
 
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
+    //     let hs = HSContribution {
+    //         m: arr1(&[1.0, 2.5]),
+    //         sigma: arr1(&[3.2, 3.5]),
+    //         epsilon_k: arr1(&[150., 220.]),
+    //     };
 
-//         // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
-//         let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
-//         // assert!((r_hds.0[2] - r_hd3.0[2]).abs() < 1e-10);
-//     }
+    //     // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
+    //     let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
+    //     // assert!((r_hds.0[2] - r_hd3.0[2]).abs() < 1e-10);
+    // }
 
-//     #[bench]
-//     fn bench_dual(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<Dual64>();
-//         t_d.eps = 1.0;
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_dual(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<Dual64>();
+    //         t_d.eps = 1.0;
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hyperdual(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HyperDual64>();
-//         t_d.eps1 = 1.0;
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_hyperdual(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HyperDual64>();
+    //         t_d.eps1 = 1.0;
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hd_scal_1(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D1>>();
-//         t_d = t_d.derive();
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_hd_scal_1(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D1>>();
+    //         t_d = t_d.derive();
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hd_scal_2(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D2>>();
-//         t_d = t_d.derive();
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_hd_scal_2(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D2>>();
+    //         t_d = t_d.derive();
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hd_scal_3(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D3>>();
-//         t_d = t_d.derive();
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_hd_scal_3(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D3>>();
+    //         t_d = t_d.derive();
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hd_scal_4(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D4>>();
-//         t_d = t_d.derive();
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_hd_scal_4(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D4>>();
+    //         t_d = t_d.derive();
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hd_scal_5(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D5>>();
-//         t_d = t_d.derive();
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
+    //     #[bench]
+    //     fn bench_hd_scal_5(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HDScal64<D5>>();
+    //         t_d = t_d.derive();
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
 
-//     #[bench]
-//     fn bench_hd3(b: &mut Bencher) {
-//         let (mut t_d, v_d, m_d) = init_state::<HD3_64>();
-//         t_d = t_d.derive();
-//         let hs = HSContribution {
-//             m: arr1(&[1.0, 2.5]),
-//             sigma: arr1(&[3.2, 3.5]),
-//             epsilon_k: arr1(&[150., 220.]),
-//         };
-//         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
-//     }
-// }
+    //     #[bench]
+    //     fn bench_hd3(b: &mut Bencher) {
+    //         let (mut t_d, v_d, m_d) = init_state::<HD3_64>();
+    //         t_d = t_d.derive();
+    //         let hs = HSContribution {
+    //             m: arr1(&[1.0, 2.5]),
+    //             sigma: arr1(&[3.2, 3.5]),
+    //             epsilon_k: arr1(&[150., 220.]),
+    //         };
+    //         b.iter(|| hs.helmholtz_energy(&t_d, &v_d, &m_d));
+    //     }
+}
