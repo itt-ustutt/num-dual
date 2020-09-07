@@ -9,6 +9,7 @@ pub mod dual;
 pub mod hd3;
 pub mod hd_scal;
 pub mod hyperdual;
+pub mod linalg;
 pub use dual::*;
 pub use hd3::*;
 pub use hd_scal::*;
