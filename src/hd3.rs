@@ -360,6 +360,8 @@ impl<T: Float> Neg for &HD3<T> {
 }
 
 impl<T: Float> DualNumMethods<T> for HD3<T> {
+    const NDERIV: usize = 3;
+
     #[inline]
     fn re(&self) -> T {
         self.0[0]

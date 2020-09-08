@@ -77,6 +77,10 @@ impl<T, D> DualNum<T> for D where
 }
 
 pub trait DualNumMethods<T>: Clone + DualNumOps<T> {
+    /// indicates the highest derivative that can be calculated with this struct
+    const NDERIV: usize;
+
+    /// returns the real part (the 0th derivative) of the number
     fn re(&self) -> T;
 
     fn recip(&self) -> Self;
@@ -123,6 +127,8 @@ pub trait DualNumMethods<T>: Clone + DualNumOps<T> {
 macro_rules! impl_dual_num_float {
     ($float:ty) => {
         impl DualNumMethods<$float> for $float {
+            const NDERIV: usize = 0;
+
             fn re(&self) -> $float {
                 *self
             }

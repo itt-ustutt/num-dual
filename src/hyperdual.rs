@@ -35,6 +35,9 @@ impl<T: Clone + Num> HyperDual<T> {
 }
 
 impl<T: Float> DualNumMethods<T> for HyperDual<T> {
+    const NDERIV: usize = 2;
+
+    #[inline]
     fn re(&self) -> T {
         self.re
     }
