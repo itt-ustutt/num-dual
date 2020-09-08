@@ -5,6 +5,9 @@ use ndarray_linalg::error::Result;
 use ndarray_linalg::*;
 
 pub trait SolveDual<A: Copy> {
+    /// indicates the highest derivative that can be calculated with this struct
+    const NDERIV: usize;
+
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     fn solve<S: Data<Elem = A>>(&self, b: &ArrayBase<S, Ix1>) -> Result<Array1<A>> {
@@ -30,6 +33,8 @@ pub trait SolveDual<A: Copy> {
 }
 
 impl<S: Data<Elem = f64>> SolveDual<f64> for ArrayBase<S, Ix2> {
+    const NDERIV: usize = 0;
+
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -50,6 +55,8 @@ impl<S: Data<Elem = f64>> SolveDual<f64> for ArrayBase<S, Ix2> {
 }
 
 impl<S: Data<Elem = Dual64>> SolveDual<Dual64> for ArrayBase<S, Ix2> {
+    const NDERIV: usize = 1;
+
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -78,6 +85,8 @@ impl<S: Data<Elem = Dual64>> SolveDual<Dual64> for ArrayBase<S, Ix2> {
 }
 
 impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
+    const NDERIV: usize = 2;
+
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -122,6 +131,8 @@ impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
 }
 
 impl<S: Data<Elem = HD3_64>> SolveDual<HD3_64> for ArrayBase<S, Ix2> {
+    const NDERIV: usize = 3;
+
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
