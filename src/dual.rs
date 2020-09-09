@@ -26,6 +26,9 @@ impl<T: Clone + Num> Dual<T> {
 }
 
 impl<T: Float> DualNumMethods<T> for Dual<T> {
+    const NDERIV: usize = 1;
+
+    #[inline]
     fn re(&self) -> T {
         self.re
     }

@@ -7,7 +7,7 @@ use std::ops::*;
 
 pub trait Derivative<T: Float>: PartialEq + Clone {
     type Arr: Array<Item = T> + PartialEq + Clone;
-    const NDIM: usize;
+    const NDERIV: usize;
 
     fn chain_rule(x: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self>;
 }
@@ -27,7 +27,7 @@ pub struct D5();
 
 impl<T: Float> Derivative<T> for D0 {
     type Arr = [T; 1];
-    const NDIM: usize = 1;
+    const NDERIV: usize = 0;
 
     #[inline]
     fn chain_rule(_: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self> {
@@ -37,7 +37,7 @@ impl<T: Float> Derivative<T> for D0 {
 
 impl<T: Float> Derivative<T> for D1 {
     type Arr = [T; 2];
-    const NDIM: usize = 2;
+    const NDERIV: usize = 1;
 
     #[inline]
     fn chain_rule(x: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self> {
@@ -50,7 +50,7 @@ impl<T: Float> Derivative<T> for D1 {
 
 impl<T: Float> Derivative<T> for D2 {
     type Arr = [T; 3];
-    const NDIM: usize = 3;
+    const NDERIV: usize = 2;
 
     #[inline]
     fn chain_rule(x: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self> {
@@ -64,7 +64,7 @@ impl<T: Float> Derivative<T> for D2 {
 
 impl<T: Float> Derivative<T> for D3 {
     type Arr = [T; 4];
-    const NDIM: usize = 4;
+    const NDERIV: usize = 3;
 
     #[inline]
     fn chain_rule(x: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self> {
@@ -80,7 +80,7 @@ impl<T: Float> Derivative<T> for D3 {
 
 impl<T: Float> Derivative<T> for D4 {
     type Arr = [T; 5];
-    const NDIM: usize = 5;
+    const NDERIV: usize = 4;
 
     #[inline]
     fn chain_rule(x: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self> {
@@ -103,7 +103,7 @@ impl<T: Float> Derivative<T> for D4 {
 
 impl<T: Float> Derivative<T> for D5 {
     type Arr = [T; 6];
-    const NDIM: usize = 6;
+    const NDERIV: usize = 5;
 
     #[inline]
     fn chain_rule(x: &HDScal<T, Self>, f: HDScal<T, Self>) -> HDScal<T, Self> {
@@ -143,7 +143,7 @@ pub type HDScal64<D> = HDScal<f64, D>;
 impl<T: Float, D: Derivative<T>> HDScal<T, D> {
     #[inline]
     pub fn new(x: T) -> Self {
-        let mut res = smallvec![T::zero(); D::NDIM];
+        let mut res = smallvec![T::zero(); D::NDERIV + 1];
         res[0] = x;
         Self(res)
     }
@@ -174,7 +174,7 @@ impl<T: Float, D: Derivative<T>> From<T> for HDScal<T, D> {
 impl<T: Float, D: Derivative<T>> Zero for HDScal<T, D> {
     #[inline]
     fn zero() -> Self {
-        Self(smallvec![T::zero(); D::NDIM])
+        Self(smallvec![T::zero(); D::NDERIV + 1])
     }
 
     #[inline]
@@ -186,7 +186,7 @@ impl<T: Float, D: Derivative<T>> Zero for HDScal<T, D> {
 impl<T: Float, D: Derivative<T>> One for HDScal<T, D> {
     #[inline]
     fn one() -> Self {
-        let mut res = smallvec![T::zero(); D::NDIM];
+        let mut res = smallvec![T::zero(); D::NDERIV + 1];
         res[0] = T::one();
         Self(res)
     }
@@ -502,6 +502,8 @@ impl<T: Float, D: Derivative<T>> HDScal<T, D> {
 }
 
 impl<T: Float, D: Derivative<T>> DualNumMethods<T> for HDScal<T, D> {
+    const NDERIV: usize = D::NDERIV;
+
     #[inline]
     fn re(&self) -> T {
         self.0[0]
