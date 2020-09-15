@@ -304,18 +304,34 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     /// assert!((res.eps1 - 7.52712759108966).abs() < 1e-10);
     /// assert!((res.eps2 - 7.52712759108966).abs() < 1e-10);
     /// assert!((res.eps1eps2 - 20.0723402429058).abs() < 1e-10);
+    ///
+    /// assert!(HyperDual64::new(1.2, 1.0, 1.0, 0.0).powf(0.0) == HyperDual64::new(1.0, 0.0, 0.0, 0.0));
+    /// assert!(HyperDual64::new(1.2, 1.0, 1.0, 0.0).powf(1.0) == HyperDual64::new(1.2, 1.0, 1.0, 0.0));
+    /// assert!(HyperDual64::new(1.2, 1.0, 1.0, 0.0).powf(2.0) == HyperDual64::new(1.44, 2.4, 2.4, 2.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powf(0.0) == HyperDual64::new(1.0, 0.0, 0.0, 0.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powf(1.0) == HyperDual64::new(0.0, 1.0, 1.0, 0.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powf(2.0) == HyperDual64::new(0.0, 0.0, 0.0, 2.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powf(4.2) == HyperDual64::new(0.0, 0.0, 0.0, 0.0));
     /// ```
     #[inline]
     fn powf(&self, exp: T) -> Self {
-        let rec = self.re.recip();
-        let fx = self.re.powf(exp);
-        let dx = exp * fx * rec;
-        HyperDual::new(
-            fx,
-            self.eps1 * dx,
-            self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * (exp - T::one()) * rec) * dx,
-        )
+        if exp.is_zero() {
+            Self::one()
+        } else {
+            if exp.is_one() {
+                *self
+            } else {
+                let pow = self.re.powf(exp - T::one() - T::one());
+                let fx = pow * self.re * self.re;
+                let dx = exp * pow * self.re;
+                HyperDual::new(
+                    fx,
+                    self.eps1 * dx,
+                    self.eps2 * dx,
+                    self.eps1eps2 * dx + self.eps1 * self.eps2 * exp * (exp - T::one()) * pow,
+                )
+            }
+        }
     }
 
     /// Raises `self` to an integer power.
@@ -327,21 +343,35 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     /// assert!((res.eps1 - 6.91200000000000).abs() < 1e-10);
     /// assert!((res.eps2 - 6.91200000000000).abs() < 1e-10);
     /// assert!((res.eps1eps2 - 17.2800000000000).abs() < 1e-10);
+    ///
+    /// assert!(HyperDual64::new(1.2, 1.0, 1.0, 0.0).powi(0) == HyperDual64::new(1.0, 0.0, 0.0, 0.0));
+    /// assert!(HyperDual64::new(1.2, 1.0, 1.0, 0.0).powi(1) == HyperDual64::new(1.2, 1.0, 1.0, 0.0));
+    /// assert!(HyperDual64::new(1.2, 1.0, 1.0, 0.0).powi(2) == HyperDual64::new(1.44, 2.4, 2.4, 2.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powi(0) == HyperDual64::new(1.0, 0.0, 0.0, 0.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powi(1) == HyperDual64::new(0.0, 1.0, 1.0, 0.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powi(2) == HyperDual64::new(0.0, 0.0, 0.0, 2.0));
+    /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powi(4) == HyperDual64::new(0.0, 0.0, 0.0, 0.0));
     /// ```
     #[inline]
     fn powi(&self, exp: i32) -> Self {
-        let e = T::from(exp).unwrap();
-        let e1 = T::from(exp - 1).unwrap();
+        match exp {
+            0 => HyperDual::one(),
+            1 => *self,
+            _ => {
+                let e = T::from(exp).unwrap();
+                let e1 = T::from(exp - 1).unwrap();
 
-        let pow = self.re.powi(exp - 2);
-        let fx = pow * self.re * self.re;
-        let dx = e * pow * self.re;
-        HyperDual::new(
-            fx,
-            self.eps1 * dx,
-            self.eps2 * dx,
-            (self.eps1eps2 * self.re + self.eps1 * self.eps2 * e1) * e * pow,
-        )
+                let pow = self.re.powi(exp - 2);
+                let fx = pow * self.re * self.re;
+                let dx = e * pow * self.re;
+                HyperDual::new(
+                    fx,
+                    self.eps1 * dx,
+                    self.eps2 * dx,
+                    (self.eps1eps2 * self.re + self.eps1 * self.eps2 * e1) * e * pow,
+                )
+            }
+        }
     }
 
     /// Computes the sine of `self`.

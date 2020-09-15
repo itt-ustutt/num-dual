@@ -210,12 +210,27 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// let res = Dual64::new(1.2, 1.0).powf(4.2);
     /// assert!((res.re - 2.15060788316847).abs() < 1e-10);
     /// assert!((res.eps - 7.52712759108966).abs() < 1e-10);
+    ///
+    /// assert!(Dual64::new(1.2, 1.0).powf(0.0) == Dual64::new(1.0, 0.0));
+    /// assert!(Dual64::new(1.2, 1.0).powf(1.0) == Dual64::new(1.2, 1.0));
+    /// assert!(Dual64::new(0.0, 1.0).powf(0.0) == Dual64::new(1.0, 0.0));
+    /// assert!(Dual64::new(0.0, 1.0).powf(1.0) == Dual64::new(0.0, 1.0));
+    /// assert!(Dual64::new(0.0, 1.0).powf(4.2) == Dual64::new(0.0, 0.0));
     /// ```
     #[inline]
     fn powf(&self, exp: T) -> Self {
-        let fx = self.re.powf(exp);
-        let dx = exp * fx / self.re;
-        Dual::new(fx, self.eps * dx)
+        if exp.is_zero() {
+            Self::one()
+        } else {
+            if exp.is_one() {
+                *self
+            } else {
+                let pow = self.re.powf(exp - T::one());
+                let fx = pow * self.re;
+                let dx = exp * pow;
+                Dual::new(fx, self.eps * dx)
+            }
+        }
     }
 
     /// Raises `self` to an integer power.
@@ -225,15 +240,25 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// let res = Dual64::new(1.2, 1.0).powi(4);
     /// assert!((res.re - 2.07360000000000).abs() < 1e-10);
     /// assert!((res.eps - 6.91200000000000).abs() < 1e-10);
+    ///
+    /// assert!(Dual64::new(1.2,1.0).powi(0) == Dual64::new(1.0, 0.0));
+    /// assert!(Dual64::new(1.2,1.0).powi(1) == Dual64::new(1.2, 1.0));
+    /// assert!(Dual64::new(0.0,1.0).powi(0) == Dual64::new(1.0, 0.0));
+    /// assert!(Dual64::new(0.0,1.0).powi(1) == Dual64::new(0.0, 1.0));
+    /// assert!(Dual64::new(0.0,1.0).powi(4) == Dual64::new(0.0, 0.0));
     /// ```
     #[inline]
     fn powi(&self, exp: i32) -> Self {
-        let e = T::from(exp).unwrap();
-
-        let pow = self.re.powi(exp - 1);
-        let fx = pow * self.re;
-        let dx = e * pow;
-        Dual::new(fx, self.eps * dx)
+        match exp {
+            0 => Dual::one(),
+            1 => *self,
+            _ => {
+                let pow = self.re.powi(exp - 1);
+                let fx = pow * self.re;
+                let dx = T::from(exp).unwrap() * pow;
+                Dual::new(fx, self.eps * dx)
+            }
+        }
     }
 
     /// Computes the sine of `self`.

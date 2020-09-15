@@ -420,11 +420,14 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn powf(&self, n: T) -> Self {
-        let rec = self.0[0].recip();
-        let f0 = self.0[0].powf(n);
-        let f1 = n * f0 * rec;
-        let f2 = (n - T::one()) * f1 * rec;
-        let f3 = (n - T::one() - T::one()) * f2 * rec;
+        let n1 = n - T::one();
+        let n2 = n1 - T::one();
+        let n3 = n2 - T::one();
+        let pow3 = self.0[0].powf(n3);
+        let f0 = pow3 * self.0[0] * self.0[0] * self.0[0];
+        let f1 = n * pow3 * self.0[0] * self.0[0];
+        let f2 = n * n1 * pow3 * self.0[0];
+        let f3 = n * n1 * n2 * pow3;
         self.chain_rule(f0, f1, f2, f3)
     }
 

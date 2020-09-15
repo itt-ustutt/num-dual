@@ -89,7 +89,7 @@ impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
     ///                [HyperDual64::new(3.0, 4.0, 5.0, 6.0), HyperDual64::new(4.0, 5.0, 6.0, 7.0)]]);
     /// let b = arr1(&[HyperDual64::new(5.0, 16.0, 22.0, 64.0), HyperDual64::new(11.0, 32.0, 42.0, 112.0)]);
     /// let x = a.solve_into(b).unwrap();
-    /// assert_abs_diff_eq!((x[0].re, 1.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[0].re, 1.0, epsilon = 1e-14);
     /// assert_abs_diff_eq!(x[0].eps1, 2.0, epsilon = 1e-14);
     /// assert_abs_diff_eq!(x[0].eps2, 3.0, epsilon = 1e-14);
     /// assert_abs_diff_eq!(x[0].eps1eps2, 4.0, epsilon = 1e-14);
