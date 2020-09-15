@@ -16,7 +16,8 @@ num-traits = {version = "0.2", default-features = false}
 default = ["std"]
 std = ["num-traits/std"]
 libm = ["num-traits/libm"]
+system = ["openblas-src/system"]
 
 [dev-dependencies]
-openblas-src = { version = "0.7", default-features = false, features = ["system"] }
+openblas-src = { version = "0.7", default-features = false }
 approx = "0.3"
