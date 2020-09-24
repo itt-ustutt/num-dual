@@ -1,5 +1,5 @@
-use crate::DualNumMethods;
-use num_traits::{Float, Inv, Num, One, Zero};
+use crate::{DualNum, DualNumMethods};
+use num_traits::{Float, FromPrimitive, Inv, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -21,7 +21,7 @@ pub struct HyperDual<T> {
 pub type HyperDual32 = HyperDual<f32>;
 pub type HyperDual64 = HyperDual<f64>;
 
-impl<T: Clone + Num> HyperDual<T> {
+impl<T> HyperDual<T> {
     /// Create a new HyperDual
     #[inline]
     pub fn new(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
@@ -34,12 +34,18 @@ impl<T: Clone + Num> HyperDual<T> {
     }
 }
 
-impl<T: Float> DualNumMethods<T> for HyperDual<T> {
+impl<T: DualNum> DualNumMethods for HyperDual<T> {
+    type Base = T;
     const NDERIV: usize = 2;
 
     #[inline]
     fn re(&self) -> T {
         self.re
+    }
+
+    #[inline]
+    fn from(re: Self::Float) -> Self {
+        Self::new(T::from(re), T::zero(), T::zero(), T::zero())
     }
 
     /// Returns `1/self`
@@ -54,7 +60,7 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     /// ```
     #[inline]
     fn recip(&self) -> Self {
-        if self.re == T::zero() {
+        if self.re.is_zero() {
             panic!("Cannot take reciprocal value of zero-valued `real`!");
         }
         let recip_re = self.re.recip();
@@ -167,7 +173,7 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     /// assert!((res.eps1eps2 - -0.483904907485808).abs() < 1e-10);
     /// ```
     #[inline]
-    fn log(&self, base: T) -> Self {
+    fn log(&self, base: Self::Float) -> Self {
         let fx = self.re.log(base);
         let lnb = base.ln();
         let dx = (self.re * lnb).recip();
@@ -237,7 +243,7 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     #[inline]
     fn log10(&self) -> Self {
         let fx = self.re.log10();
-        let ln10 = T::from(10).unwrap().ln();
+        let ln10 = Self::Float::from(10).unwrap().ln();
         let dx = (self.re * ln10).recip();
         HyperDual::new(
             fx,
@@ -314,7 +320,7 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
     /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powf(4.2) == HyperDual64::new(0.0, 0.0, 0.0, 0.0));
     /// ```
     #[inline]
-    fn powf(&self, exp: T) -> Self {
+    fn powf(&self, exp: Self::Float) -> Self {
         if exp.is_zero() {
             Self::one()
         } else {
@@ -358,7 +364,7 @@ impl<T: Float> DualNumMethods<T> for HyperDual<T> {
             0 => HyperDual::one(),
             1 => *self,
             _ => {
-                let e = T::from(exp).unwrap();
+                let e = Self::from(exp).unwrap();
                 let e1 = T::from(exp - 1).unwrap();
 
                 let pow = self.re.powi(exp - 2);
@@ -815,7 +821,12 @@ impl<'a, T: Clone + Zero> From<&'a T> for HyperDual<T> {
 
 macro_rules! forward_ref_ref_binop {
     (impl $imp:ident, $method:ident) => {
-        impl<'a, 'b, T: Clone + Num> $imp<&'b HyperDual<T>> for &'a HyperDual<T> {
+        impl<
+                'a,
+                'b,
+                T: Clone + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+            > $imp<&'b HyperDual<T>> for &'a HyperDual<T>
+        {
             type Output = HyperDual<T>;
 
             #[inline]
@@ -828,7 +839,11 @@ macro_rules! forward_ref_ref_binop {
 
 macro_rules! forward_ref_val_binop {
     (impl $imp:ident, $method:ident) => {
-        impl<'a, T: Clone + Num> $imp<HyperDual<T>> for &'a HyperDual<T> {
+        impl<
+                'a,
+                T: Clone + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+            > $imp<HyperDual<T>> for &'a HyperDual<T>
+        {
             type Output = HyperDual<T>;
 
             #[inline]
@@ -841,7 +856,11 @@ macro_rules! forward_ref_val_binop {
 
 macro_rules! forward_val_ref_binop {
     (impl $imp:ident, $method:ident) => {
-        impl<'a, T: Clone + Num> $imp<&'a HyperDual<T>> for HyperDual<T> {
+        impl<
+                'a,
+                T: Clone + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+            > $imp<&'a HyperDual<T>> for HyperDual<T>
+        {
             type Output = HyperDual<T>;
 
             #[inline]
@@ -863,7 +882,7 @@ macro_rules! forward_all_binop {
 /* arithmetic */
 forward_all_binop!(impl Add, add);
 
-impl<T: Clone + Num> Add<HyperDual<T>> for HyperDual<T> {
+impl<T: Clone + Add<Output = T>> Add<HyperDual<T>> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -879,7 +898,7 @@ impl<T: Clone + Num> Add<HyperDual<T>> for HyperDual<T> {
 
 forward_all_binop!(impl Sub, sub);
 
-impl<T: Clone + Num> Sub<HyperDual<T>> for HyperDual<T> {
+impl<T: Clone + Sub<Output = T>> Sub<HyperDual<T>> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -895,7 +914,7 @@ impl<T: Clone + Num> Sub<HyperDual<T>> for HyperDual<T> {
 
 forward_all_binop!(impl Mul, mul);
 
-impl<T: Clone + Num> Mul<HyperDual<T>> for HyperDual<T> {
+impl<T: Clone + Add<Output = T> + Mul<Output = T>> Mul<HyperDual<T>> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -914,7 +933,9 @@ impl<T: Clone + Num> Mul<HyperDual<T>> for HyperDual<T> {
 
 forward_all_binop!(impl Div, div);
 
-impl<T: Clone + Num> Div<HyperDual<T>> for HyperDual<T> {
+impl<T: Clone + Mul<Output = T> + Div<Output = T> + Add<Output = T> + Sub<Output = T> + One>
+    Div<HyperDual<T>> for HyperDual<T>
+{
     type Output = HyperDual<T>;
 
     #[inline]
@@ -943,7 +964,7 @@ impl<T: Clone + Num> Div<HyperDual<T>> for HyperDual<T> {
 }
 
 /* Neg impl */
-impl<T: Clone + Num + Neg<Output = T>> Neg for HyperDual<T> {
+impl<T: Clone + Neg<Output = T>> Neg for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -952,7 +973,7 @@ impl<T: Clone + Num + Neg<Output = T>> Neg for HyperDual<T> {
     }
 }
 
-impl<'a, T: Clone + Num + Neg<Output = T>> Neg for &'a HyperDual<T> {
+impl<'a, T: Clone + Neg<Output = T>> Neg for &'a HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -963,7 +984,7 @@ impl<'a, T: Clone + Num + Neg<Output = T>> Neg for &'a HyperDual<T> {
 
 macro_rules! real_arithmetic {
     (@forward $imp:ident::$method:ident for $($real:ident),*) => (
-        impl<'a, T: Clone + Num> $imp<&'a T> for HyperDual<T> {
+        impl<'a, T: Clone> $imp<&'a T> for HyperDual<T> {
             type Output = HyperDual<T>;
 
             #[inline]
@@ -971,7 +992,7 @@ macro_rules! real_arithmetic {
                 self.$method(other.clone())
             }
         }
-        impl<'a, T: Clone + Num> $imp<T> for &'a HyperDual<T> {
+        impl<'a, T: Clone> $imp<T> for &'a HyperDual<T> {
             type Output = HyperDual<T>;
 
             #[inline]
@@ -979,7 +1000,7 @@ macro_rules! real_arithmetic {
                 self.clone().$method(other)
             }
         }
-        impl<'a, 'b, T: Clone + Num> $imp<&'a T> for &'b HyperDual<T> {
+        impl<'a, 'b, T: Clone> $imp<&'a T> for &'b HyperDual<T> {
             type Output = HyperDual<T>;
 
             #[inline]
@@ -1063,7 +1084,7 @@ macro_rules! real_arithmetic {
 
 real_arithmetic!(f32, f64);
 
-impl<T: Clone + Num> Add<T> for HyperDual<T> {
+impl<T: Clone + Add<Output = T>> Add<T> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -1072,7 +1093,7 @@ impl<T: Clone + Num> Add<T> for HyperDual<T> {
     }
 }
 
-impl<T: Clone + Num> Sub<T> for HyperDual<T> {
+impl<T: Clone + Sub<Output = T>> Sub<T> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -1081,7 +1102,7 @@ impl<T: Clone + Num> Sub<T> for HyperDual<T> {
     }
 }
 
-impl<T: Clone + Num> Mul<T> for HyperDual<T> {
+impl<T: Clone + Mul<Output = T>> Mul<T> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -1095,7 +1116,7 @@ impl<T: Clone + Num> Mul<T> for HyperDual<T> {
     }
 }
 
-impl<T: Clone + Num> Div<T> for HyperDual<T> {
+impl<T: Clone + Mul<Output = T> + Div<Output = T> + One> Div<T> for HyperDual<T> {
     type Output = HyperDual<T>;
 
     #[inline]
@@ -1111,7 +1132,7 @@ impl<T: Clone + Num> Div<T> for HyperDual<T> {
 }
 
 /* constants */
-impl<T: Clone + Num> Zero for HyperDual<T> {
+impl<T: Clone + Zero> Zero for HyperDual<T> {
     #[inline]
     fn zero() -> Self {
         HyperDual::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
@@ -1123,7 +1144,7 @@ impl<T: Clone + Num> Zero for HyperDual<T> {
     }
 }
 
-impl<T: Clone + Num> One for HyperDual<T> {
+impl<T: Clone + One + Zero + PartialEq> One for HyperDual<T> {
     #[inline]
     fn one() -> Self {
         HyperDual::new(One::one(), Zero::zero(), Zero::zero(), Zero::zero())
@@ -1150,7 +1171,7 @@ where
 }
 
 /* iterator methods */
-impl<T: Num + Clone> Sum for HyperDual<T> {
+impl<T: Clone + Zero> Sum for HyperDual<T> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -1159,7 +1180,9 @@ impl<T: Num + Clone> Sum for HyperDual<T> {
     }
 }
 
-impl<'a, T: 'a + Num + Clone> Sum<&'a HyperDual<T>> for HyperDual<T> {
+impl<'a, T: 'a + Clone + Zero + Mul<Output = T> + Div<Output = T> + Sub<Output = T>>
+    Sum<&'a HyperDual<T>> for HyperDual<T>
+{
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a HyperDual<T>>,
@@ -1168,7 +1191,7 @@ impl<'a, T: 'a + Num + Clone> Sum<&'a HyperDual<T>> for HyperDual<T> {
     }
 }
 
-impl<T: Num + Clone> Product for HyperDual<T> {
+impl<T: Clone + One + Zero + PartialEq> Product for HyperDual<T> {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -1177,7 +1200,11 @@ impl<T: Num + Clone> Product for HyperDual<T> {
     }
 }
 
-impl<'a, T: 'a + Num + Clone> Product<&'a HyperDual<T>> for HyperDual<T> {
+impl<
+        'a,
+        T: 'a + Clone + One + Zero + PartialEq + Mul<Output = T> + Div<Output = T> + Sub<Output = T>,
+    > Product<&'a HyperDual<T>> for HyperDual<T>
+{
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = &'a HyperDual<T>>,

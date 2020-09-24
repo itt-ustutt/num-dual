@@ -1,7 +1,7 @@
 // #![feature(test)]
 // extern crate test;
 
-use num_traits::{Inv, One, Zero};
+use num_traits::{Float, Inv, One, Zero};
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 pub mod array;
@@ -15,44 +15,37 @@ pub use hd3::*;
 pub use hd_scal::*;
 pub use hyperdual::*;
 
-pub trait DualNumOps<T, Rhs = Self, Output = Self>:
+pub trait DualNumOps<Rhs = Self, Output = Self>:
     Add<Rhs, Output = Output>
-    + Add<T, Output = Output>
+    // + Add<T, Output = Output>
     + Sub<Rhs, Output = Output>
-    + Sub<T, Output = Output>
+    // + Sub<T, Output = Output>
     + Mul<Rhs, Output = Output>
-    + Mul<T, Output = Output>
+    // + Mul<T, Output = Output>
     + Div<Rhs, Output = Output>
-    + Div<T, Output = Output>
+    // + Div<T, Output = Output>
 {
 }
 
-impl<T, D, Rhs, Output> DualNumOps<T, Rhs, Output> for D where
+impl<D, Rhs, Output> DualNumOps<Rhs, Output> for D where
     D: Add<Rhs, Output = Output>
-        + Add<T, Output = Output>
         + Sub<Rhs, Output = Output>
-        + Sub<T, Output = Output>
         + Mul<Rhs, Output = Output>
-        + Mul<T, Output = Output>
-        + Div<Rhs, Output = Output>
-        + Div<T, Output = Output>
+        + Div<Rhs, Output = Output> // + Div<T, Output = Output>
 {
 }
 
-pub trait DualNumRef<T>: DualNumMethods<T> + for<'r> DualNumOps<&'r Self> {}
-impl<T, D> DualNumRef<T> for D where D: DualNumMethods<T> + for<'r> DualNumOps<&'r Self> {}
+pub trait DualNumRef<T>: DualNumMethods + for<'r> DualNumOps<&'r Self> {}
+impl<T, D> DualNumRef<T> for D where D: DualNumMethods + for<'r> DualNumOps<&'r Self> {}
 
-pub trait DualRefNum<T, Base>:
-    DualNumOps<T, Base, Base> + for<'r> DualNumOps<T, &'r Base, Base>
-{
-}
+pub trait DualRefNum<T, Base>: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base> {}
 impl<T, D, Base> DualRefNum<T, Base> for D where
-    D: DualNumOps<T, Base, Base> + for<'r> DualNumOps<T, &'r Base, Base>
+    D: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base>
 {
 }
 
-pub trait DualNum<T>:
-    DualNumMethods<T>
+pub trait DualNum:
+    DualNumMethods
     + Copy
     + Zero
     + One
@@ -60,11 +53,11 @@ pub trait DualNum<T>:
     + Inv<Output = Self>
     + Sum
     + Product
-    + From<T>
+    + PartialEq // + From<T>
 {
 }
-impl<T, D> DualNum<T> for D where
-    D: DualNumMethods<T>
+impl<D> DualNum for D where
+    D: DualNumMethods
         + Copy
         + Zero
         + One
@@ -72,27 +65,31 @@ impl<T, D> DualNum<T> for D where
         + Inv<Output = Self>
         + Sum
         + Product
-        + From<T>
+        + PartialEq // + From<T>
 {
 }
 
-pub trait DualNumMethods<T>: Clone + DualNumOps<T> {
+pub trait DualNumMethods: Clone + DualNumOps {
+    type Base;
+    type Float;
     /// indicates the highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
     /// returns the real part (the 0th derivative) of the number
-    fn re(&self) -> T;
+    fn re(&self) -> Self::Base;
+    /// Creates a new dual number from the real part (the 0th derivative)
+    fn from(re: Self::Base) -> Self;
 
     fn recip(&self) -> Self;
     fn powi(&self, n: i32) -> Self;
-    fn powf(&self, n: T) -> Self;
+    fn powf(&self, n: Self::Float) -> Self;
     fn sqrt(&self) -> Self;
     fn cbrt(&self) -> Self;
     fn exp(&self) -> Self;
     fn exp2(&self) -> Self;
     fn exp_m1(&self) -> Self;
     fn ln(&self) -> Self;
-    fn log(&self, base: T) -> Self;
+    fn log(&self, base: Self::Float) -> Self;
     fn log2(&self) -> Self;
     fn log10(&self) -> Self;
     fn ln_1p(&self) -> Self;
@@ -126,7 +123,8 @@ pub trait DualNumMethods<T>: Clone + DualNumOps<T> {
 
 macro_rules! impl_dual_num_float {
     ($float:ty) => {
-        impl DualNumMethods<$float> for $float {
+        impl DualNumMethods for $float {
+            type Base = $float;
             const NDERIV: usize = 0;
 
             fn re(&self) -> $float {
