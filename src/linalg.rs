@@ -4,6 +4,10 @@ use ndarray_linalg::convert::replicate;
 use ndarray_linalg::error::Result;
 use ndarray_linalg::*;
 
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HD3<T, F> {}
+
 pub trait SolveDual<A: Copy> {
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
@@ -121,6 +125,32 @@ impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
     }
 }
 
+impl<S: Data<Elem = HyperDualDual64>> SolveDual<HyperDualDual64> for ArrayBase<S, Ix2> {
+    /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
+    /// is the argument, and `x` is the successful result.
+    fn solve_inplace<'a, Sb: DataMut<Elem = HyperDualDual64>>(
+        &self,
+        b: &'a mut ArrayBase<Sb, Ix1>,
+    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
+        let s1 = self.mapv(|s| s.eps1);
+        let s2 = self.mapv(|s| s.eps2);
+        let s12 = self.mapv(|s| s.eps1eps2);
+        let f = self.map(|f| f.re);
+        let dx0 = f.solve_into(b.mapv(|b| b.re))?;
+        let dx1 = f.solve_into(b.mapv(|b| b.eps1) - s1.dot(&dx0))?;
+        let dx2 = f.solve_into(b.mapv(|b| b.eps2) - s2.dot(&dx0))?;
+        let dx12 =
+            f.solve_into(b.mapv(|b| b.eps1eps2) - s1.dot(&dx2) - s2.dot(&dx1) - s12.dot(&dx0))?;
+        Zip::from(&dx0)
+            .and(&dx1)
+            .and(&dx2)
+            .and(&dx12)
+            .and(&mut *b)
+            .apply(|&dx0, &dx1, &dx2, &dx12, b| *b = HyperDualDual64::new(dx0, dx1, dx2, dx12));
+        Ok(b)
+    }
+}
+
 impl<S: Data<Elem = HD3_64>> SolveDual<HD3_64> for ArrayBase<S, Ix2> {
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
@@ -163,5 +193,78 @@ impl<S: Data<Elem = HD3_64>> SolveDual<HD3_64> for ArrayBase<S, Ix2> {
             .and(&mut *b)
             .apply(|&dx0, &dx1, &dx2, &dx3, b| *b = HD3_64::new([dx0, dx1, dx2, dx3]));
         Ok(b)
+    }
+}
+
+impl<S: Data<Elem = HD3Dual64>> SolveDual<HD3Dual64> for ArrayBase<S, Ix2> {
+    /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
+    /// is the argument, and `x` is the successful result.
+    fn solve_inplace<'a, Sb: DataMut<Elem = HD3Dual64>>(
+        &self,
+        b: &'a mut ArrayBase<Sb, Ix1>,
+    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
+        let s1 = self.mapv(|s| s.0[1]);
+        let s2 = self.mapv(|s| s.0[2]);
+        let s3 = self.mapv(|s| s.0[3]);
+        let f = self.mapv(|v| v.0[0]);
+        let dx0 = f.solve_into(b.mapv(|b| b.0[0]))?;
+        let dx1 = f.solve_into(b.mapv(|b| b.0[1]) - s1.dot(&dx0))?;
+        let dx2 = f.solve_into(b.mapv(|b| b.0[2]) - s2.dot(&dx0) - s1.dot(&dx1) * 2.0)?;
+        let dx3 = f.solve_into(
+            b.mapv(|b| b.0[3]) - s3.dot(&dx0) - s2.dot(&dx1) * 3.0 - s1.dot(&dx2) * 3.0,
+        )?;
+        Zip::from(&dx0)
+            .and(&dx1)
+            .and(&dx2)
+            .and(&dx3)
+            .and(&mut *b)
+            .apply(|&dx0, &dx1, &dx2, &dx3, b| *b = HD3Dual64::new([dx0, dx1, dx2, dx3]));
+        Ok(b)
+    }
+}
+
+pub trait EighDual<A> {
+    fn eigh(&self, uplo: UPLO) -> Result<(Array1<A>, Array2<A>)>;
+}
+
+impl EighDual<Dual64> for Array2<Dual64> {
+    /// Caculates the eigenvalues and eigenvectors of a symmetric matrix
+    /// ```
+    /// # use approx::assert_abs_diff_eq;
+    /// # use num_hyperdual::Dual64;
+    /// # use num_hyperdual::linalg::EighDual;
+    /// # use ndarray::{arr1, arr2};
+    /// # use ndarray_linalg::UPLO;
+    /// let a = arr2(&[[Dual64::new(2.0, 1.0), Dual64::new(2.0, 2.0)],
+    ///                [Dual64::new(2.0, 2.0), Dual64::new(5.0, 3.0)]]);
+    /// let (l, v) = a.eigh(UPLO::Upper).unwrap();
+    /// let av = a.dot(&v);
+    /// assert_abs_diff_eq!(av[(0,0)].re, (l[0]*v[(0,0)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,0)].re, (l[0]*v[(1,0)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,1)].re, (l[1]*v[(0,1)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,1)].re, (l[1]*v[(1,1)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,0)].eps, (l[0]*v[(0,0)]).eps, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,0)].eps, (l[0]*v[(1,0)]).eps, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,1)].eps, (l[1]*v[(0,1)]).eps, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,1)].eps, (l[1]*v[(1,1)]).eps, epsilon = 1e-14);
+    /// ```
+    fn eigh(&self, uplo: UPLO) -> Result<(Array1<Dual64>, Array2<Dual64>)> {
+        let s1 = self.map(|x| x.eps);
+        let (l0, v0) = self.map(|x| x.re).eigh(uplo)?;
+        let m = v0.t().dot(&s1).dot(&v0);
+        let a = Array::from_shape_fn((l0.len(), l0.len()), |(i, j)| {
+            if i == j {
+                0.0
+            } else {
+                m[(i, j)] / (l0[i] - l0[j])
+            }
+        });
+        let l = Zip::from(&l0)
+            .and(&m.diag())
+            .apply_collect(|&l0, &l1| Dual64::new(l0, l1));
+        let v = Zip::from(&v0)
+            .and(&a.dot(&v0))
+            .apply_collect(|&v0, &v1| Dual64::new(v0, v1));
+        Ok((l, v))
     }
 }

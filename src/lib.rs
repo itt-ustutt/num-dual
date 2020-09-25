@@ -1,10 +1,11 @@
 // #![feature(test)]
 // extern crate test;
 
-use num_traits::{Float, Inv, One, Zero};
+use num_traits::{Inv, One, Zero};
 use std::iter::{Product, Sum};
 use std::ops::{Add, Div, Mul, Neg, Sub};
-pub mod array;
+#[macro_use]
+mod macros;
 pub mod dual;
 pub mod hd3;
 pub mod hd_scal;
@@ -15,37 +16,41 @@ pub use hd3::*;
 pub use hd_scal::*;
 pub use hyperdual::*;
 
-pub trait DualNumOps<Rhs = Self, Output = Self>:
+pub trait DualNumOps<F, Rhs = Self, Output = Self>:
     Add<Rhs, Output = Output>
-    // + Add<T, Output = Output>
+    + Add<F, Output = Output>
     + Sub<Rhs, Output = Output>
-    // + Sub<T, Output = Output>
+    + Sub<F, Output = Output>
     + Mul<Rhs, Output = Output>
-    // + Mul<T, Output = Output>
+    + Mul<F, Output = Output>
     + Div<Rhs, Output = Output>
-    // + Div<T, Output = Output>
+    + Div<F, Output = Output>
 {
 }
 
-impl<D, Rhs, Output> DualNumOps<Rhs, Output> for D where
+impl<D, F, Rhs, Output> DualNumOps<F, Rhs, Output> for D where
     D: Add<Rhs, Output = Output>
+        + Add<F, Output = Output>
         + Sub<Rhs, Output = Output>
+        + Sub<F, Output = Output>
         + Mul<Rhs, Output = Output>
-        + Div<Rhs, Output = Output> // + Div<T, Output = Output>
+        + Mul<F, Output = Output>
+        + Div<Rhs, Output = Output>
+        + Div<F, Output = Output>
 {
 }
 
-pub trait DualNumRef<T>: DualNumMethods + for<'r> DualNumOps<&'r Self> {}
-impl<T, D> DualNumRef<T> for D where D: DualNumMethods + for<'r> DualNumOps<&'r Self> {}
+// pub trait DualNumRef<T>: DualNumMethods<F> + for<'r> DualNumOps<&'r Self> {}
+// impl<T, D> DualNumRef<T> for D where D: DualNumMethods<F> + for<'r> DualNumOps<&'r Self> {}
 
-pub trait DualRefNum<T, Base>: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base> {}
-impl<T, D, Base> DualRefNum<T, Base> for D where
-    D: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base>
-{
-}
+// pub trait DualRefNum<T, Base>: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base> {}
+// impl<T, D, Base> DualRefNum<T, Base> for D where
+//     D: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base>
+// {
+// }
 
-pub trait DualNum:
-    DualNumMethods
+pub trait DualNum<F>:
+    DualNumMethods<F>
     + Copy
     + Zero
     + One
@@ -53,11 +58,12 @@ pub trait DualNum:
     + Inv<Output = Self>
     + Sum
     + Product
-    + PartialEq // + From<T>
+    + PartialEq
+    + From<F>
 {
 }
-impl<D> DualNum for D where
-    D: DualNumMethods
+impl<D, F> DualNum<F> for D where
+    D: DualNumMethods<F>
         + Copy
         + Zero
         + One
@@ -65,31 +71,28 @@ impl<D> DualNum for D where
         + Inv<Output = Self>
         + Sum
         + Product
-        + PartialEq // + From<T>
+        + PartialEq
+        + From<F>
 {
 }
 
-pub trait DualNumMethods: Clone + DualNumOps {
-    type Base;
-    type Float;
+pub trait DualNumMethods<F>: Clone + DualNumOps<F> {
     /// indicates the highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
     /// returns the real part (the 0th derivative) of the number
-    fn re(&self) -> Self::Base;
-    /// Creates a new dual number from the real part (the 0th derivative)
-    fn from(re: Self::Base) -> Self;
+    fn re(&self) -> F;
 
     fn recip(&self) -> Self;
     fn powi(&self, n: i32) -> Self;
-    fn powf(&self, n: Self::Float) -> Self;
+    fn powf(&self, n: F) -> Self;
     fn sqrt(&self) -> Self;
     fn cbrt(&self) -> Self;
     fn exp(&self) -> Self;
     fn exp2(&self) -> Self;
     fn exp_m1(&self) -> Self;
     fn ln(&self) -> Self;
-    fn log(&self, base: Self::Float) -> Self;
+    fn log(&self, base: F) -> Self;
     fn log2(&self) -> Self;
     fn log10(&self) -> Self;
     fn ln_1p(&self) -> Self;
@@ -123,8 +126,7 @@ pub trait DualNumMethods: Clone + DualNumOps {
 
 macro_rules! impl_dual_num_float {
     ($float:ty) => {
-        impl DualNumMethods for $float {
-            type Base = $float;
+        impl DualNumMethods<$float> for $float {
             const NDERIV: usize = 0;
 
             fn re(&self) -> $float {
@@ -362,23 +364,24 @@ mod bench {
         assert!((r_hd.eps1eps2 - r_hd3.0[2]).abs() < 1e-10);
     }
 
-    // #[test]
-    // fn test_third_derivative() {
-    //     // let (t_hds, mut v_hds, m_hds) = init_state::<HDScal64<D2>>();
-    //     // v_hds = v_hds.derive();
-    //     let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
-    //     v_hd3 = v_hd3.derive();
+    #[test]
+    fn test_third_derivative() {
+        let (t_hdd, mut v_hdd, m_hdd) = init_state::<HyperDual<Dual64, f64>>();
+        v_hdd.re.eps = 1.0;
+        v_hdd.eps1.re = 1.0;
+        v_hdd.eps2.re = 1.0;
+        let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
+        v_hd3 = v_hd3.derive();
 
-    //     let hs = HSContribution {
-    //         m: arr1(&[1.0, 2.5]),
-    //         sigma: arr1(&[3.2, 3.5]),
-    //         epsilon_k: arr1(&[150., 220.]),
-    //     };
-
-    //     // let r_hds = hs.helmholtz_energy(t_hds, v_hds, &m_hds);
-    //     let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
-    //     // assert!((r_hds.0[2] - r_hd3.0[2]).abs() < 1e-10);
-    // }
+        let hs = HSContribution {
+            m: arr1(&[1.0, 2.5]),
+            sigma: arr1(&[3.2, 3.5]),
+            epsilon_k: arr1(&[150., 220.]),
+        };
+        let r_hdd = hs.helmholtz_energy(t_hdd, v_hdd, &m_hdd);
+        let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
+        assert!((r_hdd.eps1eps2.eps - r_hd3.0[3]).abs() < 1e-10);
+    }
 
     //     #[bench]
     //     fn bench_dual(b: &mut Bencher) {

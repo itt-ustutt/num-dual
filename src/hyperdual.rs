@@ -1,13 +1,14 @@
-use crate::{DualNum, DualNumMethods};
-use num_traits::{Float, FromPrimitive, Inv, One, Zero};
+use crate::{Dual32, Dual64, DualNum, DualNumMethods};
+use num_traits::{Float, Inv, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
+use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// A hyper dual number.
-#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Default)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 #[repr(C)]
-pub struct HyperDual<T> {
+pub struct HyperDual<T, F = T> {
     /// Real part of the hyper dual number
     pub re: T,
     /// Eps1 part
@@ -16,13 +17,16 @@ pub struct HyperDual<T> {
     pub eps2: T,
     /// Eps1eps2 part
     pub eps1eps2: T,
+    f: PhantomData<F>,
 }
 
 pub type HyperDual32 = HyperDual<f32>;
 pub type HyperDual64 = HyperDual<f64>;
+pub type HyperDualDual32 = HyperDual<Dual32, f32>;
+pub type HyperDualDual64 = HyperDual<Dual64, f64>;
 
-impl<T> HyperDual<T> {
-    /// Create a new HyperDual
+impl<T, F> HyperDual<T, F> {
+    /// Create a new hyperdual number
     #[inline]
     pub fn new(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
         HyperDual {
@@ -30,22 +34,31 @@ impl<T> HyperDual<T> {
             eps1,
             eps2,
             eps1eps2,
+            f: PhantomData,
         }
     }
 }
 
-impl<T: DualNum> DualNumMethods for HyperDual<T> {
-    type Base = T;
-    const NDERIV: usize = 2;
-
+impl<T: Zero, F> HyperDual<T, F> {
+    /// Create a new hyperdual number from the real part
     #[inline]
-    fn re(&self) -> T {
-        self.re
+    pub fn from_re(re: T) -> Self {
+        HyperDual::new(re, T::zero(), T::zero(), T::zero())
     }
+}
+
+impl<T: DualNum<F>, F> From<F> for HyperDual<T, F> {
+    fn from(float: F) -> Self {
+        HyperDual::new(T::from(float), T::zero(), T::zero(), T::zero())
+    }
+}
+
+impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
+    const NDERIV: usize = T::NDERIV + 2;
 
     #[inline]
-    fn from(re: Self::Float) -> Self {
-        Self::new(T::from(re), T::zero(), T::zero(), T::zero())
+    fn re(&self) -> F {
+        self.re.re()
     }
 
     /// Returns `1/self`
@@ -173,7 +186,7 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     /// assert!((res.eps1eps2 - -0.483904907485808).abs() < 1e-10);
     /// ```
     #[inline]
-    fn log(&self, base: Self::Float) -> Self {
+    fn log(&self, base: F) -> Self {
         let fx = self.re.log(base);
         let lnb = base.ln();
         let dx = (self.re * lnb).recip();
@@ -243,7 +256,7 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     #[inline]
     fn log10(&self) -> Self {
         let fx = self.re.log10();
-        let ln10 = Self::Float::from(10).unwrap().ln();
+        let ln10 = F::from(10.0).unwrap().ln();
         let dx = (self.re * ln10).recip();
         HyperDual::new(
             fx,
@@ -320,21 +333,21 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     /// assert!(HyperDual64::new(0.0, 1.0, 1.0, 0.0).powf(4.2) == HyperDual64::new(0.0, 0.0, 0.0, 0.0));
     /// ```
     #[inline]
-    fn powf(&self, exp: Self::Float) -> Self {
+    fn powf(&self, exp: F) -> Self {
         if exp.is_zero() {
             Self::one()
         } else {
             if exp.is_one() {
                 *self
             } else {
-                let pow = self.re.powf(exp - T::one() - T::one());
+                let pow = self.re.powf(exp - F::one() - F::one());
                 let fx = pow * self.re * self.re;
-                let dx = exp * pow * self.re;
+                let dx = pow * self.re * exp;
                 HyperDual::new(
                     fx,
                     self.eps1 * dx,
                     self.eps2 * dx,
-                    self.eps1eps2 * dx + self.eps1 * self.eps2 * exp * (exp - T::one()) * pow,
+                    self.eps1eps2 * dx + self.eps1 * self.eps2 * exp * (exp - F::one()) * pow,
                 )
             }
         }
@@ -364,8 +377,8 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
             0 => HyperDual::one(),
             1 => *self,
             _ => {
-                let e = Self::from(exp).unwrap();
-                let e1 = T::from(exp - 1).unwrap();
+                let e = T::from(F::from(exp).unwrap());
+                let e1 = T::from(F::from(exp - 1).unwrap());
 
                 let pow = self.re.powi(exp - 2);
                 let fx = pow * self.re * self.re;
@@ -687,20 +700,20 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     /// assert!((res.eps1eps2 - -0.201224955209705).abs() < 1e-10);
     /// ```
     fn sph_j0(&self) -> Self {
-        let (fx, dx, dx2) = if self.re.abs() < T::epsilon() {
+        let (fx, dx, dx2) = if self.re().abs() < F::epsilon() {
             (
-                T::one() - self.re * self.re / T::from(6.0).unwrap(),
-                -self.re / T::from(3.0).unwrap(),
-                -T::from(1.0 / 3.0).unwrap(),
+                T::one() - self.re * self.re / F::from(6.0).unwrap(),
+                -self.re / F::from(3.0).unwrap(),
+                -T::from(F::from(1.0 / 3.0).unwrap()),
             )
         } else {
             let (s, c) = self.re.sin_cos();
             let rec = self.re.recip();
-            let two = T::one() + T::one();
+            let two = F::one() + F::one();
             (
                 s * rec,
                 (-s * rec + c) * rec,
-                (two * (s * rec - c) * rec - s) * rec,
+                ((s * rec - c) * two * rec - s) * rec,
             )
         };
         HyperDual::new(
@@ -722,18 +735,18 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     /// assert!((res.eps1eps2 - -0.201097592627034).abs() < 1e-10);
     /// ```
     fn sph_j1(&self) -> Self {
-        let (fx, dx, dx2) = if self.re.abs() < T::epsilon() {
-            let one = T::one();
+        let (fx, dx, dx2) = if self.re().abs() < F::epsilon() {
+            let one = F::one();
             let third = one / (one + one + one);
-            (self.re * third, third, T::zero())
+            (self.re * third, T::from(third), T::zero())
         } else {
             let (s, c) = self.re.sin_cos();
             let rec = self.re.recip();
-            let two = T::one() + T::one();
+            let two = F::one() + F::one();
             (
                 (s * rec - c) * rec,
-                (two * (c - s * rec) * rec + s) * rec,
-                ((two * (s * rec - c) * rec - s) * T::from(3.0).unwrap() * rec + c) * rec,
+                ((c - s * rec) * two * rec + s) * rec,
+                (((s * rec - c) * rec * two - s) * F::from(3.0).unwrap() * rec + c) * rec,
             )
         };
         HyperDual::new(
@@ -755,23 +768,23 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     /// assert!((res.eps1eps2 - 0.0589484167190109).abs() < 1e-10);
     /// ```
     fn sph_j2(&self) -> Self {
-        let (fx, dx, dx2) = if self.re.abs() < T::epsilon() {
+        let (fx, dx, dx2) = if self.re().abs() < F::epsilon() {
             (
-                self.re * self.re / T::from(15.0).unwrap(),
-                self.re / T::from(7.5).unwrap(),
-                T::from(1.0 / 7.5).unwrap(),
+                self.re * self.re / F::from(15.0).unwrap(),
+                self.re / F::from(7.5).unwrap(),
+                T::from(F::from(1.0 / 7.5).unwrap()),
             )
         } else {
             let (s, c) = self.re.sin_cos();
             let rec = self.re.recip();
-            let three = T::one() + T::one() + T::one();
+            let three = F::one() + F::one() + F::one();
             let nine = three * three;
             (
-                (three * (s * rec - c) * rec - s) * rec,
-                ((nine * (-s * rec + c) * rec + (three + T::one()) * s) * rec - c) * rec,
-                (((T::from(36.0).unwrap() * (s * rec - c) * rec - T::from(17.0).unwrap() * s)
+                ((s * rec - c) * three * rec - s) * rec,
+                (((-s * rec + c) * nine * rec + s * (three + F::one())) * rec - c) * rec,
+                ((((s * rec - c) * F::from(36.0).unwrap() * rec - s * F::from(17.0).unwrap())
                     * rec
-                    + T::from(5.0).unwrap() * c)
+                    + c * F::from(5.0).unwrap())
                     * rec
                     + s)
                     * rec,
@@ -786,186 +799,90 @@ impl<T: DualNum> DualNumMethods for HyperDual<T> {
     }
 }
 
-impl<T: Float> Inv for HyperDual<T> {
+impl<T: DualNum<F>, F: Float> Inv for HyperDual<T, F> {
     type Output = Self;
     fn inv(self) -> Self {
         self.recip()
     }
 }
 
-impl<T: Float> Inv for &HyperDual<T> {
-    type Output = HyperDual<T>;
-    fn inv(self) -> HyperDual<T> {
+impl<T: DualNum<F>, F: Float> Inv for &HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
+    fn inv(self) -> HyperDual<T, F> {
         self.recip()
     }
 }
 
-impl<T: Zero> From<T> for HyperDual<T> {
-    #[inline]
-    fn from(re: T) -> Self {
-        HyperDual {
-            re: re,
-            eps1: T::zero(),
-            eps2: T::zero(),
-            eps1eps2: T::zero(),
-        }
-    }
-}
-
-impl<'a, T: Clone + Zero> From<&'a T> for HyperDual<T> {
-    #[inline]
-    fn from(re: &T) -> Self {
-        From::from(re.clone())
-    }
-}
-
-macro_rules! forward_ref_ref_binop {
-    (impl $imp:ident, $method:ident) => {
-        impl<
-                'a,
-                'b,
-                T: Clone + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
-            > $imp<&'b HyperDual<T>> for &'a HyperDual<T>
-        {
-            type Output = HyperDual<T>;
-
-            #[inline]
-            fn $method(self, other: &HyperDual<T>) -> HyperDual<T> {
-                self.clone().$method(other.clone())
-            }
-        }
-    };
-}
-
-macro_rules! forward_ref_val_binop {
-    (impl $imp:ident, $method:ident) => {
-        impl<
-                'a,
-                T: Clone + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
-            > $imp<HyperDual<T>> for &'a HyperDual<T>
-        {
-            type Output = HyperDual<T>;
-
-            #[inline]
-            fn $method(self, other: HyperDual<T>) -> HyperDual<T> {
-                self.clone().$method(other)
-            }
-        }
-    };
-}
-
-macro_rules! forward_val_ref_binop {
-    (impl $imp:ident, $method:ident) => {
-        impl<
-                'a,
-                T: Clone + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
-            > $imp<&'a HyperDual<T>> for HyperDual<T>
-        {
-            type Output = HyperDual<T>;
-
-            #[inline]
-            fn $method(self, other: &HyperDual<T>) -> Self {
-                self.$method(other.clone())
-            }
-        }
-    };
-}
-
-macro_rules! forward_all_binop {
-    (impl $imp:ident, $method:ident) => {
-        forward_ref_ref_binop!(impl $imp, $method);
-        forward_ref_val_binop!(impl $imp, $method);
-        forward_val_ref_binop!(impl $imp, $method);
-    };
-}
-
 /* arithmetic */
-forward_all_binop!(impl Add, add);
 
-impl<T: Clone + Add<Output = T>> Add<HyperDual<T>> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
     #[inline]
-    fn add(self, other: HyperDual<T>) -> Self {
+    fn mul(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
         HyperDual::new(
-            self.re.clone() + other.re.clone(),
-            self.eps1.clone() + other.eps1.clone(),
-            self.eps2.clone() + other.eps2.clone(),
-            self.eps1eps2.clone() + other.eps1eps2.clone(),
+            self.re * other.re,
+            self.re * other.eps1 + other.re * self.eps1,
+            self.re * other.eps2 + other.re * self.eps2,
+            self.re * other.eps1eps2
+                + other.re * self.eps1eps2
+                + self.eps1 * other.eps2
+                + self.eps2 * other.eps1,
         )
     }
 }
 
-forward_all_binop!(impl Sub, sub);
-
-impl<T: Clone + Sub<Output = T>> Sub<HyperDual<T>> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
     #[inline]
-    fn sub(self, other: HyperDual<T>) -> Self {
+    fn div(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
+        let inv = T::one() / other.re;
+        let inv2 = inv * inv;
         HyperDual::new(
-            self.re.clone() - other.re.clone(),
-            self.eps1.clone() - other.eps1.clone(),
-            self.eps2.clone() - other.eps2.clone(),
-            self.eps1eps2.clone() - other.eps1eps2.clone(),
+            self.re * inv,
+            (self.eps1 * other.re - self.re * other.eps1) * inv2,
+            (self.eps2 * other.re - self.re * other.eps2) * inv2,
+            self.eps1eps2 * inv
+                - (self.re * other.eps1eps2 + self.eps1 * other.eps2 + self.eps2 * other.eps1)
+                    * inv2
+                + (T::one() + T::one()) * self.re * other.eps1 * other.eps2 * inv2 * inv,
         )
     }
 }
 
-forward_all_binop!(impl Mul, mul);
-
-impl<T: Clone + Add<Output = T> + Mul<Output = T>> Mul<HyperDual<T>> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Add<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
     #[inline]
-    fn mul(self, other: HyperDual<T>) -> Self {
+    fn add(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
         HyperDual::new(
-            self.re.clone() * other.re.clone(),
-            self.re.clone() * other.eps1.clone() + other.re.clone() * self.eps1.clone(),
-            self.re.clone() * other.eps2.clone() + other.re.clone() * self.eps2.clone(),
-            self.re.clone() * other.eps1eps2.clone()
-                + other.re.clone() * self.eps1eps2.clone()
-                + self.eps1.clone() * other.eps2.clone()
-                + self.eps2.clone() * other.eps1.clone(),
+            self.re + other.re,
+            self.eps1 + other.eps1,
+            self.eps2 + other.eps2,
+            self.eps1eps2 + other.eps1eps2,
         )
     }
 }
 
-forward_all_binop!(impl Div, div);
-
-impl<T: Clone + Mul<Output = T> + Div<Output = T> + Add<Output = T> + Sub<Output = T> + One>
-    Div<HyperDual<T>> for HyperDual<T>
-{
-    type Output = HyperDual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
     #[inline]
-    fn div(self, other: HyperDual<T>) -> Self {
-        let inv = T::one() / other.re.clone();
-        let inv2 = inv.clone() * inv.clone();
+    fn sub(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
         HyperDual::new(
-            self.re.clone() * inv.clone(),
-            (self.eps1.clone() * other.re.clone() - self.re.clone() * other.eps1.clone())
-                * inv2.clone(),
-            (self.eps2.clone() * other.re.clone() - self.re.clone() * other.eps2.clone())
-                * inv2.clone(),
-            self.eps1eps2.clone() * inv.clone()
-                - (self.re.clone() * other.eps1eps2.clone()
-                    + self.eps1.clone() * other.eps2.clone()
-                    + self.eps2.clone() * other.eps1.clone())
-                    * inv2.clone()
-                + (T::one() + T::one())
-                    * self.re.clone()
-                    * other.eps1.clone()
-                    * other.eps2.clone()
-                    * inv2.clone()
-                    * inv.clone(),
+            self.re - other.re,
+            self.eps1 - other.eps1,
+            self.eps2 - other.eps2,
+            self.eps1eps2 - other.eps1eps2,
         )
     }
 }
+
+forward_binop!(HyperDual, Mul, *, mul);
+forward_binop!(HyperDual, Div, /, div);
+forward_binop!(HyperDual, Add, +, add);
+forward_binop!(HyperDual, Sub, -, sub);
 
 /* Neg impl */
-impl<T: Clone + Neg<Output = T>> Neg for HyperDual<T> {
-    type Output = HyperDual<T>;
+impl<T: DualNum<F>, F: Float> Neg for HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
 
     #[inline]
     fn neg(self) -> Self {
@@ -973,166 +890,55 @@ impl<T: Clone + Neg<Output = T>> Neg for HyperDual<T> {
     }
 }
 
-impl<'a, T: Clone + Neg<Output = T>> Neg for &'a HyperDual<T> {
-    type Output = HyperDual<T>;
+impl<'a, T: DualNum<F>, F: Float> Neg for &'a HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
 
     #[inline]
-    fn neg(self) -> HyperDual<T> {
-        -self.clone()
+    fn neg(self) -> HyperDual<T, F> {
+        -*self
     }
 }
 
-macro_rules! real_arithmetic {
-    (@forward $imp:ident::$method:ident for $($real:ident),*) => (
-        impl<'a, T: Clone> $imp<&'a T> for HyperDual<T> {
-            type Output = HyperDual<T>;
-
-            #[inline]
-            fn $method(self, other: &T) -> Self {
-                self.$method(other.clone())
-            }
-        }
-        impl<'a, T: Clone> $imp<T> for &'a HyperDual<T> {
-            type Output = HyperDual<T>;
-
-            #[inline]
-            fn $method(self, other: T) -> HyperDual<T> {
-                self.clone().$method(other)
-            }
-        }
-        impl<'a, 'b, T: Clone> $imp<&'a T> for &'b HyperDual<T> {
-            type Output = HyperDual<T>;
-
-            #[inline]
-            fn $method(self, other: &T) -> HyperDual<T> {
-                self.clone().$method(other.clone())
-            }
-        }
-        $(
-            impl<'a> $imp<&'a HyperDual<$real>> for $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn $method(self, other: &HyperDual<$real>) -> HyperDual<$real> {
-                    self.$method(other.clone())
-                }
-            }
-            impl<'a> $imp<HyperDual<$real>> for &'a $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn $method(self, other: HyperDual<$real>) -> HyperDual<$real> {
-                    self.clone().$method(other)
-                }
-            }
-            impl<'a, 'b> $imp<&'a HyperDual<$real>> for &'b $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn $method(self, other: &HyperDual<$real>) -> HyperDual<$real> {
-                    self.clone().$method(other.clone())
-                }
-            }
-        )*
-    );
-    ($($real:ident),*) => (
-        real_arithmetic!(@forward Add::add for $($real),*);
-        real_arithmetic!(@forward Sub::sub for $($real),*);
-        real_arithmetic!(@forward Mul::mul for $($real),*);
-        real_arithmetic!(@forward Div::div for $($real),*);
-        // real_arithmetic!(@forward Rem::rem for $($real),*);
-
-        $(
-            impl Add<HyperDual<$real>> for $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn add(self, other: HyperDual<$real>) -> HyperDual<$real> {
-                    HyperDual::new(self + other.re, other.eps1, other.eps2, other.eps1eps2)
-                }
-            }
-
-            impl Sub<HyperDual<$real>> for $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn sub(self, other: HyperDual<$real>) -> HyperDual<$real> {
-                    HyperDual::new(self - other.re, Self::zero() - other.eps1, Self::zero() - other.eps2, Self::zero() - other.eps1eps2)
-                }
-            }
-
-            impl Mul<HyperDual<$real>> for $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn mul(self, other: HyperDual<$real>) -> HyperDual<$real> {
-                    HyperDual::new(self * other.re, self * other.eps1, self * other.eps2, self * other.eps1eps2)
-                }
-            }
-
-            impl Div<HyperDual<$real>> for $real {
-                type Output = HyperDual<$real>;
-
-                #[inline]
-                fn div(self, other: HyperDual<$real>) -> HyperDual<$real> {
-                    self * other.recip()
-                }
-            }
-        )*
-    );
-}
-
-real_arithmetic!(f32, f64);
-
-impl<T: Clone + Add<Output = T>> Add<T> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
+/* scalar operations */
+impl<T: DualNum<F>, F: Float> Mul<F> for HyperDual<T, F> {
+    type Output = Self;
     #[inline]
-    fn add(self, other: T) -> Self {
-        HyperDual::new(self.re + other, self.eps1, self.eps2, self.eps1eps2)
-    }
-}
-
-impl<T: Clone + Sub<Output = T>> Sub<T> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
-    #[inline]
-    fn sub(self, other: T) -> Self {
-        HyperDual::new(self.re - other, self.eps1, self.eps2, self.eps1eps2)
-    }
-}
-
-impl<T: Clone + Mul<Output = T>> Mul<T> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
-    #[inline]
-    fn mul(self, other: T) -> Self {
+    fn mul(self, other: F) -> Self {
         HyperDual::new(
-            self.re * other.clone(),
-            self.eps1 * other.clone(),
-            self.eps2 * other.clone(),
+            self.re * other,
+            self.eps1 * other,
+            self.eps2 * other,
             self.eps1eps2 * other,
         )
     }
 }
 
-impl<T: Clone + Mul<Output = T> + Div<Output = T> + One> Div<T> for HyperDual<T> {
-    type Output = HyperDual<T>;
-
+impl<T: DualNum<F>, F: Float> Div<F> for HyperDual<T, F> {
+    type Output = Self;
     #[inline]
-    fn div(self, other: T) -> Self {
-        let inv = T::one() / other;
-        HyperDual::new(
-            self.re * inv.clone(),
-            self.eps1 * inv.clone(),
-            self.eps2 * inv.clone(),
-            self.eps1eps2 * inv,
-        )
+    fn div(self, other: F) -> Self {
+        self * other.recip()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Add<F> for HyperDual<T, F> {
+    type Output = Self;
+    #[inline]
+    fn add(self, other: F) -> Self {
+        HyperDual::new(self.re + other, self.eps1, self.eps2, self.eps1eps2)
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Sub<F> for HyperDual<T, F> {
+    type Output = Self;
+    #[inline]
+    fn sub(self, other: F) -> Self {
+        HyperDual::new(self.re - other, self.eps1, self.eps2, self.eps1eps2)
     }
 }
 
 /* constants */
-impl<T: Clone + Zero> Zero for HyperDual<T> {
+impl<T: DualNum<F>, F: Float> Zero for HyperDual<T, F> {
     #[inline]
     fn zero() -> Self {
         HyperDual::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
@@ -1144,7 +950,7 @@ impl<T: Clone + Zero> Zero for HyperDual<T> {
     }
 }
 
-impl<T: Clone + One + Zero + PartialEq> One for HyperDual<T> {
+impl<T: DualNum<F>, F: Float> One for HyperDual<T, F> {
     #[inline]
     fn one() -> Self {
         HyperDual::new(One::one(), Zero::zero(), Zero::zero(), Zero::zero())
@@ -1157,10 +963,7 @@ impl<T: Clone + One + Zero + PartialEq> One for HyperDual<T> {
 }
 
 /* string conversions */
-impl<T> fmt::Display for HyperDual<T>
-where
-    T: fmt::Display,
-{
+impl<T: fmt::Display, F> fmt::Display for HyperDual<T, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -1171,7 +974,7 @@ where
 }
 
 /* iterator methods */
-impl<T: Clone + Zero> Sum for HyperDual<T> {
+impl<T: DualNum<F>, F: Float> Sum for HyperDual<T, F> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -1180,18 +983,16 @@ impl<T: Clone + Zero> Sum for HyperDual<T> {
     }
 }
 
-impl<'a, T: 'a + Clone + Zero + Mul<Output = T> + Div<Output = T> + Sub<Output = T>>
-    Sum<&'a HyperDual<T>> for HyperDual<T>
-{
+impl<'a, T: DualNum<F>, F: Float> Sum<&'a HyperDual<T, F>> for HyperDual<T, F> {
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a HyperDual<T>>,
+        I: Iterator<Item = &'a HyperDual<T, F>>,
     {
         iter.fold(Self::zero(), |acc, c| acc + c)
     }
 }
 
-impl<T: Clone + One + Zero + PartialEq> Product for HyperDual<T> {
+impl<T: DualNum<F>, F: Float> Product for HyperDual<T, F> {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -1200,14 +1001,10 @@ impl<T: Clone + One + Zero + PartialEq> Product for HyperDual<T> {
     }
 }
 
-impl<
-        'a,
-        T: 'a + Clone + One + Zero + PartialEq + Mul<Output = T> + Div<Output = T> + Sub<Output = T>,
-    > Product<&'a HyperDual<T>> for HyperDual<T>
-{
+impl<'a, T: DualNum<F>, F: Float> Product<&'a HyperDual<T, F>> for HyperDual<T, F> {
     fn product<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a HyperDual<T>>,
+        I: Iterator<Item = &'a HyperDual<T, F>>,
     {
         iter.fold(Self::one(), |acc, c| acc * c)
     }
