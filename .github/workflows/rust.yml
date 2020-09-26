@@ -19,4 +19,4 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose --features="static"
+      run: cargo test --verbose --features="openblas-static"
