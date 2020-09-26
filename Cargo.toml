@@ -7,18 +7,21 @@ edition = "2018"
 
 [dependencies]
 ndarray = "0.13"
-ndarray-linalg = { version = "0.12", features = ["openblas"] }
+ndarray-linalg = { git = "https://github.com/rust-ndarray/ndarray-linalg" }
 num-integer = "0.1"
 smallvec = "1.4"
 num-traits = {version = "0.2", default-features = false}
-openblas-src = { version = "0.9", default-features = false }
 
 [features]
 default = ["std"]
 std = ["num-traits/std"]
 libm = ["num-traits/libm"]
-system = ["openblas-src/system"]
-static = ["openblas-src/static"]
+openblas-system = ["ndarray-linalg/openblas-system"]
+openblas-static = ["ndarray-linalg/openblas-static"]
+netlib-system = ["ndarray-linalg/netlib-system"]
+netlib-static = ["ndarray-linalg/netlib-static"]
+intel-mkl-static = ["ndarray-linalg/intel-mkl-static"]
+intel-mkl-system = ["ndarray-linalg/intel-mkl-system"]
 
 [dev-dependencies]
 approx = "0.3"
