@@ -1,19 +1,27 @@
-use crate::DualNumMethods;
+use crate::{Dual32, Dual64, DualNum, DualNumMethods};
 use num_traits::{Float, Inv, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
+use std::marker::PhantomData;
 use std::ops::*;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default)]
-pub struct HD3<T>(pub [T; 4]);
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct HD3<T, F = T>(pub [T; 4], PhantomData<F>);
 
 pub type HD3_32 = HD3<f32>;
 pub type HD3_64 = HD3<f64>;
+pub type HD3Dual32 = HD3<Dual32, f32>;
+pub type HD3Dual64 = HD3<Dual64, f64>;
 
-impl<T: Float> HD3<T> {
+impl<T: DualNum<F>, F: Float> HD3<T, F> {
     #[inline]
     pub fn new(x: [T; 4]) -> Self {
-        Self(x)
+        Self(x, PhantomData)
+    }
+
+    #[inline]
+    pub fn from_re(re: T) -> Self {
+        Self::new([re, T::zero(), T::zero(), T::zero()])
     }
 
     #[inline]
@@ -35,7 +43,7 @@ impl<T: Float> HD3<T> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
         let three = T::one() + T::one() + T::one();
-        Self([
+        Self::new([
             f0,
             f1 * self.0[1],
             f2 * self.0[1] * self.0[1] + f1 * self.0[2],
@@ -46,18 +54,18 @@ impl<T: Float> HD3<T> {
     }
 }
 
-impl<T: Float> From<T> for HD3<T> {
-    fn from(float: T) -> Self {
+impl<T: DualNum<F>, F: Float> From<F> for HD3<T, F> {
+    fn from(float: F) -> Self {
         let mut res = [T::zero(); 4];
-        res[0] = float;
-        Self(res)
+        res[0] = T::from(float);
+        Self::new(res)
     }
 }
 
-impl<T: Float> Zero for HD3<T> {
+impl<T: DualNum<F>, F: Float> Zero for HD3<T, F> {
     #[inline]
     fn zero() -> Self {
-        Self([T::zero(); 4])
+        Self::new([T::zero(); 4])
     }
 
     #[inline]
@@ -66,12 +74,12 @@ impl<T: Float> Zero for HD3<T> {
     }
 }
 
-impl<T: Float> One for HD3<T> {
+impl<T: DualNum<F>, F: Float> One for HD3<T, F> {
     #[inline]
     fn one() -> Self {
         let mut res = [T::zero(); 4];
         res[0] = T::one();
-        Self(res)
+        Self::new(res)
     }
 
     #[inline]
@@ -80,13 +88,13 @@ impl<T: Float> One for HD3<T> {
     }
 }
 
-impl<'a, 'b, T: Float> Mul<&'a HD3<T>> for &'b HD3<T> {
-    type Output = HD3<T>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HD3<T, F>> for &'b HD3<T, F> {
+    type Output = HD3<T, F>;
     #[inline]
-    fn mul(self, rhs: &HD3<T>) -> HD3<T> {
+    fn mul(self, rhs: &HD3<T, F>) -> HD3<T, F> {
         let two = T::one() + T::one();
         let three = two + T::one();
-        HD3([
+        HD3::new([
             self.0[0] * rhs.0[0],
             self.0[1] * rhs.0[0] + self.0[0] * rhs.0[1],
             self.0[2] * rhs.0[0] + two * self.0[1] * rhs.0[1] + self.0[0] * rhs.0[2],
@@ -98,24 +106,24 @@ impl<'a, 'b, T: Float> Mul<&'a HD3<T>> for &'b HD3<T> {
     }
 }
 
-impl<'a, 'b, T: Float> Div<&'a HD3<T>> for &'b HD3<T> {
-    type Output = HD3<T>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HD3<T, F>> for &'b HD3<T, F> {
+    type Output = HD3<T, F>;
     #[inline]
-    fn div(self, rhs: &HD3<T>) -> HD3<T> {
+    fn div(self, rhs: &HD3<T, F>) -> HD3<T, F> {
         let rec = T::one() / rhs.0[0];
         let f0 = rec;
         let f1 = -f0 * rec;
-        let f2 = T::from(-2.0).unwrap() * f1 * rec;
-        let f3 = T::from(-3.0).unwrap() * f2 * rec;
+        let f2 = f1 * rec * F::from(-2.0).unwrap();
+        let f3 = f2 * rec * F::from(-3.0).unwrap();
         self * rhs.chain_rule(f0, f1, f2, f3)
     }
 }
 
-impl<'a, 'b, T: Float> Add<&'a HD3<T>> for &'b HD3<T> {
-    type Output = HD3<T>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Add<&'a HD3<T, F>> for &'b HD3<T, F> {
+    type Output = HD3<T, F>;
     #[inline]
-    fn add(self, rhs: &HD3<T>) -> HD3<T> {
-        HD3([
+    fn add(self, rhs: &HD3<T, F>) -> HD3<T, F> {
+        HD3::new([
             self.0[0] + rhs.0[0],
             self.0[1] + rhs.0[1],
             self.0[2] + rhs.0[2],
@@ -124,11 +132,11 @@ impl<'a, 'b, T: Float> Add<&'a HD3<T>> for &'b HD3<T> {
     }
 }
 
-impl<'a, 'b, T: Float> Sub<&'a HD3<T>> for &'b HD3<T> {
-    type Output = HD3<T>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a HD3<T, F>> for &'b HD3<T, F> {
+    type Output = HD3<T, F>;
     #[inline]
-    fn sub(self, rhs: &HD3<T>) -> HD3<T> {
-        HD3([
+    fn sub(self, rhs: &HD3<T, F>) -> HD3<T, F> {
+        HD3::new([
             self.0[0] - rhs.0[0],
             self.0[1] - rhs.0[1],
             self.0[2] - rhs.0[2],
@@ -137,212 +145,13 @@ impl<'a, 'b, T: Float> Sub<&'a HD3<T>> for &'b HD3<T> {
     }
 }
 
-macro_rules! forward_binop {
-    ($trt:ident, $operator:tt, $mth:ident) => {
-        impl<T: Float> $trt<HD3<T>> for &HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: HD3<T>) -> Self::Output {
-                self $operator &rhs
-            }
-        }
+forward_binop!(HD3, Mul, *, mul);
+forward_binop!(HD3, Div, /, div);
+forward_binop!(HD3, Add, +, add);
+forward_binop!(HD3, Sub, -, sub);
 
-        impl<T: Float> $trt<&HD3<T>> for HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: &HD3<T>) -> Self::Output {
-                &self $operator rhs
-            }
-        }
-
-        impl<T: Float> $trt for HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: HD3<T>) -> Self::Output {
-                &self $operator &rhs
-            }
-        }
-    };
-}
-
-forward_binop!(Mul, *, mul);
-forward_binop!(Div, /, div);
-forward_binop!(Add, +, add);
-forward_binop!(Sub, -, sub);
-
-macro_rules! impl_scalar_op {
-    ($trt:ident, $operator:tt, $mth:ident, $trt_assign:ident, $op_assign:tt, $mth_assign:ident) => {
-        impl<T: Float> $trt<T> for HD3<T>
-        {
-            type Output = Self;
-            #[inline]
-            fn $mth(self, rhs: T) -> Self {
-                &self $operator rhs
-            }
-        }
-
-        impl<T: Float> $trt<&T> for HD3<T>
-        {
-            type Output = Self;
-            #[inline]
-            fn $mth(self, rhs: &T) -> Self {
-                &self $operator rhs
-            }
-        }
-
-        impl<T: Float> $trt<T> for &HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: T) -> HD3<T> {
-                HD3([self.0[0] $operator rhs,
-                     self.0[1] $operator rhs,
-                     self.0[2] $operator rhs,
-                     self.0[3] $operator rhs])
-            }
-        }
-
-        impl<T: Float> $trt<&T> for &HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: &T) -> HD3<T> {
-                self $operator *rhs
-            }
-        }
-
-        // impl<T: Float> $trt_assign<T> for HD3<T>
-        // {
-        //     fn $mth_assign(&mut self, rhs: T) {
-        //         self.0.iter_mut().for_each(|x| *x $op_assign rhs);
-        //     }
-        // }
-    };
-}
-
-macro_rules! impl_scalar_addition_op {
-    ($trt:ident, $operator:tt, $mth:ident, $trt_assign:ident, $op_assign:tt, $mth_assign:ident) => {
-        impl<T: Float> $trt<T> for HD3<T>
-        {
-            type Output = Self;
-            #[inline]
-            fn $mth(mut self, rhs: T) -> Self {
-                *self.f0_mut() = self.f0() $operator rhs;
-                self
-            }
-        }
-
-        impl<T: Float> $trt<&T> for HD3<T>
-        {
-            type Output = Self;
-            #[inline]
-            fn $mth(mut self, rhs: &T) -> Self {
-                *self.f0_mut() = self.f0() $operator *rhs;
-                self
-            }
-        }
-
-        impl<T: Float> $trt<T> for &HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: T) -> HD3<T> {
-                let mut res = HD3(self.0.clone());
-                *res.f0_mut() = self.f0() $operator rhs;
-                res
-            }
-        }
-
-        impl<T: Float> $trt<&T> for &HD3<T>
-        {
-            type Output = HD3<T>;
-            #[inline]
-            fn $mth(self, rhs: &T) -> HD3<T> {
-                let mut res = HD3(self.0.clone());
-                *res.f0_mut() = self.f0() $operator *rhs;
-                res
-            }
-        }
-
-        // impl<T: Float> $trt_assign<T> for HD3<T>
-        // {
-        //     fn $mth_assign(&mut self, rhs: T) {
-        //         *self.f0_mut() $op_assign rhs;
-        //     }
-        // }
-    };
-}
-
-impl_scalar_op!(Mul, *, mul, MulAssign, *=, mul_assign);
-impl_scalar_op!(Div, /, div, DivAssign, /=, div_assign);
-impl_scalar_addition_op!(Add, +, add, AddAssign, +=, add_assign);
-impl_scalar_addition_op!(Sub, -, sub, SubAssign, -=, sub_assign);
-
-// macro_rules! impl_assign_op {
-//     ($trt:ident, $operator:tt, $trt_assign:ident, $op_assign:tt, $mth_assign:ident) => {
-
-//         impl<D: Derivative> $trt_assign<&HD3<D>> for HD3<D>
-//         {
-//             fn $mth_assign(&mut self, rhs: &HD3<D>) {
-//                 let res = &*self $operator rhs;
-//                 self.0.iter_mut().zip(res.0.iter()).for_each(|(s, &r)| *s = r);
-//             }
-//         }
-
-//         impl<D: Derivative> $trt_assign for HD3<D>
-//         {
-//             fn $mth_assign(&mut self, rhs: HD3<D>) {
-//                 *self $op_assign &rhs;
-//             }
-//         }
-//     };
-// }
-
-// macro_rules! impl_addition_assign_op {
-//     ($trt:ident, $operator:tt, $mth:ident) => {
-//         impl<D: Derivative> $trt<&HD3<D>> for HD3<D>
-//         {
-//             fn $mth(&mut self, rhs: &HD3<D>) {
-//                 self.0.iter_mut().zip(rhs.0.iter()).for_each(|(s, &r)| *s $operator r);
-//             }
-//         }
-
-//         impl<D: Derivative> $trt<HD3<D>> for HD3<D>
-//         {
-//             fn $mth(&mut self, rhs: HD3<D>) {
-//                 self.0.iter_mut().zip(rhs.0.into_iter()).for_each(|(s, r)| *s $operator r);
-//             }
-//         }
-//     };
-// }
-
-// impl_assign_op!(Mul, *, MulAssign, *=, mul_assign);
-// // impl_assign_op!(Div, /, DivAssign, /=, div_assign);
-// impl_addition_assign_op!(AddAssign, +=, add_assign);
-// impl_addition_assign_op!(SubAssign, -=, sub_assign);
-
-// impl<D: Derivative> DivAssign<&HD3<D>> for HD3<D> {
-//     fn div_assign(&mut self, rhs: &HD3<D>) {
-//         self.0
-//             .iter_mut()
-//             .zip(rhs.0.iter())
-//             .for_each(|(s, &r)| *s /= r);
-//     }
-// }
-
-// impl<D: Derivative> DivAssign<HD3<D>> for HD3<D> {
-//     fn div_assign(&mut self, rhs: HD3<D>) {
-//         self.0
-//             .iter_mut()
-//             .zip(rhs.0.into_iter())
-//             .for_each(|(s, r)| *s /= r);
-//     }
-// }
-
-impl<T: Float> Neg for HD3<T> {
+/* Neg impl */
+impl<T: DualNum<F>, F: Float> Neg for HD3<T, F> {
     type Output = Self;
     #[inline]
     fn neg(mut self) -> Self {
@@ -351,20 +160,58 @@ impl<T: Float> Neg for HD3<T> {
     }
 }
 
-impl<T: Float> Neg for &HD3<T> {
-    type Output = HD3<T>;
+impl<T: DualNum<F>, F: Float> Neg for &HD3<T, F> {
+    type Output = HD3<T, F>;
     #[inline]
     fn neg(self) -> Self::Output {
-        HD3([-self.0[0], -self.0[1], -self.0[2], -self.0[3]])
+        HD3::new([-self.0[0], -self.0[1], -self.0[2], -self.0[3]])
     }
 }
 
-impl<T: Float> DualNumMethods<T> for HD3<T> {
-    const NDERIV: usize = 3;
+/* scalar operations */
+impl<T: DualNum<F>, F: Float> Mul<F> for HD3<T, F> {
+    type Output = Self;
+    #[inline]
+    fn mul(self, other: F) -> Self {
+        HD3::new([
+            self.0[0] * other,
+            self.0[1] * other,
+            self.0[2] * other,
+            self.0[3] * other,
+        ])
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Div<F> for HD3<T, F> {
+    type Output = Self;
+    #[inline]
+    fn div(self, other: F) -> Self {
+        self * other.recip()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Add<F> for HD3<T, F> {
+    type Output = Self;
+    #[inline]
+    fn add(self, other: F) -> Self {
+        HD3::new([self.0[0] + other, self.0[1], self.0[2], self.0[3]])
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Sub<F> for HD3<T, F> {
+    type Output = Self;
+    #[inline]
+    fn sub(self, other: F) -> Self {
+        HD3::new([self.0[0] - other, self.0[1], self.0[2], self.0[3]])
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DualNumMethods<F> for HD3<T, F> {
+    const NDERIV: usize = T::NDERIV + 3;
 
     #[inline]
-    fn re(&self) -> T {
-        self.0[0]
+    fn re(&self) -> F {
+        self.0[0].re()
     }
 
     /// ```
@@ -381,8 +228,8 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
         let rec = self.0[0].recip();
         let f0 = rec;
         let f1 = -f0 * rec;
-        let f2 = T::from(-2.0).unwrap() * f1 * rec;
-        let f3 = T::from(-3.0).unwrap() * f2 * rec;
+        let f2 = f1 * rec * F::from(-2.0).unwrap();
+        let f3 = f2 * rec * F::from(-3.0).unwrap();
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -403,9 +250,9 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
         let f0 = f1 * self.0[0];
         self.chain_rule(
             f0,
-            T::from(n).unwrap() * f1,
-            T::from(n * (n - 1)).unwrap() * f2,
-            T::from(n * (n - 1) * (n - 2)).unwrap() * f3,
+            f1 * F::from(n).unwrap(),
+            f2 * F::from(n * (n - 1)).unwrap(),
+            f3 * F::from(n * (n - 1) * (n - 2)).unwrap(),
         )
     }
 
@@ -419,15 +266,15 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// assert!((res.0[3] - 36.7992904453272).abs() < 1e-10);
     /// ```
     #[inline]
-    fn powf(&self, n: T) -> Self {
-        let n1 = n - T::one();
-        let n2 = n1 - T::one();
-        let n3 = n2 - T::one();
+    fn powf(&self, n: F) -> Self {
+        let n1 = n - F::one();
+        let n2 = n1 - F::one();
+        let n3 = n2 - F::one();
         let pow3 = self.0[0].powf(n3);
         let f0 = pow3 * self.0[0] * self.0[0] * self.0[0];
-        let f1 = n * pow3 * self.0[0] * self.0[0];
-        let f2 = n * n1 * pow3 * self.0[0];
-        let f3 = n * n1 * n2 * pow3;
+        let f1 = pow3 * self.0[0] * self.0[0] * n;
+        let f2 = pow3 * self.0[0] * n * n1;
+        let f3 = pow3 * n * n1 * n2;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -443,11 +290,11 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     #[inline]
     fn sqrt(&self) -> Self {
         let rec = self.0[0].recip();
-        let half = T::from(0.5).unwrap();
+        let half = F::from(0.5).unwrap();
         let f0 = self.0[0].sqrt();
-        let f1 = half * f0 * rec;
-        let f2 = -half * f1 * rec;
-        let f3 = (-T::one() - half) * f2 * rec;
+        let f1 = f0 * rec * half;
+        let f2 = -f1 * rec * half;
+        let f3 = f2 * rec * (-F::one() - half);
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -463,11 +310,11 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     #[inline]
     fn cbrt(&self) -> Self {
         let rec = self.0[0].recip();
-        let third = T::from(1.0 / 3.0).unwrap();
+        let third = F::from(1.0 / 3.0).unwrap();
         let f0 = self.0[0].cbrt();
-        let f1 = third * f0 * rec;
-        let f2 = (third - T::one()) * f1 * rec;
-        let f3 = (third - T::one() - T::one()) * f2 * rec;
+        let f1 = f0 * rec * third;
+        let f2 = f1 * rec * (third - F::one());
+        let f3 = f2 * rec * (third - F::one() - F::one());
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -498,7 +345,7 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn exp2(&self) -> Self {
-        let ln2 = T::from(2.0).unwrap().ln();
+        let ln2 = F::from(2.0).unwrap().ln();
         let f0 = self.0[0].exp2();
         let f1 = f0 * ln2;
         let f2 = f1 * ln2;
@@ -537,7 +384,7 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
         let f0 = self.0[0].ln();
         let f1 = rec;
         let f2 = -f1 * rec;
-        let f3 = T::from(-2.0).unwrap() * f2 * rec;
+        let f3 = f2 * rec * F::from(-2.0).unwrap();
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -551,12 +398,12 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// assert!((res.0[3] - 0.806508179143013).abs() < 1e-10);
     /// ```
     #[inline]
-    fn log(&self, base: T) -> Self {
+    fn log(&self, base: F) -> Self {
         let rec = self.0[0].recip();
         let f0 = self.0[0].log(base);
         let f1 = rec / base.ln();
         let f2 = -f1 * rec;
-        let f3 = T::from(-2.0).unwrap() * f2 * rec;
+        let f3 = f2 * rec * F::from(-2.0).unwrap();
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -573,9 +420,9 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     fn log2(&self) -> Self {
         let rec = self.0[0].recip();
         let f0 = self.0[0].log2();
-        let f1 = rec / (T::one() + T::one()).ln();
+        let f1 = rec / (F::one() + F::one()).ln();
         let f2 = -f1 * rec;
-        let f3 = T::from(-2.0).unwrap() * f2 * rec;
+        let f3 = f2 * rec * F::from(-2.0).unwrap();
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -592,9 +439,9 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     fn log10(&self) -> Self {
         let rec = self.0[0].recip();
         let f0 = self.0[0].log10();
-        let f1 = rec / T::from(10.0).unwrap().ln();
+        let f1 = rec / F::from(10.0).unwrap().ln();
         let f2 = -f1 * rec;
-        let f3 = T::from(-2.0).unwrap() * f2 * rec;
+        let f3 = f2 * rec * F::from(-2.0).unwrap();
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -609,11 +456,11 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn ln_1p(&self) -> Self {
-        let rec = (T::one() + self.0[0]).recip();
+        let rec = (self.0[0] + F::one()).recip();
         let f0 = self.0[0].ln_1p();
         let f1 = rec;
         let f2 = -f1 * rec;
-        let f3 = T::from(-2.0).unwrap() * f2 * rec;
+        let f3 = f2 * rec * F::from(-2.0).unwrap();
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -695,7 +542,7 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
         let f0 = self.0[0].asin();
         let f1 = rec.sqrt();
         let f2 = self.0[0] * f1 * rec;
-        let f3 = ((T::one() + T::one()) * self.0[0] * self.0[0] + T::one()) * f1 * rec * rec;
+        let f3 = (self.0[0] * self.0[0] * (F::one() + F::one()) + F::one()) * f1 * rec * rec;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -714,7 +561,7 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
         let f0 = self.0[0].acos();
         let f1 = -rec.sqrt();
         let f2 = self.0[0] * f1 * rec;
-        let f3 = ((T::one() + T::one()) * self.0[0] * self.0[0] + T::one()) * f1 * rec * rec;
+        let f3 = (self.0[0] * self.0[0] * (F::one() + F::one()) + F::one()) * f1 * rec * rec;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -729,12 +576,12 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn atan(&self) -> Self {
-        let two = T::one() + T::one();
+        let two = F::one() + F::one();
         let rec = (T::one() + self.0[0] * self.0[0]).recip();
         let f0 = self.0[0].atan();
         let f1 = rec;
-        let f2 = -two * self.0[0] * f1 * rec;
-        let f3 = (T::from(6.0).unwrap() * self.0[0] * self.0[0] - two) * f1 * rec * rec;
+        let f2 = -self.0[0] * f1 * rec * two;
+        let f3 = (self.0[0] * self.0[0] * F::from(6.0).unwrap() - two) * f1 * rec * rec;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -799,7 +646,7 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
         let f0 = self.0[0].asinh();
         let f1 = rec.sqrt();
         let f2 = -self.0[0] * f1 * rec;
-        let f3 = ((T::one() + T::one()) * self.0[0] * self.0[0] - T::one()) * f1 * rec * rec;
+        let f3 = (self.0[0] * self.0[0] * (F::one() + F::one()) - F::one()) * f1 * rec * rec;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -814,11 +661,11 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn acosh(&self) -> Self {
-        let rec = (self.0[0] * self.0[0] - T::one()).recip();
+        let rec = (self.0[0] * self.0[0] - F::one()).recip();
         let f0 = self.0[0].acosh();
         let f1 = rec.sqrt();
         let f2 = -self.0[0] * f1 * rec;
-        let f3 = ((T::one() + T::one()) * self.0[0] * self.0[0] + T::one()) * f1 * rec * rec;
+        let f3 = (self.0[0] * self.0[0] * (F::one() + F::one()) + F::one()) * f1 * rec * rec;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -833,12 +680,12 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn atanh(&self) -> Self {
-        let two = T::one() + T::one();
+        let two = F::one() + F::one();
         let rec = (T::one() - self.0[0] * self.0[0]).recip();
         let f0 = self.0[0].atanh();
         let f1 = rec;
-        let f2 = two * self.0[0] * f1 * rec;
-        let f3 = (T::from(6.0).unwrap() * self.0[0] * self.0[0] + two) * f1 * rec * rec;
+        let f2 = self.0[0] * f1 * rec * two;
+        let f3 = (self.0[0] * self.0[0] * F::from(6.0).unwrap() + two) * f1 * rec * rec;
         self.chain_rule(f0, f1, f2, f3)
     }
 
@@ -853,8 +700,8 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn sph_j0(&self) -> Self {
-        if self.0[0] < T::epsilon() {
-            Self::one() - self * self / T::from(6.0).unwrap()
+        if self.re() < F::epsilon() {
+            Self::one() - self * self / F::from(6.0).unwrap()
         } else {
             self.sin() / self
         }
@@ -871,8 +718,8 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn sph_j1(&self) -> Self {
-        if self.0[0] < T::epsilon() {
-            self / T::from(3.0).unwrap()
+        if self.re() < F::epsilon() {
+            *self / F::from(3.0).unwrap()
         } else {
             let (s, c) = self.sin_cos();
             (s - self * c) / (self * self)
@@ -890,32 +737,32 @@ impl<T: Float> DualNumMethods<T> for HD3<T> {
     /// ```
     #[inline]
     fn sph_j2(&self) -> Self {
-        if self.0[0] < T::epsilon() {
-            self * self / T::from(15.0).unwrap()
+        if self.re() < F::epsilon() {
+            self * self / F::from(15.0).unwrap()
         } else {
             let (s, c) = self.sin_cos();
             let s2 = self * self;
-            ((&s - self * c) * T::from(3.0).unwrap() - &s2 * s) / (s2 * self)
+            ((&s - self * c) * F::from(3.0).unwrap() - &s2 * s) / (s2 * self)
         }
     }
 }
 
-impl<T: Float> Inv for HD3<T> {
+impl<T: DualNum<F>, F: Float> Inv for HD3<T, F> {
     type Output = Self;
     fn inv(self) -> Self {
         self.recip()
     }
 }
 
-impl<T: Float> Inv for &HD3<T> {
-    type Output = HD3<T>;
-    fn inv(self) -> HD3<T> {
+impl<T: DualNum<F>, F: Float> Inv for &HD3<T, F> {
+    type Output = HD3<T, F>;
+    fn inv(self) -> HD3<T, F> {
         self.recip()
     }
 }
 
 /* iterator methods */
-impl<T: Float> Sum for HD3<T> {
+impl<T: DualNum<F>, F: Float> Sum for HD3<T, F> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -924,16 +771,16 @@ impl<T: Float> Sum for HD3<T> {
     }
 }
 
-impl<'a, T: 'a + Float> Sum<&'a HD3<T>> for HD3<T> {
+impl<'a, T: DualNum<F>, F: 'a + Float> Sum<&'a HD3<T, F>> for HD3<T, F> {
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a HD3<T>>,
+        I: Iterator<Item = &'a HD3<T, F>>,
     {
         iter.fold(Self::zero(), |acc, c| acc + c)
     }
 }
 
-impl<T: Float> Product for HD3<T> {
+impl<T: DualNum<F>, F: Float> Product for HD3<T, F> {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -942,20 +789,17 @@ impl<T: Float> Product for HD3<T> {
     }
 }
 
-impl<'a, T: 'a + Float> Product<&'a HD3<T>> for HD3<T> {
+impl<'a, T: DualNum<F>, F: 'a + Float> Product<&'a HD3<T, F>> for HD3<T, F> {
     fn product<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a HD3<T>>,
+        I: Iterator<Item = &'a HD3<T, F>>,
     {
         iter.fold(Self::one(), |acc, c| acc * c)
     }
 }
 
 /* string conversions */
-impl<T> fmt::Display for HD3<T>
-where
-    T: fmt::Display,
-{
+impl<T: fmt::Display, F> fmt::Display for HD3<T, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

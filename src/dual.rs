@@ -1,36 +1,56 @@
-use crate::DualNumMethods;
-use num_traits::{Float, Inv, Num, One, Zero};
+use crate::{DualNum, DualNumMethods};
+use num_traits::{Float, Inv, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
+use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 /// A dual number.
-#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Default)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 #[repr(C)]
-pub struct Dual<T> {
+pub struct Dual<T, F = T> {
     /// Real part of the dual number
     pub re: T,
     /// Eps part
     pub eps: T,
+    f: PhantomData<F>,
 }
 
 pub type Dual32 = Dual<f32>;
 pub type Dual64 = Dual<f64>;
 
-impl<T: Clone + Num> Dual<T> {
-    /// Create a new Dual
+impl<T, F> Dual<T, F> {
+    /// Create a new dual number
     #[inline]
     pub fn new(re: T, eps: T) -> Self {
-        Dual { re, eps }
+        Dual {
+            re,
+            eps,
+            f: PhantomData,
+        }
     }
 }
 
-impl<T: Float> DualNumMethods<T> for Dual<T> {
-    const NDERIV: usize = 1;
+impl<T: Zero, F> Dual<T, F> {
+    /// Create a new dual number from the real part
+    #[inline]
+    pub fn from_re(re: T) -> Self {
+        Dual::new(re, T::zero())
+    }
+}
+
+impl<T: DualNum<F>, F> From<F> for Dual<T, F> {
+    fn from(float: F) -> Self {
+        Dual::new(T::from(float), T::zero())
+    }
+}
+
+impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
+    const NDERIV: usize = T::NDERIV + 1;
 
     #[inline]
-    fn re(&self) -> T {
-        self.re
+    fn re(&self) -> F {
+        self.re.re()
     }
 
     /// Returns `1/self`
@@ -118,7 +138,7 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// assert!((res.eps - 0.580685888982970).abs() < 1e-10);
     /// ```
     #[inline]
-    fn log(&self, base: T) -> Self {
+    fn log(&self, base: F) -> Self {
         let fx = self.re.log(base);
         let dx = (self.re * base.ln()).recip();
         Dual::new(fx, self.eps * dx)
@@ -165,7 +185,7 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     #[inline]
     fn log10(&self) -> Self {
         let fx = self.re.log10();
-        let dx = (T::from(10).unwrap().ln() * self.re).recip();
+        let dx = (self.re * F::from(10).unwrap().ln()).recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -218,16 +238,16 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// assert!(Dual64::new(0.0, 1.0).powf(4.2) == Dual64::new(0.0, 0.0));
     /// ```
     #[inline]
-    fn powf(&self, exp: T) -> Self {
+    fn powf(&self, exp: F) -> Self {
         if exp.is_zero() {
             Self::one()
         } else {
             if exp.is_one() {
                 *self
             } else {
-                let pow = self.re.powf(exp - T::one());
+                let pow = self.re.powf(exp - F::one());
                 let fx = pow * self.re;
-                let dx = exp * pow;
+                let dx = pow * exp;
                 Dual::new(fx, self.eps * dx)
             }
         }
@@ -255,7 +275,7 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
             _ => {
                 let pow = self.re.powi(exp - 1);
                 let fx = pow * self.re;
-                let dx = T::from(exp).unwrap() * pow;
+                let dx = T::from(F::from(exp).unwrap()) * pow;
                 Dual::new(fx, self.eps * dx)
             }
         }
@@ -465,10 +485,10 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// assert!((res.eps - -0.345284569857790).abs() < 1e-10);
     /// ```
     fn sph_j0(&self) -> Self {
-        let (fx, dx) = if self.re.abs() < T::epsilon() {
+        let (fx, dx) = if self.re().abs() < F::epsilon() {
             (
-                T::one() - self.re * self.re / T::from(6.0).unwrap(),
-                -self.re / T::from(3.0).unwrap(),
+                T::one() - self.re * self.re / F::from(6.0).unwrap(),
+                -self.re / F::from(3.0).unwrap(),
             )
         } else {
             let (s, c) = self.re.sin_cos();
@@ -487,15 +507,15 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// assert!((res.eps - 0.201224955209705).abs() < 1e-10);
     /// ```
     fn sph_j1(&self) -> Self {
-        let (fx, dx) = if self.re.abs() < T::epsilon() {
+        let (fx, dx) = if self.re().abs() < F::epsilon() {
             let one = T::one();
             let third = one / (one + one + one);
             (self.re * third, third)
         } else {
             let (s, c) = self.re.sin_cos();
             let rec = self.re.recip();
-            let two = T::one() + T::one();
-            ((s * rec - c) * rec, (two * (c - s * rec) * rec + s) * rec)
+            let two = F::one() + F::one();
+            ((s * rec - c) * rec, ((c - s * rec) * two * rec + s) * rec)
         };
         Dual::new(fx, self.eps * dx)
     }
@@ -509,166 +529,82 @@ impl<T: Float> DualNumMethods<T> for Dual<T> {
     /// assert!((res.eps - 0.129004104011656).abs() < 1e-10);
     /// ```
     fn sph_j2(&self) -> Self {
-        let (fx, dx) = if self.re.abs() < T::epsilon() {
+        let (fx, dx) = if self.re().abs() < F::epsilon() {
             (
-                self.re * self.re / T::from(15.0).unwrap(),
-                self.re / T::from(7.5).unwrap(),
+                self.re * self.re / F::from(15.0).unwrap(),
+                self.re / F::from(7.5).unwrap(),
             )
         } else {
             let (s, c) = self.re.sin_cos();
             let rec = self.re.recip();
-            let three = T::one() + T::one() + T::one();
+            let three = F::one() + F::one() + F::one();
             let nine = three * three;
             (
-                (three * (s * rec - c) * rec - s) * rec,
-                ((nine * (-s * rec + c) * rec + (three + T::one()) * s) * rec - c) * rec,
+                ((s * rec - c) * three * rec - s) * rec,
+                (((-s * rec + c) * nine * rec + s * (three + F::one())) * rec - c) * rec,
             )
         };
         Dual::new(fx, self.eps * dx)
     }
 }
 
-impl<T: Float> Inv for Dual<T> {
+impl<T: DualNum<F>, F: Float> Inv for Dual<T, F> {
     type Output = Self;
     fn inv(self) -> Self {
         self.recip()
     }
 }
 
-impl<T: Float> Inv for &Dual<T> {
-    type Output = Dual<T>;
-    fn inv(self) -> Dual<T> {
-        self.recip()
-    }
-}
-
-impl<T: Zero> From<T> for Dual<T> {
-    #[inline]
-    fn from(re: T) -> Self {
-        Dual {
-            re: re,
-            eps: T::zero(),
-        }
-    }
-}
-
-impl<'a, T: Clone + Zero> From<&'a T> for Dual<T> {
-    #[inline]
-    fn from(re: &T) -> Self {
-        From::from(re.clone())
-    }
-}
-
-macro_rules! forward_ref_ref_binop {
-    (impl $imp:ident, $method:ident) => {
-        impl<'a, 'b, T: Clone + Num> $imp<&'b Dual<T>> for &'a Dual<T> {
-            type Output = Dual<T>;
-
-            #[inline]
-            fn $method(self, other: &Dual<T>) -> Dual<T> {
-                self.clone().$method(other.clone())
-            }
-        }
-    };
-}
-
-macro_rules! forward_ref_val_binop {
-    (impl $imp:ident, $method:ident) => {
-        impl<'a, T: Clone + Num> $imp<Dual<T>> for &'a Dual<T> {
-            type Output = Dual<T>;
-
-            #[inline]
-            fn $method(self, other: Dual<T>) -> Dual<T> {
-                self.clone().$method(other)
-            }
-        }
-    };
-}
-
-macro_rules! forward_val_ref_binop {
-    (impl $imp:ident, $method:ident) => {
-        impl<'a, T: Clone + Num> $imp<&'a Dual<T>> for Dual<T> {
-            type Output = Dual<T>;
-
-            #[inline]
-            fn $method(self, other: &Dual<T>) -> Self {
-                self.$method(other.clone())
-            }
-        }
-    };
-}
-
-macro_rules! forward_all_binop {
-    (impl $imp:ident, $method:ident) => {
-        forward_ref_ref_binop!(impl $imp, $method);
-        forward_ref_val_binop!(impl $imp, $method);
-        forward_val_ref_binop!(impl $imp, $method);
-    };
-}
-
 /* arithmetic */
-forward_all_binop!(impl Add, add);
 
-impl<T: Clone + Num> Add<Dual<T>> for Dual<T> {
-    type Output = Dual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual<T, F>> for &'b Dual<T, F> {
+    type Output = Dual<T, F>;
     #[inline]
-    fn add(self, other: Dual<T>) -> Self {
+    fn mul(self, other: &Dual<T, F>) -> Dual<T, F> {
         Dual::new(
-            self.re.clone() + other.re.clone(),
-            self.eps.clone() + other.eps.clone(),
+            self.re * other.re,
+            self.re * other.eps + other.re * self.eps,
         )
     }
 }
 
-forward_all_binop!(impl Sub, sub);
-
-impl<T: Clone + Num> Sub<Dual<T>> for Dual<T> {
-    type Output = Dual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a Dual<T, F>> for &'b Dual<T, F> {
+    type Output = Dual<T, F>;
     #[inline]
-    fn sub(self, other: Dual<T>) -> Self {
+    fn div(self, other: &Dual<T, F>) -> Dual<T, F> {
+        let inv = T::one() / other.re;
+        let inv2 = inv * inv;
         Dual::new(
-            self.re.clone() - other.re.clone(),
-            self.eps.clone() - other.eps.clone(),
+            self.re * inv,
+            (self.eps * other.re - self.re * other.eps) * inv2,
         )
     }
 }
 
-forward_all_binop!(impl Mul, mul);
-
-impl<T: Clone + Num> Mul<Dual<T>> for Dual<T> {
-    type Output = Dual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Add<&'a Dual<T, F>> for &'b Dual<T, F> {
+    type Output = Dual<T, F>;
     #[inline]
-    fn mul(self, other: Dual<T>) -> Self {
-        Dual::new(
-            self.re.clone() * other.re.clone(),
-            self.re.clone() * other.eps.clone() + other.re.clone() * self.eps.clone(),
-        )
+    fn add(self, other: &Dual<T, F>) -> Dual<T, F> {
+        Dual::new(self.re + other.re, self.eps + other.eps)
     }
 }
 
-forward_all_binop!(impl Div, div);
-
-impl<T: Clone + Num> Div<Dual<T>> for Dual<T> {
-    type Output = Dual<T>;
-
+impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a Dual<T, F>> for &'b Dual<T, F> {
+    type Output = Dual<T, F>;
     #[inline]
-    fn div(self, other: Dual<T>) -> Self {
-        let inv = T::one() / other.re.clone();
-        let inv2 = inv.clone() * inv.clone();
-        Dual::new(
-            self.re.clone() * inv.clone(),
-            (self.eps.clone() * other.re.clone() - self.re.clone() * other.eps.clone())
-                * inv2.clone(),
-        )
+    fn sub(self, other: &Dual<T, F>) -> Dual<T, F> {
+        Dual::new(self.re - other.re, self.eps - other.eps)
     }
 }
+
+forward_binop!(Dual, Mul, *, mul);
+forward_binop!(Dual, Div, /, div);
+forward_binop!(Dual, Add, +, add);
+forward_binop!(Dual, Sub, -, sub);
 
 /* Neg impl */
-impl<T: Clone + Num + Neg<Output = T>> Neg for Dual<T> {
-    type Output = Dual<T>;
+impl<T: DualNum<F>, F: Float> Neg for Dual<T, F> {
+    type Output = Dual<T, F>;
 
     #[inline]
     fn neg(self) -> Self {
@@ -676,156 +612,50 @@ impl<T: Clone + Num + Neg<Output = T>> Neg for Dual<T> {
     }
 }
 
-impl<'a, T: Clone + Num + Neg<Output = T>> Neg for &'a Dual<T> {
-    type Output = Dual<T>;
+impl<'a, T: DualNum<F>, F: Float> Neg for &'a Dual<T, F> {
+    type Output = Dual<T, F>;
 
     #[inline]
-    fn neg(self) -> Dual<T> {
-        -self.clone()
+    fn neg(self) -> Dual<T, F> {
+        -*self
     }
 }
 
-macro_rules! real_arithmetic {
-    (@forward $imp:ident::$method:ident for $($real:ident),*) => (
-        impl<'a, T: Clone + Num> $imp<&'a T> for Dual<T> {
-            type Output = Dual<T>;
-
-            #[inline]
-            fn $method(self, other: &T) -> Self {
-                self.$method(other.clone())
-            }
-        }
-        impl<'a, T: Clone + Num> $imp<T> for &'a Dual<T> {
-            type Output = Dual<T>;
-
-            #[inline]
-            fn $method(self, other: T) -> Dual<T> {
-                self.clone().$method(other)
-            }
-        }
-        impl<'a, 'b, T: Clone + Num> $imp<&'a T> for &'b Dual<T> {
-            type Output = Dual<T>;
-
-            #[inline]
-            fn $method(self, other: &T) -> Dual<T> {
-                self.clone().$method(other.clone())
-            }
-        }
-        $(
-            impl<'a> $imp<&'a Dual<$real>> for $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn $method(self, other: &Dual<$real>) -> Dual<$real> {
-                    self.$method(other.clone())
-                }
-            }
-            impl<'a> $imp<Dual<$real>> for &'a $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn $method(self, other: Dual<$real>) -> Dual<$real> {
-                    self.clone().$method(other)
-                }
-            }
-            impl<'a, 'b> $imp<&'a Dual<$real>> for &'b $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn $method(self, other: &Dual<$real>) -> Dual<$real> {
-                    self.clone().$method(other.clone())
-                }
-            }
-        )*
-    );
-    ($($real:ident),*) => (
-        real_arithmetic!(@forward Add::add for $($real),*);
-        real_arithmetic!(@forward Sub::sub for $($real),*);
-        real_arithmetic!(@forward Mul::mul for $($real),*);
-        real_arithmetic!(@forward Div::div for $($real),*);
-        // real_arithmetic!(@forward Rem::rem for $($real),*);
-
-        $(
-            impl Add<Dual<$real>> for $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn add(self, other: Dual<$real>) -> Dual<$real> {
-                    Dual::new(self + other.re, other.eps)
-                }
-            }
-
-            impl Sub<Dual<$real>> for $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn sub(self, other: Dual<$real>) -> Dual<$real> {
-                    Dual::new(self - other.re, Self::zero() - other.eps)
-                }
-            }
-
-            impl Mul<Dual<$real>> for $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn mul(self, other: Dual<$real>) -> Dual<$real> {
-                    Dual::new(self * other.re, self * other.eps)
-                }
-            }
-
-            impl Div<Dual<$real>> for $real {
-                type Output = Dual<$real>;
-
-                #[inline]
-                fn div(self, other: Dual<$real>) -> Dual<$real> {
-                    self * other.recip()
-                }
-            }
-        )*
-    );
+/* scalar operations */
+impl<T: DualNum<F>, F: Float> Mul<F> for Dual<T, F> {
+    type Output = Self;
+    #[inline]
+    fn mul(self, other: F) -> Self {
+        Dual::new(self.re * other, self.eps * other)
+    }
 }
 
-real_arithmetic!(f32, f64);
-
-impl<T: Clone + Num> Add<T> for Dual<T> {
-    type Output = Dual<T>;
-
+impl<T: DualNum<F>, F: Float> Div<F> for Dual<T, F> {
+    type Output = Self;
     #[inline]
-    fn add(self, other: T) -> Self {
+    fn div(self, other: F) -> Self {
+        self * other.recip()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Add<F> for Dual<T, F> {
+    type Output = Self;
+    #[inline]
+    fn add(self, other: F) -> Self {
         Dual::new(self.re + other, self.eps)
     }
 }
 
-impl<T: Clone + Num> Sub<T> for Dual<T> {
-    type Output = Dual<T>;
-
+impl<T: DualNum<F>, F: Float> Sub<F> for Dual<T, F> {
+    type Output = Self;
     #[inline]
-    fn sub(self, other: T) -> Self {
+    fn sub(self, other: F) -> Self {
         Dual::new(self.re - other, self.eps)
     }
 }
 
-impl<T: Clone + Num> Mul<T> for Dual<T> {
-    type Output = Dual<T>;
-
-    #[inline]
-    fn mul(self, other: T) -> Self {
-        Dual::new(self.re * other.clone(), self.eps * other.clone())
-    }
-}
-
-impl<T: Clone + Num> Div<T> for Dual<T> {
-    type Output = Dual<T>;
-
-    #[inline]
-    fn div(self, other: T) -> Self {
-        let inv = T::one() / other;
-        Dual::new(self.re * inv.clone(), self.eps * inv.clone())
-    }
-}
-
 /* constants */
-impl<T: Clone + Num> Zero for Dual<T> {
+impl<T: DualNum<F>, F: Float> Zero for Dual<T, F> {
     #[inline]
     fn zero() -> Self {
         Dual::new(Zero::zero(), Zero::zero())
@@ -837,7 +667,7 @@ impl<T: Clone + Num> Zero for Dual<T> {
     }
 }
 
-impl<T: Clone + Num> One for Dual<T> {
+impl<T: DualNum<F>, F: Float> One for Dual<T, F> {
     #[inline]
     fn one() -> Self {
         Dual::new(One::one(), Zero::zero())
@@ -850,17 +680,14 @@ impl<T: Clone + Num> One for Dual<T> {
 }
 
 /* string conversions */
-impl<T> fmt::Display for Dual<T>
-where
-    T: fmt::Display,
-{
+impl<T: fmt::Display, F> fmt::Display for Dual<T, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}ε", self.re, self.eps)
     }
 }
 
 /* iterator methods */
-impl<T: Num + Clone> Sum for Dual<T> {
+impl<T: DualNum<F>, F: Float> Sum for Dual<T, F> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -869,16 +696,16 @@ impl<T: Num + Clone> Sum for Dual<T> {
     }
 }
 
-impl<'a, T: 'a + Num + Clone> Sum<&'a Dual<T>> for Dual<T> {
+impl<'a, T: DualNum<F>, F: Float> Sum<&'a Dual<T, F>> for Dual<T, F> {
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a Dual<T>>,
+        I: Iterator<Item = &'a Dual<T, F>>,
     {
         iter.fold(Self::zero(), |acc, c| acc + c)
     }
 }
 
-impl<T: Num + Clone> Product for Dual<T> {
+impl<T: DualNum<F>, F: Float> Product for Dual<T, F> {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -887,10 +714,10 @@ impl<T: Num + Clone> Product for Dual<T> {
     }
 }
 
-impl<'a, T: 'a + Num + Clone> Product<&'a Dual<T>> for Dual<T> {
+impl<'a, T: DualNum<F>, F: Float> Product<&'a Dual<T, F>> for Dual<T, F> {
     fn product<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a Dual<T>>,
+        I: Iterator<Item = &'a Dual<T, F>>,
     {
         iter.fold(Self::one(), |acc, c| acc * c)
     }
