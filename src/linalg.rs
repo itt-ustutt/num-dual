@@ -8,32 +8,52 @@ impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HD3<T, F> {}
 
-pub trait SolveDual<A: Copy> {
+type LU64 = LUFactorized<OwnedRepr<f64>>;
+
+pub trait FactorizeIntoDual {
+    fn factorize_into_dual(self) -> Result<LU64>;
+}
+
+impl<D: DualNum<f64>> FactorizeIntoDual for Array2<D> {
+    fn factorize_into_dual(self) -> Result<LU64> {
+        self.map(|s| s.re()).factorize_into()
+    }
+}
+
+pub trait SolveDual<D: DualNum<f64>>: FactorizeIntoDual + Clone {
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
-    fn solve<S: Data<Elem = A>>(&self, b: &ArrayBase<S, Ix1>) -> Result<Array1<A>> {
+    fn solve(&self, b: &Array1<D>) -> Result<Array1<D>> {
         let mut b = replicate(b);
         self.solve_inplace(&mut b)?;
         Ok(b)
     }
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
-    fn solve_into<S: DataMut<Elem = A>>(
-        &self,
-        mut b: ArrayBase<S, Ix1>,
-    ) -> Result<ArrayBase<S, Ix1>> {
+    fn solve_into(&self, mut b: Array1<D>) -> Result<Array1<D>> {
         self.solve_inplace(&mut b)?;
         Ok(b)
     }
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
-    fn solve_inplace<'a, S: DataMut<Elem = A>>(
+    fn solve_inplace<'a>(&self, b: &'a mut Array1<D>) -> Result<&'a mut Array1<D>> {
+        let lu = self.clone().factorize_into_dual()?;
+        self.solve_recursive_inplace(&lu, b)
+    }
+
+    fn solve_recursive_into(&self, lu: &LU64, mut b: Array1<D>) -> Result<Array1<D>> {
+        self.solve_recursive_inplace(lu, &mut b)?;
+        Ok(b)
+    }
+
+    fn solve_recursive_inplace<'a>(
         &self,
-        b: &'a mut ArrayBase<S, Ix1>,
-    ) -> Result<&'a mut ArrayBase<S, Ix1>>;
+        lu: &LU64,
+        b: &'a mut Array1<D>,
+    ) -> Result<&'a mut Array1<D>>;
 }
 
-impl<S: Data<Elem = f64>> SolveDual<f64> for ArrayBase<S, Ix2> {
+impl SolveDual<f64> for Array2<f64> {
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -45,15 +65,23 @@ impl<S: Data<Elem = f64>> SolveDual<f64> for ArrayBase<S, Ix2> {
     /// let x = a.solve_into(b).unwrap();
     /// assert_eq!(x, arr1(&[1.0, 3.0]));
     /// ```
-    fn solve_inplace<'a, Sb: DataMut<Elem = f64>>(
-        &self,
-        b: &'a mut ArrayBase<Sb, Ix1>,
-    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
+    fn solve_inplace<'a>(&self, b: &'a mut Array1<f64>) -> Result<&'a mut Array1<f64>> {
         <Self as Solve<f64>>::solve_inplace(self, b)
+    }
+
+    fn solve_recursive_inplace<'a>(
+        &self,
+        lu: &LU64,
+        b: &'a mut Array1<f64>,
+    ) -> Result<&'a mut Array1<f64>> {
+        lu.solve_inplace(b)
     }
 }
 
-impl<S: Data<Elem = Dual64>> SolveDual<Dual64> for ArrayBase<S, Ix2> {
+impl<D: DualNum<f64> + 'static> SolveDual<Dual<D, f64>> for Array2<Dual<D, f64>>
+where
+    Array2<D>: SolveDual<D>,
+{
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -66,22 +94,27 @@ impl<S: Data<Elem = Dual64>> SolveDual<Dual64> for ArrayBase<S, Ix2> {
     /// let x = a.solve_into(b).unwrap();
     /// assert_eq!(x, arr1(&[Dual64::new(1.0, 2.0), Dual64::new(3.0, 4.0)]));
     /// ```
-    fn solve_inplace<'a, Sb: DataMut<Elem = Dual64>>(
+    fn solve_recursive_inplace<'a>(
         &self,
-        b: &'a mut ArrayBase<Sb, Ix1>,
-    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
-        let f = self.map(Dual64::re).factorize_into()?;
-        let dx0 = f.solve_into(b.map(Dual64::re))?;
-        let dx1 = f.solve_into(b.mapv(|b| b.eps) - self.mapv(|s| s.eps).dot(&dx0))?;
+        lu: &LU64,
+        b: &'a mut Array1<Dual<D, f64>>,
+    ) -> Result<&'a mut Array1<Dual<D, f64>>> {
+        let f = self.mapv(|s| s.re);
+        let dx0 = f.solve_recursive_into(lu, b.mapv(|b| b.re))?;
+        let dx1 =
+            f.solve_recursive_into(lu, b.mapv(|b| b.eps) - &self.mapv(|s| s.eps).dot(&dx0))?;
         Zip::from(&dx0)
             .and(&dx1)
             .and(&mut *b)
-            .apply(|&dx0, &dx1, b| *b = Dual64::new(dx0, dx1));
+            .apply(|&dx0, &dx1, b| *b = Dual::new(dx0, dx1));
         Ok(b)
     }
 }
 
-impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
+impl<D: DualNum<f64> + 'static> SolveDual<HyperDual<D, f64>> for Array2<HyperDual<D, f64>>
+where
+    Array2<D>: SolveDual<D>,
+{
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -102,17 +135,18 @@ impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
     /// assert_abs_diff_eq!(x[1].eps2, 4.0, epsilon = 1e-14);
     /// assert_abs_diff_eq!(x[1].eps1eps2, 5.0, epsilon = 1e-14);
     /// ```
-    fn solve_inplace<'a, Sb: DataMut<Elem = HyperDual64>>(
+    fn solve_recursive_inplace<'a>(
         &self,
-        b: &'a mut ArrayBase<Sb, Ix1>,
-    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
+        lu: &LU64,
+        b: &'a mut Array1<HyperDual<D, f64>>,
+    ) -> Result<&'a mut Array1<HyperDual<D, f64>>> {
+        let f = self.mapv(|s| s.re);
         let s1 = self.mapv(|s| s.eps1);
         let s2 = self.mapv(|s| s.eps2);
         let s12 = self.mapv(|s| s.eps1eps2);
-        let f = self.map(HyperDual64::re).factorize_into()?;
-        let dx0 = f.solve_into(b.map(HyperDual64::re))?;
-        let dx1 = f.solve_into(b.mapv(|b| b.eps1) - s1.dot(&dx0))?;
-        let dx2 = f.solve_into(b.mapv(|b| b.eps2) - s2.dot(&dx0))?;
+        let dx0 = f.solve_recursive_into(lu, b.mapv(|b| b.re))?;
+        let dx1 = f.solve_recursive_into(lu, b.mapv(|b| b.eps1) - s1.dot(&dx0))?;
+        let dx2 = f.solve_recursive_into(lu, b.mapv(|b| b.eps2) - s2.dot(&dx0))?;
         let dx12 =
             f.solve_into(b.mapv(|b| b.eps1eps2) - s1.dot(&dx2) - s2.dot(&dx1) - s12.dot(&dx0))?;
         Zip::from(&dx0)
@@ -120,38 +154,15 @@ impl<S: Data<Elem = HyperDual64>> SolveDual<HyperDual64> for ArrayBase<S, Ix2> {
             .and(&dx2)
             .and(&dx12)
             .and(&mut *b)
-            .apply(|&dx0, &dx1, &dx2, &dx12, b| *b = HyperDual64::new(dx0, dx1, dx2, dx12));
+            .apply(|&dx0, &dx1, &dx2, &dx12, b| *b = HyperDual::new(dx0, dx1, dx2, dx12));
         Ok(b)
     }
 }
 
-impl<S: Data<Elem = HyperDualDual64>> SolveDual<HyperDualDual64> for ArrayBase<S, Ix2> {
-    /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
-    /// is the argument, and `x` is the successful result.
-    fn solve_inplace<'a, Sb: DataMut<Elem = HyperDualDual64>>(
-        &self,
-        b: &'a mut ArrayBase<Sb, Ix1>,
-    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
-        let s1 = self.mapv(|s| s.eps1);
-        let s2 = self.mapv(|s| s.eps2);
-        let s12 = self.mapv(|s| s.eps1eps2);
-        let f = self.map(|f| f.re);
-        let dx0 = f.solve_into(b.mapv(|b| b.re))?;
-        let dx1 = f.solve_into(b.mapv(|b| b.eps1) - s1.dot(&dx0))?;
-        let dx2 = f.solve_into(b.mapv(|b| b.eps2) - s2.dot(&dx0))?;
-        let dx12 =
-            f.solve_into(b.mapv(|b| b.eps1eps2) - s1.dot(&dx2) - s2.dot(&dx1) - s12.dot(&dx0))?;
-        Zip::from(&dx0)
-            .and(&dx1)
-            .and(&dx2)
-            .and(&dx12)
-            .and(&mut *b)
-            .apply(|&dx0, &dx1, &dx2, &dx12, b| *b = HyperDualDual64::new(dx0, dx1, dx2, dx12));
-        Ok(b)
-    }
-}
-
-impl<S: Data<Elem = HD3_64>> SolveDual<HD3_64> for ArrayBase<S, Ix2> {
+impl<D: DualNum<f64> + 'static> SolveDual<HD3<D, f64>> for Array2<HD3<D, f64>>
+where
+    Array2<D>: SolveDual<D>,
+{
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
@@ -172,45 +183,21 @@ impl<S: Data<Elem = HD3_64>> SolveDual<HD3_64> for ArrayBase<S, Ix2> {
     /// assert_abs_diff_eq!(x[1].0[2], 4.0, epsilon = 1e-14);
     /// assert_abs_diff_eq!(x[1].0[3], 5.0, epsilon = 1e-14);
     /// ```
-    fn solve_inplace<'a, Sb: DataMut<Elem = HD3_64>>(
+    fn solve_recursive_inplace<'a>(
         &self,
-        b: &'a mut ArrayBase<Sb, Ix1>,
-    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
+        lu: &LU64,
+        b: &'a mut Array1<HD3<D, f64>>,
+    ) -> Result<&'a mut Array1<HD3<D, f64>>> {
+        let f = self.mapv(|s| s.0[0]);
         let s1 = self.mapv(|s| s.0[1]);
         let s2 = self.mapv(|s| s.0[2]);
         let s3 = self.mapv(|s| s.0[3]);
-        let f = self.map(HD3_64::re).factorize_into()?;
-        let dx0 = f.solve_into(b.map(HD3_64::re))?;
-        let dx1 = f.solve_into(b.mapv(|b| b.0[1]) - s1.dot(&dx0))?;
-        let dx2 = f.solve_into(b.mapv(|b| b.0[2]) - s2.dot(&dx0) - 2.0 * s1.dot(&dx1))?;
-        let dx3 = f.solve_into(
-            b.mapv(|b| b.0[3]) - s3.dot(&dx0) - 3.0 * s2.dot(&dx1) - 3.0 * s1.dot(&dx2),
-        )?;
-        Zip::from(&dx0)
-            .and(&dx1)
-            .and(&dx2)
-            .and(&dx3)
-            .and(&mut *b)
-            .apply(|&dx0, &dx1, &dx2, &dx3, b| *b = HD3_64::new([dx0, dx1, dx2, dx3]));
-        Ok(b)
-    }
-}
-
-impl<S: Data<Elem = HD3Dual64>> SolveDual<HD3Dual64> for ArrayBase<S, Ix2> {
-    /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
-    /// is the argument, and `x` is the successful result.
-    fn solve_inplace<'a, Sb: DataMut<Elem = HD3Dual64>>(
-        &self,
-        b: &'a mut ArrayBase<Sb, Ix1>,
-    ) -> Result<&'a mut ArrayBase<Sb, Ix1>> {
-        let s1 = self.mapv(|s| s.0[1]);
-        let s2 = self.mapv(|s| s.0[2]);
-        let s3 = self.mapv(|s| s.0[3]);
-        let f = self.mapv(|v| v.0[0]);
-        let dx0 = f.solve_into(b.mapv(|b| b.0[0]))?;
-        let dx1 = f.solve_into(b.mapv(|b| b.0[1]) - s1.dot(&dx0))?;
-        let dx2 = f.solve_into(b.mapv(|b| b.0[2]) - s2.dot(&dx0) - s1.dot(&dx1) * 2.0)?;
-        let dx3 = f.solve_into(
+        let dx0 = f.solve_recursive_into(lu, b.map(|b| b.0[0]))?;
+        let dx1 = f.solve_recursive_into(lu, b.mapv(|b| b.0[1]) - s1.dot(&dx0))?;
+        let dx2 =
+            f.solve_recursive_into(lu, b.mapv(|b| b.0[2]) - s2.dot(&dx0) - s1.dot(&dx1) * 2.0)?;
+        let dx3 = f.solve_recursive_into(
+            lu,
             b.mapv(|b| b.0[3]) - s3.dot(&dx0) - s2.dot(&dx1) * 3.0 - s1.dot(&dx2) * 3.0,
         )?;
         Zip::from(&dx0)
@@ -218,7 +205,7 @@ impl<S: Data<Elem = HD3Dual64>> SolveDual<HD3Dual64> for ArrayBase<S, Ix2> {
             .and(&dx2)
             .and(&dx3)
             .and(&mut *b)
-            .apply(|&dx0, &dx1, &dx2, &dx3, b| *b = HD3Dual64::new([dx0, dx1, dx2, dx3]));
+            .apply(|&dx0, &dx1, &dx2, &dx3, b| *b = HD3::new([dx0, dx1, dx2, dx3]));
         Ok(b)
     }
 }
