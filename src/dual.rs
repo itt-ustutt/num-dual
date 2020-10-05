@@ -3,7 +3,7 @@ use num_traits::{Float, Inv, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// A dual number.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
@@ -651,6 +651,69 @@ impl<T: DualNum<F>, F: Float> Sub<F> for Dual<T, F> {
     #[inline]
     fn sub(self, other: F) -> Self {
         Dual::new(self.re - other, self.eps)
+    }
+}
+
+/* assign operations */
+impl<T: DualNum<F>, F: Float> MulAssign for Dual<T, F> {
+    #[inline]
+    fn mul_assign(&mut self, other: Self) {
+        self.eps = self.eps * other.re + self.re * other.eps;
+        self.re *= other.re;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> MulAssign<F> for Dual<T, F> {
+    #[inline]
+    fn mul_assign(&mut self, other: F) {
+        self.re *= other;
+        self.eps *= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DivAssign for Dual<T, F> {
+    #[inline]
+    fn div_assign(&mut self, other: Self) {
+        self.eps = (self.eps * other.re - self.re * other.eps) / (other.re * other.re);
+        self.re /= other.re;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DivAssign<F> for Dual<T, F> {
+    #[inline]
+    fn div_assign(&mut self, other: F) {
+        self.re /= other;
+        self.eps /= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> AddAssign for Dual<T, F> {
+    #[inline]
+    fn add_assign(&mut self, other: Self) {
+        self.re += other.re;
+        self.eps += other.eps;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> AddAssign<F> for Dual<T, F> {
+    #[inline]
+    fn add_assign(&mut self, other: F) {
+        self.re += other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> SubAssign for Dual<T, F> {
+    #[inline]
+    fn sub_assign(&mut self, other: Self) {
+        self.re -= other.re;
+        self.eps -= other.eps;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> SubAssign<F> for Dual<T, F> {
+    #[inline]
+    fn sub_assign(&mut self, other: F) {
+        self.re -= other;
     }
 }
 

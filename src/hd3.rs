@@ -206,6 +206,75 @@ impl<T: DualNum<F>, F: Float> Sub<F> for HD3<T, F> {
     }
 }
 
+/* assign operations */
+impl<T: DualNum<F>, F: Float> MulAssign for HD3<T, F> {
+    #[inline]
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> MulAssign<F> for HD3<T, F> {
+    #[inline]
+    fn mul_assign(&mut self, other: F) {
+        self.0[0] *= other;
+        self.0[1] *= other;
+        self.0[2] *= other;
+        self.0[3] *= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DivAssign for HD3<T, F> {
+    #[inline]
+    fn div_assign(&mut self, other: Self) {
+        *self = *self / other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DivAssign<F> for HD3<T, F> {
+    #[inline]
+    fn div_assign(&mut self, other: F) {
+        self.0[0] /= other;
+        self.0[1] /= other;
+        self.0[2] /= other;
+        self.0[3] /= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> AddAssign for HD3<T, F> {
+    #[inline]
+    fn add_assign(&mut self, other: Self) {
+        self.0[0] += other.0[0];
+        self.0[1] += other.0[1];
+        self.0[2] += other.0[2];
+        self.0[3] += other.0[3];
+    }
+}
+
+impl<T: DualNum<F>, F: Float> AddAssign<F> for HD3<T, F> {
+    #[inline]
+    fn add_assign(&mut self, other: F) {
+        self.0[0] += other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> SubAssign for HD3<T, F> {
+    #[inline]
+    fn sub_assign(&mut self, other: Self) {
+        self.0[0] -= other.0[0];
+        self.0[1] -= other.0[1];
+        self.0[2] -= other.0[2];
+        self.0[3] -= other.0[3];
+    }
+}
+
+impl<T: DualNum<F>, F: Float> SubAssign<F> for HD3<T, F> {
+    #[inline]
+    fn sub_assign(&mut self, other: F) {
+        self.0[0] -= other;
+    }
+}
+
 impl<T: DualNum<F>, F: Float> DualNumMethods<F> for HD3<T, F> {
     const NDERIV: usize = T::NDERIV + 3;
 
