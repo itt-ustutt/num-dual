@@ -3,7 +3,7 @@
 
 use num_traits::{Inv, One, Zero};
 use std::iter::{Product, Sum};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 #[macro_use]
 mod macros;
 pub mod dual;
@@ -40,6 +40,30 @@ impl<D, F, Rhs, Output> DualNumOps<F, Rhs, Output> for D where
 {
 }
 
+pub trait DualNumAssignOps<F, Rhs = Self>:
+    AddAssign<Rhs>
+    + AddAssign<F>
+    + SubAssign<Rhs>
+    + SubAssign<F>
+    + MulAssign<Rhs>
+    + MulAssign<F>
+    + DivAssign<Rhs>
+    + DivAssign<F>
+{
+}
+
+impl<D, F, Rhs> DualNumAssignOps<F, Rhs> for D where
+    D: AddAssign<Rhs>
+        + AddAssign<F>
+        + SubAssign<Rhs>
+        + SubAssign<F>
+        + MulAssign<Rhs>
+        + MulAssign<F>
+        + DivAssign<Rhs>
+        + DivAssign<F>
+{
+}
+
 // pub trait DualNumRef<T>: DualNumMethods<F> + for<'r> DualNumOps<&'r Self> {}
 // impl<T, D> DualNumRef<T> for D where D: DualNumMethods<F> + for<'r> DualNumOps<&'r Self> {}
 
@@ -51,6 +75,7 @@ impl<D, F, Rhs, Output> DualNumOps<F, Rhs, Output> for D where
 
 pub trait DualNum<F>:
     DualNumMethods<F>
+    + DualNumAssignOps<F>
     + Copy
     + Zero
     + One
@@ -64,6 +89,7 @@ pub trait DualNum<F>:
 }
 impl<D, F> DualNum<F> for D where
     D: DualNumMethods<F>
+        + DualNumAssignOps<F>
         + Copy
         + Zero
         + One

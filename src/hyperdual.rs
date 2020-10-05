@@ -3,7 +3,7 @@ use num_traits::{Float, Inv, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// A hyper dual number.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
@@ -934,6 +934,75 @@ impl<T: DualNum<F>, F: Float> Sub<F> for HyperDual<T, F> {
     #[inline]
     fn sub(self, other: F) -> Self {
         HyperDual::new(self.re - other, self.eps1, self.eps2, self.eps1eps2)
+    }
+}
+
+/* assign operations */
+impl<T: DualNum<F>, F: Float> MulAssign for HyperDual<T, F> {
+    #[inline]
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> MulAssign<F> for HyperDual<T, F> {
+    #[inline]
+    fn mul_assign(&mut self, other: F) {
+        self.re *= other;
+        self.eps1 *= other;
+        self.eps2 *= other;
+        self.eps1eps2 *= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DivAssign for HyperDual<T, F> {
+    #[inline]
+    fn div_assign(&mut self, other: Self) {
+        *self = *self / other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> DivAssign<F> for HyperDual<T, F> {
+    #[inline]
+    fn div_assign(&mut self, other: F) {
+        self.re /= other;
+        self.eps1 /= other;
+        self.eps2 /= other;
+        self.eps1eps2 /= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> AddAssign for HyperDual<T, F> {
+    #[inline]
+    fn add_assign(&mut self, other: Self) {
+        self.re += other.re;
+        self.eps1 += other.eps1;
+        self.eps2 += other.eps2;
+        self.eps1eps2 += other.eps1eps2;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> AddAssign<F> for HyperDual<T, F> {
+    #[inline]
+    fn add_assign(&mut self, other: F) {
+        self.re += other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> SubAssign for HyperDual<T, F> {
+    #[inline]
+    fn sub_assign(&mut self, other: Self) {
+        self.re -= other.re;
+        self.eps1 -= other.eps1;
+        self.eps2 -= other.eps2;
+        self.eps1eps2 -= other.eps1eps2;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> SubAssign<F> for HyperDual<T, F> {
+    #[inline]
+    fn sub_assign(&mut self, other: F) {
+        self.re -= other;
     }
 }
 
