@@ -63,9 +63,6 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     /// ```
     #[inline]
     fn recip(&self) -> Self {
-        if self.re == T::zero() {
-            panic!("Cannot take reciprocal value of zero-valued `real`!");
-        }
         let recip_re = self.re.recip();
         Dual::new(recip_re, -self.eps * recip_re * recip_re)
     }

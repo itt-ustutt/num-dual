@@ -73,9 +73,6 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     /// ```
     #[inline]
     fn recip(&self) -> Self {
-        if self.re.is_zero() {
-            panic!("Cannot take reciprocal value of zero-valued `real`!");
-        }
         let recip_re = self.re.recip();
         let recip_re2 = recip_re * recip_re;
         let two = T::one() + T::one();
