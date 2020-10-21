@@ -2,6 +2,7 @@
 // extern crate test;
 
 use num_traits::{Inv, One, Zero};
+use std::fmt;
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 #[macro_use]
@@ -85,6 +86,7 @@ pub trait DualNum<F>:
     + Product
     + PartialEq
     + From<F>
+    + fmt::Display
 {
 }
 impl<D, F> DualNum<F> for D where
@@ -99,6 +101,7 @@ impl<D, F> DualNum<F> for D where
         + Product
         + PartialEq
         + From<F>
+        + fmt::Display
 {
 }
 
