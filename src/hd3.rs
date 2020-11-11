@@ -310,19 +310,51 @@ impl<T: DualNum<F>, F: Float> DualNumMethods<F> for HD3<T, F> {
     /// assert!((res.0[1] - 14.9299200000000).abs() < 1e-10);
     /// assert!((res.0[2] - 62.2080000000000).abs() < 1e-10);
     /// assert!((res.0[3] - 207.360000000000).abs() < 1e-10);
+    /// let res0 = HD3_64::from(0.0).derive().powi(0);
+    /// assert!((res0.0[0] - 1.00000000000000).abs() < 1e-10);
+    /// assert!((res0.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res0.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res0.0[3] - 0.00000000000000).abs() < 1e-10);
+    /// let res1 = HD3_64::from(0.0).derive().powi(1);
+    /// assert!((res1.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res1.0[1] - 1.00000000000000).abs() < 1e-10);
+    /// assert!((res1.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res1.0[3] - 0.00000000000000).abs() < 1e-10);
+    /// let res2 = HD3_64::from(0.0).derive().powi(2);
+    /// assert!((res2.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res2.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res2.0[2] - 2.00000000000000).abs() < 1e-10);
+    /// assert!((res2.0[3] - 0.00000000000000).abs() < 1e-10);
+    /// let res3 = HD3_64::from(0.0).derive().powi(3);
+    /// assert!((res3.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res3.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res3.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res3.0[3] - 6.00000000000000).abs() < 1e-10);
+    /// let res4 = HD3_64::from(0.0).derive().powi(4);
+    /// assert!((res4.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res4.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res4.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res4.0[3] - 0.00000000000000).abs() < 1e-10);
     /// ```
     #[inline]
-    fn powi(&self, n: i32) -> Self {
-        let f3 = self.0[0].powi(n - 3);
-        let f2 = f3 * self.0[0];
-        let f1 = f2 * self.0[0];
-        let f0 = f1 * self.0[0];
-        self.chain_rule(
-            f0,
-            f1 * F::from(n).unwrap(),
-            f2 * F::from(n * (n - 1)).unwrap(),
-            f3 * F::from(n * (n - 1) * (n - 2)).unwrap(),
-        )
+    fn powi(&self, exp: i32) -> Self {
+        match exp {
+            0 => HD3::one(),
+            1 => *self,
+            2 => self * self,
+            _ => {
+                let f3 = self.0[0].powi(exp - 3);
+                let f2 = f3 * self.0[0];
+                let f1 = f2 * self.0[0];
+                let f0 = f1 * self.0[0];
+                self.chain_rule(
+                    f0,
+                    f1 * F::from(exp).unwrap(),
+                    f2 * F::from(exp * (exp - 1)).unwrap(),
+                    f3 * F::from(exp * (exp - 1) * (exp - 2)).unwrap(),
+                )
+            }
+        }
     }
 
     /// ```
