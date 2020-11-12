@@ -238,15 +238,13 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     fn powf(&self, exp: F) -> Self {
         if exp.is_zero() {
             Self::one()
+        } else if exp.is_one() {
+            *self
         } else {
-            if exp.is_one() {
-                *self
-            } else {
-                let pow = self.re.powf(exp - F::one());
-                let fx = pow * self.re;
-                let dx = pow * exp;
-                Dual::new(fx, self.eps * dx)
-            }
+            let pow = self.re.powf(exp - F::one());
+            let fx = pow * self.re;
+            let dx = pow * exp;
+            Dual::new(fx, self.eps * dx)
         }
     }
 
