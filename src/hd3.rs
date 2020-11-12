@@ -365,18 +365,51 @@ impl<T: DualNum<F>, F: Float> DualNumMethods<F> for HD3<T, F> {
     /// assert!((res.0[1] - 7.52712759108966).abs() < 1e-10);
     /// assert!((res.0[2] - 20.0723402429058).abs() < 1e-10);
     /// assert!((res.0[3] - 36.7992904453272).abs() < 1e-10);
+    /// let res0 = HD3_64::from(0.0).derive().powf(0.0);
+    /// assert!((res0.0[0] - 1.00000000000000).abs() < 1e-10);
+    /// assert!((res0.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res0.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res0.0[3] - 0.00000000000000).abs() < 1e-10);
+    /// let res1 = HD3_64::from(0.0).derive().powf(1.0);
+    /// assert!((res1.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res1.0[1] - 1.00000000000000).abs() < 1e-10);
+    /// assert!((res1.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res1.0[3] - 0.00000000000000).abs() < 1e-10);
+    /// let res2 = HD3_64::from(0.0).derive().powf(2.0);
+    /// assert!((res2.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res2.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res2.0[2] - 2.00000000000000).abs() < 1e-10);
+    /// assert!((res2.0[3] - 0.00000000000000).abs() < 1e-10);
+    /// let res3 = HD3_64::from(0.0).derive().powf(3.0);
+    /// assert!((res3.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res3.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res3.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res3.0[3] - 6.00000000000000).abs() < 1e-10);
+    /// let res4 = HD3_64::from(0.0).derive().powf(4.0);
+    /// assert!((res4.0[0] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res4.0[1] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res4.0[2] - 0.00000000000000).abs() < 1e-10);
+    /// assert!((res4.0[3] - 0.00000000000000).abs() < 1e-10);
     /// ```
     #[inline]
     fn powf(&self, n: F) -> Self {
-        let n1 = n - F::one();
-        let n2 = n1 - F::one();
-        let n3 = n2 - F::one();
-        let pow3 = self.0[0].powf(n3);
-        let f0 = pow3 * self.0[0] * self.0[0] * self.0[0];
-        let f1 = pow3 * self.0[0] * self.0[0] * n;
-        let f2 = pow3 * self.0[0] * n * n1;
-        let f3 = pow3 * n * n1 * n2;
-        self.chain_rule(f0, f1, f2, f3)
+        if n.is_zero() {
+            Self::one()
+        } else if n.is_one() {
+            *self
+        } else if n - F::one() - F::one() < F::epsilon() {
+            self * self
+        } else {
+            let n1 = n - F::one();
+            let n2 = n1 - F::one();
+            let n3 = n2 - F::one();
+            let pow3 = self.0[0].powf(n3);
+            let f0 = pow3 * self.0[0] * self.0[0] * self.0[0];
+            let f1 = pow3 * self.0[0] * self.0[0] * n;
+            let f2 = pow3 * self.0[0] * n * n1;
+            let f3 = pow3 * n * n1 * n2;
+            self.chain_rule(f0, f1, f2, f3)
+        }
     }
 
     /// ```
