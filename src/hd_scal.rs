@@ -250,6 +250,14 @@ impl<'a, 'b, T: Float, D: Derivative<T>> Sub<&'a HDScal<T, D>> for &'b HDScal<T,
     }
 }
 
+impl<'a, 'b, T: Float, D: Derivative<T>> Rem<&'a HDScal<T, D>> for &'b HDScal<T, D> {
+    type Output = HDScal<T, D>;
+    #[inline]
+    fn rem(self, _rhs: &HDScal<T, D>) -> HDScal<T, D> {
+        unimplemented!()
+    }
+}
+
 macro_rules! forward_binop {
     ($trt:ident, $operator:tt, $mth:ident) => {
         impl<T: Float, D: Derivative<T>> $trt<HDScal<T, D>> for &HDScal<T, D>
@@ -285,6 +293,7 @@ forward_binop!(Mul, *, mul);
 forward_binop!(Div, /, div);
 forward_binop!(Add, +, add);
 forward_binop!(Sub, -, sub);
+forward_binop!(Rem, %, rem);
 
 macro_rules! impl_scalar_op {
     ($trt:ident, $operator:tt, $mth:ident, $trt_assign:ident, $op_assign:tt, $mth_assign:ident) => {
@@ -390,6 +399,7 @@ impl_scalar_op!(Mul, *, mul, MulAssign, *=, mul_assign);
 impl_scalar_op!(Div, /, div, DivAssign, /=, div_assign);
 impl_scalar_addition_op!(Add, +, add, AddAssign, +=, add_assign);
 impl_scalar_addition_op!(Sub, -, sub, SubAssign, -=, sub_assign);
+impl_scalar_addition_op!(Rem, %, rem, RemAssign, %=, rem_assign);
 
 // macro_rules! impl_assign_op {
 //     ($trt:ident, $operator:tt, $trt_assign:ident, $op_assign:tt, $mth_assign:ident) => {

@@ -1,10 +1,10 @@
 // #![feature(test)]
 // extern crate test;
 
-use num_traits::{Inv, One, Zero};
+use num_traits::{FromPrimitive, Inv, NumAssign, NumAssignOps, NumOps};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::Neg;
 #[macro_use]
 mod macros;
 pub mod dual;
@@ -17,95 +17,42 @@ pub use hd3::*;
 pub use hd_scal::*;
 pub use hyperdual::*;
 
-pub trait DualNumOps<F, Rhs = Self, Output = Self>:
-    Add<Rhs, Output = Output>
-    + Add<F, Output = Output>
-    + Sub<Rhs, Output = Output>
-    + Sub<F, Output = Output>
-    + Mul<Rhs, Output = Output>
-    + Mul<F, Output = Output>
-    + Div<Rhs, Output = Output>
-    + Div<F, Output = Output>
-{
-}
-
-impl<D, F, Rhs, Output> DualNumOps<F, Rhs, Output> for D where
-    D: Add<Rhs, Output = Output>
-        + Add<F, Output = Output>
-        + Sub<Rhs, Output = Output>
-        + Sub<F, Output = Output>
-        + Mul<Rhs, Output = Output>
-        + Mul<F, Output = Output>
-        + Div<Rhs, Output = Output>
-        + Div<F, Output = Output>
-{
-}
-
-pub trait DualNumAssignOps<F, Rhs = Self>:
-    AddAssign<Rhs>
-    + AddAssign<F>
-    + SubAssign<Rhs>
-    + SubAssign<F>
-    + MulAssign<Rhs>
-    + MulAssign<F>
-    + DivAssign<Rhs>
-    + DivAssign<F>
-{
-}
-
-impl<D, F, Rhs> DualNumAssignOps<F, Rhs> for D where
-    D: AddAssign<Rhs>
-        + AddAssign<F>
-        + SubAssign<Rhs>
-        + SubAssign<F>
-        + MulAssign<Rhs>
-        + MulAssign<F>
-        + DivAssign<Rhs>
-        + DivAssign<F>
-{
-}
-
-// pub trait DualNumRef<T>: DualNumMethods<F> + for<'r> DualNumOps<&'r Self> {}
-// impl<T, D> DualNumRef<T> for D where D: DualNumMethods<F> + for<'r> DualNumOps<&'r Self> {}
-
-// pub trait DualRefNum<T, Base>: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base> {}
-// impl<T, D, Base> DualRefNum<T, Base> for D where
-//     D: DualNumOps<Base, Base> + for<'r> DualNumOps<&'r Base, Base>
-// {
-// }
-
 pub trait DualNum<F>:
     DualNumMethods<F>
-    + DualNumAssignOps<F>
+    + NumAssign
+    + NumAssignOps<F>
     + Copy
-    + Zero
-    + One
     + Neg<Output = Self>
     + Inv<Output = Self>
     + Sum
     + Product
-    + PartialEq
+    + FromPrimitive
     + From<F>
     + fmt::Display
+    + Sync
+    + Send
+    + 'static
 {
 }
 impl<D, F> DualNum<F> for D where
     D: DualNumMethods<F>
-        + DualNumAssignOps<F>
+        + NumAssign
+        + NumAssignOps<F>
         + Copy
-        + Zero
-        + One
         + Neg<Output = Self>
         + Inv<Output = Self>
         + Sum
         + Product
-        + PartialEq
+        + FromPrimitive
         + From<F>
         + fmt::Display
+        + Sync
+        + Send
+        + 'static
 {
 }
 
-pub trait DualNumMethods<F>: Clone + DualNumOps<F> {
+pub trait DualNumMethods<F>: Clone + NumOps<Self> + NumOps<F> {
     /// indicates the highest derivative that can be calculated with this struct
     const NDERIV: usize;
 

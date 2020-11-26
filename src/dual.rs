@@ -1,9 +1,11 @@
 use crate::{DualNum, DualNumMethods};
-use num_traits::{Float, Inv, One, Zero};
+use num_traits::{Float, FromPrimitive, Inv, Num, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
+};
 
 /// A dual number.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
@@ -592,10 +594,19 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a Dual<T, F>> for &'b Dual<T, F> {
     }
 }
 
+impl<'a, 'b, T: DualNum<F>, F: Float> Rem<&'a Dual<T, F>> for &'b Dual<T, F> {
+    type Output = Dual<T, F>;
+    #[inline]
+    fn rem(self, _other: &Dual<T, F>) -> Dual<T, F> {
+        unimplemented!()
+    }
+}
+
 forward_binop!(Dual, Mul, *, mul);
 forward_binop!(Dual, Div, /, div);
 forward_binop!(Dual, Add, +, add);
 forward_binop!(Dual, Sub, -, sub);
+forward_binop!(Dual, Rem, %, rem);
 
 /* Neg impl */
 impl<T: DualNum<F>, F: Float> Neg for Dual<T, F> {
@@ -646,6 +657,14 @@ impl<T: DualNum<F>, F: Float> Sub<F> for Dual<T, F> {
     #[inline]
     fn sub(self, other: F) -> Self {
         Dual::new(self.re - other, self.eps)
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Rem<F> for Dual<T, F> {
+    type Output = Self;
+    #[inline]
+    fn rem(self, _other: F) -> Self {
+        unimplemented!()
     }
 }
 
@@ -709,6 +728,20 @@ impl<T: DualNum<F>, F: Float> SubAssign<F> for Dual<T, F> {
     #[inline]
     fn sub_assign(&mut self, other: F) {
         self.re -= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> RemAssign for Dual<T, F> {
+    #[inline]
+    fn rem_assign(&mut self, _other: Self) {
+        unimplemented!()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> RemAssign<F> for Dual<T, F> {
+    #[inline]
+    fn rem_assign(&mut self, _other: F) {
+        unimplemented!()
     }
 }
 
@@ -780,3 +813,12 @@ impl<'a, T: DualNum<F>, F: Float> Product<&'a Dual<T, F>> for Dual<T, F> {
         iter.fold(Self::one(), |acc, c| acc * c)
     }
 }
+
+impl<T: DualNum<F>, F: Float> Num for Dual<T, F> {
+    type FromStrRadixErr = F::FromStrRadixErr;
+    fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
+        unimplemented!()
+    }
+}
+
+impl_from_primitive!(Dual);

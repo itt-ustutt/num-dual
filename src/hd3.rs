@@ -1,5 +1,5 @@
 use crate::{Dual32, Dual64, DualNum, DualNumMethods};
-use num_traits::{Float, Inv, One, Zero};
+use num_traits::{Float, FromPrimitive, Inv, Num, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -145,10 +145,19 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a HD3<T, F>> for &'b HD3<T, F> {
     }
 }
 
+impl<'a, 'b, T: DualNum<F>, F: Float> Rem<&'a HD3<T, F>> for &'b HD3<T, F> {
+    type Output = HD3<T, F>;
+    #[inline]
+    fn rem(self, _rhs: &HD3<T, F>) -> HD3<T, F> {
+        unimplemented!()
+    }
+}
+
 forward_binop!(HD3, Mul, *, mul);
 forward_binop!(HD3, Div, /, div);
 forward_binop!(HD3, Add, +, add);
 forward_binop!(HD3, Sub, -, sub);
+forward_binop!(HD3, Rem, %, rem);
 
 /* Neg impl */
 impl<T: DualNum<F>, F: Float> Neg for HD3<T, F> {
@@ -203,6 +212,14 @@ impl<T: DualNum<F>, F: Float> Sub<F> for HD3<T, F> {
     #[inline]
     fn sub(self, other: F) -> Self {
         HD3::new([self.0[0] - other, self.0[1], self.0[2], self.0[3]])
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Rem<F> for HD3<T, F> {
+    type Output = Self;
+    #[inline]
+    fn rem(self, _other: F) -> Self {
+        unimplemented!()
     }
 }
 
@@ -272,6 +289,20 @@ impl<T: DualNum<F>, F: Float> SubAssign<F> for HD3<T, F> {
     #[inline]
     fn sub_assign(&mut self, other: F) {
         self.0[0] -= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> RemAssign for HD3<T, F> {
+    #[inline]
+    fn rem_assign(&mut self, _other: Self) {
+        unimplemented!()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> RemAssign<F> for HD3<T, F> {
+    #[inline]
+    fn rem_assign(&mut self, _other: F) {
+        unimplemented!()
     }
 }
 
@@ -942,3 +973,12 @@ impl<T: fmt::Display, F> fmt::Display for HD3<T, F> {
         )
     }
 }
+
+impl<T: DualNum<F>, F: Float> Num for HD3<T, F> {
+    type FromStrRadixErr = F::FromStrRadixErr;
+    fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
+        unimplemented!()
+    }
+}
+
+impl_from_primitive!(HD3);
