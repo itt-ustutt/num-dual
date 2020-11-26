@@ -1,9 +1,12 @@
-use crate::{Dual32, Dual64, DualNum, DualNumMethods};
-use num_traits::{Float, Inv, One, Zero};
+use crate::dual::{Dual32, Dual64};
+use crate::{DualNum, DualNumMethods};
+use num_traits::{Float, FromPrimitive, Inv, Num, One, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
+};
 
 /// A hyper dual number.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
@@ -870,10 +873,19 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a HyperDual<T, F>> for &'b HyperDual
     }
 }
 
+impl<'a, 'b, T: DualNum<F>, F: Float> Rem<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+    type Output = HyperDual<T, F>;
+    #[inline]
+    fn rem(self, _other: &HyperDual<T, F>) -> HyperDual<T, F> {
+        unimplemented!()
+    }
+}
+
 forward_binop!(HyperDual, Mul, *, mul);
 forward_binop!(HyperDual, Div, /, div);
 forward_binop!(HyperDual, Add, +, add);
 forward_binop!(HyperDual, Sub, -, sub);
+forward_binop!(HyperDual, Rem, %, rem);
 
 /* Neg impl */
 impl<T: DualNum<F>, F: Float> Neg for HyperDual<T, F> {
@@ -929,6 +941,14 @@ impl<T: DualNum<F>, F: Float> Sub<F> for HyperDual<T, F> {
     #[inline]
     fn sub(self, other: F) -> Self {
         HyperDual::new(self.re - other, self.eps1, self.eps2, self.eps1eps2)
+    }
+}
+
+impl<T: DualNum<F>, F: Float> Rem<F> for HyperDual<T, F> {
+    type Output = Self;
+    #[inline]
+    fn rem(self, _other: F) -> Self {
+        unimplemented!()
     }
 }
 
@@ -998,6 +1018,20 @@ impl<T: DualNum<F>, F: Float> SubAssign<F> for HyperDual<T, F> {
     #[inline]
     fn sub_assign(&mut self, other: F) {
         self.re -= other;
+    }
+}
+
+impl<T: DualNum<F>, F: Float> RemAssign for HyperDual<T, F> {
+    #[inline]
+    fn rem_assign(&mut self, _other: Self) {
+        unimplemented!()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> RemAssign<F> for HyperDual<T, F> {
+    #[inline]
+    fn rem_assign(&mut self, _other: F) {
+        unimplemented!()
     }
 }
 
@@ -1073,3 +1107,12 @@ impl<'a, T: DualNum<F>, F: Float> Product<&'a HyperDual<T, F>> for HyperDual<T, 
         iter.fold(Self::one(), |acc, c| acc * c)
     }
 }
+
+impl<T: DualNum<F>, F: Float> Num for HyperDual<T, F> {
+    type FromStrRadixErr = F::FromStrRadixErr;
+    fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
+        unimplemented!()
+    }
+}
+
+impl_from_primitive!(HyperDual);
