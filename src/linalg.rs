@@ -57,13 +57,15 @@ impl SolveDual<f64> for Array2<f64> {
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
+    /// # use approx::assert_abs_diff_eq;
     /// # use num_hyperdual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
     /// let a = arr2(&[[1.0, 3.0],
     ///                [5.0, 7.0]]);
     /// let b = arr1(&[10.0, 26.0]);
     /// let x = a.solve_into(b).unwrap();
-    /// assert_eq!(x, arr1(&[1.0, 3.0]));
+    /// assert_abs_diff_eq!(x[0], 1.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[1], 3.0, epsilon = 1e-14);
     /// ```
     fn solve_inplace<'a>(&self, b: &'a mut Array1<f64>) -> Result<&'a mut Array1<f64>> {
         <Self as Solve<f64>>::solve_inplace(self, b)
@@ -85,6 +87,7 @@ where
     /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
     /// is the argument, and `x` is the successful result.
     /// ```
+    /// # use approx::assert_abs_diff_eq;
     /// # use num_hyperdual::Dual64;
     /// # use num_hyperdual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
@@ -92,7 +95,10 @@ where
     ///                [Dual64::new(5.0, 6.0), Dual64::new(7.0, 8.0)]]);
     /// let b = arr1(&[Dual64::new(10.0, 28.0), Dual64::new(26.0, 68.0)]);
     /// let x = a.solve_into(b).unwrap();
-    /// assert_eq!(x, arr1(&[Dual64::new(1.0, 2.0), Dual64::new(3.0, 4.0)]));
+    /// assert_abs_diff_eq!(x[0].re, 1.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[0].eps, 2.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[1].re, 3.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[1].eps, 4.0, epsilon = 1e-14);
     /// ```
     fn solve_recursive_inplace<'a>(
         &self,
