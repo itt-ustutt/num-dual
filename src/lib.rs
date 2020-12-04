@@ -1,10 +1,9 @@
 // #![feature(test)]
 // extern crate test;
 
-use num_traits::{FromPrimitive, Inv, NumAssign, NumAssignOps, NumOps};
+use num_traits::{FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::ops::Neg;
 #[macro_use]
 mod macros;
 pub mod dual;
@@ -19,10 +18,10 @@ pub use hyperdual::*;
 
 pub trait DualNum<F>:
     DualNumMethods<F>
-    + NumAssign
+    + Signed
+    + NumAssignOps
     + NumAssignOps<F>
     + Copy
-    + Neg<Output = Self>
     + Inv<Output = Self>
     + Sum
     + Product
@@ -36,10 +35,10 @@ pub trait DualNum<F>:
 }
 impl<D, F> DualNum<F> for D where
     D: DualNumMethods<F>
-        + NumAssign
+        + Signed
+        + NumAssignOps
         + NumAssignOps<F>
         + Copy
-        + Neg<Output = Self>
         + Inv<Output = Self>
         + Sum
         + Product

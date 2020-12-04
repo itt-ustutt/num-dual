@@ -92,3 +92,43 @@ macro_rules! impl_from_primitive {
         }
     };
 }
+
+macro_rules! impl_signed {
+    ($struct:ident) => {
+        impl<T: DualNum<F>, F: Float + Signed> Signed for $struct<T, F> {
+            fn abs(&self) -> Self {
+                if self.is_positive() {
+                    *self
+                } else {
+                    -self
+                }
+            }
+
+            fn abs_sub(&self, other: &Self) -> Self {
+                if self.re() > other.re() {
+                    self - other
+                } else {
+                    Self::zero()
+                }
+            }
+
+            fn signum(&self) -> Self {
+                if self.is_positive() {
+                    Self::one()
+                } else if self.is_zero() {
+                    Self::zero()
+                } else {
+                    -Self::one()
+                }
+            }
+
+            fn is_positive(&self) -> bool {
+                self.re().is_positive()
+            }
+
+            fn is_negative(&self) -> bool {
+                self.re().is_negative()
+            }
+        }
+    };
+}
