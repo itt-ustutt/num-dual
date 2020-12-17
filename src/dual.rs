@@ -1,5 +1,6 @@
-use crate::{DualNum, DualNumMethods};
-use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use crate::static_vec::StaticVec;
+use crate::{DualNum, DualNumMethods, DualVec};
+use num_traits::{Float, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -10,45 +11,63 @@ use std::ops::{
 /// A dual number.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 #[repr(C)]
-pub struct Dual<T, F = T> {
+pub struct Dual<T0, T1 = T0, F = T0> {
     /// Real part of the dual number
-    pub re: T,
+    pub re: T0,
     /// Eps part
-    pub eps: T,
+    pub eps: T1,
     f: PhantomData<F>,
 }
 
 pub type Dual32 = Dual<f32>;
 pub type Dual64 = Dual<f64>;
 
-impl<T, F> Dual<T, F> {
+pub type DualN32<const N: usize> = Dual<f32, StaticVec<f32, N>>;
+pub type DualN64<const N: usize> = Dual<f64, StaticVec<f64, N>>;
+
+impl<T0, T1: DualVec<T0, F>, F> Dual<T0, T1, F> {
     /// Create a new dual number
     #[inline]
-    pub fn new(re: T, eps: T) -> Self {
+    pub fn new(re: T0, eps: T1) -> Self {
         Dual {
             re,
             eps,
             f: PhantomData,
         }
     }
-}
 
-impl<T: Zero, F> Dual<T, F> {
     /// Create a new dual number from the real part
     #[inline]
-    pub fn from_re(re: T) -> Self {
-        Dual::new(re, T::zero())
+    pub fn from_re(re: T0) -> Self {
+        Dual::new(re, T1::zero())
     }
 }
 
-impl<T: DualNum<F>, F> From<F> for Dual<T, F> {
+impl<T: One, F> Dual<T, T, F> {
+    #[inline]
+    pub fn derive(mut self) -> Self {
+        self.eps = T::one();
+        self
+    }
+}
+
+impl<T: One, F, const N: usize> Dual<T, StaticVec<T, N>, F> {
+    #[inline]
+    pub fn derive(mut self, i: usize) -> Self {
+        self.eps[i] = T::one();
+        self
+    }
+}
+
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F> From<F> for Dual<T0, T1, F> {
+    #[inline]
     fn from(float: F) -> Self {
-        Dual::new(T::from(float), T::zero())
+        Dual::from_re(T0::from(float))
     }
 }
 
-impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
-    const NDERIV: usize = T::NDERIV + 1;
+impl<F: Float, T0: DualNum<F>, T1: DualVec<T0, F>> DualNumMethods<F> for Dual<T0, T1, F> {
+    const NDERIV: usize = T0::NDERIV + 1;
 
     #[inline]
     fn re(&self) -> F {
@@ -109,7 +128,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn exp2(&self) -> Self {
         let fx = self.re.exp2();
-        let ln_two = (T::one() + T::one()).ln();
+        let ln_two = (T0::one() + T0::one()).ln();
         Dual::new(fx, self.eps * fx * ln_two)
     }
 
@@ -154,7 +173,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn ln_1p(&self) -> Self {
         let fx = self.re.ln_1p();
-        let dx = (T::one() + self.re).recip();
+        let dx = (T0::one() + self.re).recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -169,7 +188,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn log2(&self) -> Self {
         let fx = self.re.log2();
-        let dx = ((T::one() + T::one()).ln() * self.re).recip();
+        let dx = ((T0::one() + T0::one()).ln() * self.re).recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -199,7 +218,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn sqrt(&self) -> Self {
         let fx = self.re.sqrt();
-        let one = T::one();
+        let one = T0::one();
         let half = (one + one).recip();
         let dx = fx.recip() * half;
         Dual::new(fx, self.eps * dx)
@@ -216,7 +235,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn cbrt(&self) -> Self {
         let fx = self.re.cbrt();
-        let one = T::one();
+        let one = T0::one();
         let third = (one + one + one).recip();
         let dx = fx / self.re * third;
         Dual::new(fx, self.eps * dx)
@@ -272,7 +291,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
             _ => {
                 let pow = self.re.powi(exp - 1);
                 let fx = pow * self.re;
-                let dx = T::from(F::from(exp).unwrap()) * pow;
+                let dx = T0::from(F::from(exp).unwrap()) * pow;
                 Dual::new(fx, self.eps * dx)
             }
         }
@@ -334,7 +353,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn tan(&self) -> Self {
         let fx = self.re.tan();
-        let dx = fx * fx + T::one();
+        let dx = fx * fx + T0::one();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -349,7 +368,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn asin(&self) -> Self {
         let fx = self.re.asin();
-        let dx = (T::one() - self.re * self.re).sqrt().recip();
+        let dx = (T0::one() - self.re * self.re).sqrt().recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -364,7 +383,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn acos(&self) -> Self {
         let fx = self.re.acos();
-        let dx = -(T::one() - self.re * self.re).sqrt().recip();
+        let dx = -(T0::one() - self.re * self.re).sqrt().recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -379,7 +398,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn atan(&self) -> Self {
         let fx = self.re.atan();
-        let dx = (T::one() + self.re * self.re).recip();
+        let dx = (T0::one() + self.re * self.re).recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -424,7 +443,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn tanh(&self) -> Self {
         let fx = self.re.tanh();
-        let dx = T::one() - fx * fx;
+        let dx = T0::one() - fx * fx;
         Dual::new(fx, self.eps * dx)
     }
 
@@ -439,7 +458,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn asinh(&self) -> Self {
         let fx = self.re.asinh();
-        let dx = (self.re * self.re + T::one()).sqrt().recip();
+        let dx = (self.re * self.re + T0::one()).sqrt().recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -454,7 +473,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn acosh(&self) -> Self {
         let fx = self.re.acosh();
-        let dx = (self.re * self.re - T::one()).sqrt().recip();
+        let dx = (self.re * self.re - T0::one()).sqrt().recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -469,7 +488,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     #[inline]
     fn atanh(&self) -> Self {
         let fx = self.re.atanh();
-        let dx = (T::one() - self.re * self.re).recip();
+        let dx = (T0::one() - self.re * self.re).recip();
         Dual::new(fx, self.eps * dx)
     }
 
@@ -484,7 +503,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     fn sph_j0(&self) -> Self {
         let (fx, dx) = if self.re().abs() < F::epsilon() {
             (
-                T::one() - self.re * self.re / F::from(6.0).unwrap(),
+                T0::one() - self.re * self.re / F::from(6.0).unwrap(),
                 -self.re / F::from(3.0).unwrap(),
             )
         } else {
@@ -505,7 +524,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     /// ```
     fn sph_j1(&self) -> Self {
         let (fx, dx) = if self.re().abs() < F::epsilon() {
-            let one = T::one();
+            let one = T0::one();
             let third = one / (one + one + one);
             (self.re * third, third)
         } else {
@@ -545,7 +564,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Inv for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Inv for Dual<T0, T1, F> {
     type Output = Self;
     fn inv(self) -> Self {
         self.recip()
@@ -554,63 +573,71 @@ impl<T: DualNum<F>, F: Float> Inv for Dual<T, F> {
 
 /* arithmetic */
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual<T, F>> for &'b Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Mul<&'a Dual<T0, T1, F>>
+    for &'b Dual<T0, T1, F>
+{
+    type Output = Dual<T0, T1, F>;
     #[inline]
-    fn mul(self, other: &Dual<T, F>) -> Dual<T, F> {
+    fn mul(self, other: &Dual<T0, T1, F>) -> Self::Output {
         Dual::new(
             self.re * other.re,
-            self.re * other.eps + other.re * self.eps,
+            other.eps * self.re + self.eps * other.re,
         )
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a Dual<T, F>> for &'b Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Div<&'a Dual<T0, T1, F>>
+    for &'b Dual<T0, T1, F>
+{
+    type Output = Dual<T0, T1, F>;
     #[inline]
-    fn div(self, other: &Dual<T, F>) -> Dual<T, F> {
-        let inv = T::one() / other.re;
+    fn div(self, other: &Dual<T0, T1, F>) -> Dual<T0, T1, F> {
+        let inv = other.re.recip();
         let inv2 = inv * inv;
         Dual::new(
             self.re * inv,
-            (self.eps * other.re - self.re * other.eps) * inv2,
+            (self.eps * other.re - other.eps * self.re) * inv2,
         )
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Add<&'a Dual<T, F>> for &'b Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Add<&'a Dual<T0, T1, F>>
+    for &'b Dual<T0, T1, F>
+{
+    type Output = Dual<T0, T1, F>;
     #[inline]
-    fn add(self, other: &Dual<T, F>) -> Dual<T, F> {
+    fn add(self, other: &Dual<T0, T1, F>) -> Dual<T0, T1, F> {
         Dual::new(self.re + other.re, self.eps + other.eps)
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a Dual<T, F>> for &'b Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Sub<&'a Dual<T0, T1, F>>
+    for &'b Dual<T0, T1, F>
+{
+    type Output = Dual<T0, T1, F>;
     #[inline]
-    fn sub(self, other: &Dual<T, F>) -> Dual<T, F> {
+    fn sub(self, other: &Dual<T0, T1, F>) -> Dual<T0, T1, F> {
         Dual::new(self.re - other.re, self.eps - other.eps)
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Rem<&'a Dual<T, F>> for &'b Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1, F: Float> Rem<&'a Dual<T0, T1, F>> for &'b Dual<T0, T1, F> {
+    type Output = Dual<T0, T1, F>;
     #[inline]
-    fn rem(self, _other: &Dual<T, F>) -> Dual<T, F> {
+    fn rem(self, _other: &Dual<T0, T1, F>) -> Dual<T0, T1, F> {
         unimplemented!()
     }
 }
 
-forward_binop!(Dual, Mul, *, mul);
-forward_binop!(Dual, Div, /, div);
-forward_binop!(Dual, Add, +, add);
-forward_binop!(Dual, Sub, -, sub);
-forward_binop!(Dual, Rem, %, rem);
+forward_binop_vec!(Dual, Mul, *, mul);
+forward_binop_vec!(Dual, Div, /, div);
+forward_binop_vec!(Dual, Add, +, add);
+forward_binop_vec!(Dual, Sub, -, sub);
+forward_binop_vec!(Dual, Rem, %, rem);
 
 /* Neg impl */
-impl<T: DualNum<F>, F: Float> Neg for Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Neg for Dual<T0, T1, F> {
+    type Output = Dual<T0, T1, F>;
 
     #[inline]
     fn neg(self) -> Self {
@@ -618,17 +645,19 @@ impl<T: DualNum<F>, F: Float> Neg for Dual<T, F> {
     }
 }
 
-impl<'a, T: DualNum<F>, F: Float> Neg for &'a Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Neg for &'a Dual<T0, T1, F> {
+    type Output = Dual<T0, T1, F>;
 
     #[inline]
-    fn neg(self) -> Dual<T, F> {
+    fn neg(self) -> Dual<T0, T1, F> {
         -*self
     }
 }
 
 /* scalar operations */
-impl<T: DualNum<F>, F: Float> Mul<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F> + Mul<F, Output = T1>, F: Float> Mul<F>
+    for Dual<T0, T1, F>
+{
     type Output = Self;
     #[inline]
     fn mul(self, other: F) -> Self {
@@ -636,7 +665,9 @@ impl<T: DualNum<F>, F: Float> Mul<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Div<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F> + Mul<F, Output = T1>, F: Float> Div<F>
+    for Dual<T0, T1, F>
+{
     type Output = Self;
     #[inline]
     fn div(self, other: F) -> Self {
@@ -644,7 +675,7 @@ impl<T: DualNum<F>, F: Float> Div<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Add<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Add<F> for Dual<T0, T1, F> {
     type Output = Self;
     #[inline]
     fn add(self, other: F) -> Self {
@@ -652,7 +683,7 @@ impl<T: DualNum<F>, F: Float> Add<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Sub<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Sub<F> for Dual<T0, T1, F> {
     type Output = Self;
     #[inline]
     fn sub(self, other: F) -> Self {
@@ -660,7 +691,7 @@ impl<T: DualNum<F>, F: Float> Sub<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Rem<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1, F: Float> Rem<F> for Dual<T0, T1, F> {
     type Output = Self;
     #[inline]
     fn rem(self, _other: F) -> Self {
@@ -669,15 +700,15 @@ impl<T: DualNum<F>, F: Float> Rem<F> for Dual<T, F> {
 }
 
 /* assign operations */
-impl<T: DualNum<F>, F: Float> MulAssign for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> MulAssign for Dual<T0, T1, F> {
     #[inline]
     fn mul_assign(&mut self, other: Self) {
-        self.eps = self.eps * other.re + self.re * other.eps;
+        self.eps = self.eps * other.re + other.eps * self.re;
         self.re *= other.re;
     }
 }
 
-impl<T: DualNum<F>, F: Float> MulAssign<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1: MulAssign<F>, F: Float> MulAssign<F> for Dual<T0, T1, F> {
     #[inline]
     fn mul_assign(&mut self, other: F) {
         self.re *= other;
@@ -685,15 +716,15 @@ impl<T: DualNum<F>, F: Float> MulAssign<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> DivAssign for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> DivAssign for Dual<T0, T1, F> {
     #[inline]
     fn div_assign(&mut self, other: Self) {
-        self.eps = (self.eps * other.re - self.re * other.eps) / (other.re * other.re);
+        self.eps = (self.eps * other.re - other.eps * self.re) / (other.re * other.re);
         self.re /= other.re;
     }
 }
 
-impl<T: DualNum<F>, F: Float> DivAssign<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DivAssign<F>, F: Float> DivAssign<F> for Dual<T0, T1, F> {
     #[inline]
     fn div_assign(&mut self, other: F) {
         self.re /= other;
@@ -701,7 +732,7 @@ impl<T: DualNum<F>, F: Float> DivAssign<F> for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> AddAssign for Dual<T, F> {
+impl<T0: DualNum<F>, T1: AddAssign, F: Float> AddAssign for Dual<T0, T1, F> {
     #[inline]
     fn add_assign(&mut self, other: Self) {
         self.re += other.re;
@@ -709,14 +740,14 @@ impl<T: DualNum<F>, F: Float> AddAssign for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> AddAssign<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1, F: Float> AddAssign<F> for Dual<T0, T1, F> {
     #[inline]
     fn add_assign(&mut self, other: F) {
         self.re += other;
     }
 }
 
-impl<T: DualNum<F>, F: Float> SubAssign for Dual<T, F> {
+impl<T0: DualNum<F>, T1: SubAssign, F: Float> SubAssign for Dual<T0, T1, F> {
     #[inline]
     fn sub_assign(&mut self, other: Self) {
         self.re -= other.re;
@@ -724,21 +755,21 @@ impl<T: DualNum<F>, F: Float> SubAssign for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> SubAssign<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1, F: Float> SubAssign<F> for Dual<T0, T1, F> {
     #[inline]
     fn sub_assign(&mut self, other: F) {
         self.re -= other;
     }
 }
 
-impl<T: DualNum<F>, F: Float> RemAssign for Dual<T, F> {
+impl<T0: DualNum<F>, T1, F: Float> RemAssign for Dual<T0, T1, F> {
     #[inline]
     fn rem_assign(&mut self, _other: Self) {
         unimplemented!()
     }
 }
 
-impl<T: DualNum<F>, F: Float> RemAssign<F> for Dual<T, F> {
+impl<T0: DualNum<F>, T1, F: Float> RemAssign<F> for Dual<T0, T1, F> {
     #[inline]
     fn rem_assign(&mut self, _other: F) {
         unimplemented!()
@@ -746,7 +777,7 @@ impl<T: DualNum<F>, F: Float> RemAssign<F> for Dual<T, F> {
 }
 
 /* constants */
-impl<T: DualNum<F>, F: Float> Zero for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Zero for Dual<T0, T1, F> {
     #[inline]
     fn zero() -> Self {
         Dual::new(Zero::zero(), Zero::zero())
@@ -758,7 +789,7 @@ impl<T: DualNum<F>, F: Float> Zero for Dual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> One for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> One for Dual<T0, T1, F> {
     #[inline]
     fn one() -> Self {
         Dual::new(One::one(), Zero::zero())
@@ -771,14 +802,14 @@ impl<T: DualNum<F>, F: Float> One for Dual<T, F> {
 }
 
 /* string conversions */
-impl<T: fmt::Display, F> fmt::Display for Dual<T, F> {
+impl<T0: fmt::Display, T1: fmt::Display, F> fmt::Display for Dual<T0, T1, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}ε", self.re, self.eps)
     }
 }
 
 /* iterator methods */
-impl<T: DualNum<F>, F: Float> Sum for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Sum for Dual<T0, T1, F> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -787,16 +818,18 @@ impl<T: DualNum<F>, F: Float> Sum for Dual<T, F> {
     }
 }
 
-impl<'a, T: DualNum<F>, F: Float> Sum<&'a Dual<T, F>> for Dual<T, F> {
+impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Sum<&'a Dual<T0, T1, F>>
+    for Dual<T0, T1, F>
+{
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a Dual<T, F>>,
+        I: Iterator<Item = &'a Dual<T0, T1, F>>,
     {
         iter.fold(Self::zero(), |acc, c| acc + c)
     }
 }
 
-impl<T: DualNum<F>, F: Float> Product for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Product for Dual<T0, T1, F> {
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -805,22 +838,23 @@ impl<T: DualNum<F>, F: Float> Product for Dual<T, F> {
     }
 }
 
-impl<'a, T: DualNum<F>, F: Float> Product<&'a Dual<T, F>> for Dual<T, F> {
+impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Product<&'a Dual<T0, T1, F>>
+    for Dual<T0, T1, F>
+{
     fn product<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a Dual<T, F>>,
+        I: Iterator<Item = &'a Dual<T0, T1, F>>,
     {
         iter.fold(Self::one(), |acc, c| acc * c)
     }
 }
 
-impl<T: DualNum<F>, F: Float> Num for Dual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float> Num for Dual<T0, T1, F> {
     type FromStrRadixErr = F::FromStrRadixErr;
     fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
         unimplemented!()
     }
 }
 
-impl_from_primitive!(Dual);
-impl_signed!(Dual);
-impl_float_const!(Dual);
+impl_from_primitive_vec!(Dual);
+impl_signed_vec!(Dual);

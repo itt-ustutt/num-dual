@@ -1,6 +1,7 @@
 use crate::dual::{Dual32, Dual64};
-use crate::{DualNum, DualNumMethods};
-use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use crate::static_vec::{StaticMat, StaticVec};
+use crate::{DualNum, DualNumMethods, DualVec};
+use num_traits::{Float, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -11,27 +12,31 @@ use std::ops::{
 /// A hyper dual number.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 #[repr(C)]
-pub struct HyperDual<T, F = T> {
+pub struct HyperDual<T0, T1 = T0, T2 = T0, F = T0> {
     /// Real part of the hyper dual number
-    pub re: T,
+    pub re: T0,
     /// Eps1 part
-    pub eps1: T,
+    pub eps1: T1,
     /// Eps2 part
-    pub eps2: T,
+    pub eps2: T1,
     /// Eps1eps2 part
-    pub eps1eps2: T,
+    pub eps1eps2: T2,
     f: PhantomData<F>,
 }
 
 pub type HyperDual32 = HyperDual<f32>;
 pub type HyperDual64 = HyperDual<f64>;
-pub type HyperDualDual32 = HyperDual<Dual32, f32>;
-pub type HyperDualDual64 = HyperDual<Dual64, f64>;
+pub type HyperDualN32<const N: usize> =
+    HyperDual<f32, StaticVec<f32, N>, StaticMat<f32, N, N>, f32>;
+pub type HyperDualN64<const N: usize> =
+    HyperDual<f64, StaticVec<f64, N>, StaticMat<f64, N, N>, f64>;
+pub type HyperDualDual32 = HyperDual<Dual32, Dual32, Dual32, f32>;
+pub type HyperDualDual64 = HyperDual<Dual64, Dual64, Dual64, f64>;
 
-impl<T, F> HyperDual<T, F> {
+impl<T0, T1: Zero, T2: Zero, F> HyperDual<T0, T1, T2, F> {
     /// Create a new hyperdual number
     #[inline]
-    pub fn new(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
+    pub fn new(re: T0, eps1: T1, eps2: T1, eps1eps2: T2) -> Self {
         HyperDual {
             re,
             eps1,
@@ -40,24 +45,49 @@ impl<T, F> HyperDual<T, F> {
             f: PhantomData,
         }
     }
-}
 
-impl<T: Zero, F> HyperDual<T, F> {
     /// Create a new hyperdual number from the real part
     #[inline]
-    pub fn from_re(re: T) -> Self {
-        HyperDual::new(re, T::zero(), T::zero(), T::zero())
+    pub fn from_re(re: T0) -> Self {
+        HyperDual::new(re, T1::zero(), T1::zero(), T2::zero())
     }
 }
 
-impl<T: DualNum<F>, F> From<F> for HyperDual<T, F> {
+impl<T: One, F> HyperDual<T, T, T, F> {
+    #[inline]
+    pub fn derive1(mut self) -> Self {
+        self.eps1 = T::one();
+        self
+    }
+
+    #[inline]
+    pub fn derive2(mut self) -> Self {
+        self.eps2 = T::one();
+        self
+    }
+}
+
+impl<T: One, F, const N: usize> HyperDual<T, StaticVec<T, N>, StaticMat<T, N, N>, F> {
+    #[inline]
+    pub fn derive(mut self, i: usize) -> Self {
+        self.eps1[i] = T::one();
+        self.eps2[i] = T::one();
+        self
+    }
+}
+
+impl<T0: DualNum<F>, T1: Zero, T2: Zero, F> From<F> for HyperDual<T0, T1, T2, F> {
     fn from(float: F) -> Self {
-        HyperDual::new(T::from(float), T::zero(), T::zero(), T::zero())
+        HyperDual::new(T0::from(float), T1::zero(), T1::zero(), T2::zero())
     }
 }
 
-impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
-    const NDERIV: usize = T::NDERIV + 2;
+impl<F: Float, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>> DualNumMethods<F>
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
+    const NDERIV: usize = T0::NDERIV + 2;
 
     #[inline]
     fn re(&self) -> F {
@@ -78,12 +108,12 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     fn recip(&self) -> Self {
         let recip_re = self.re.recip();
         let recip_re2 = recip_re * recip_re;
-        let two = T::one() + T::one();
+        let two = T0::one() + T0::one();
         HyperDual::new(
             recip_re,
             -self.eps1 * recip_re2,
             -self.eps2 * recip_re2,
-            (two * self.eps1 * self.eps2 * recip_re - self.eps1eps2) * recip_re2,
+            (self.eps1 * self.eps2 * two * recip_re - self.eps1eps2) * recip_re2,
         )
     }
 
@@ -143,7 +173,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn exp2(&self) -> Self {
         let fx = self.re.exp2();
-        let ln_two = (T::one() + T::one()).ln();
+        let ln_two = (T0::one() + T0::one()).ln();
         let dx = fx * ln_two;
         HyperDual::new(
             fx,
@@ -211,7 +241,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn ln_1p(&self) -> Self {
         let fx = self.re.ln_1p();
-        let dx = (T::one() + self.re).recip();
+        let dx = (T0::one() + self.re).recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
@@ -233,7 +263,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn log2(&self) -> Self {
         let fx = self.re.log2();
-        let ln2 = (T::one() + T::one()).ln();
+        let ln2 = (T0::one() + T0::one()).ln();
         let dx = (self.re * ln2).recip();
         HyperDual::new(
             fx,
@@ -279,7 +309,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn sqrt(&self) -> Self {
         let fx = self.re.sqrt();
-        let one = T::one();
+        let one = T0::one();
         let half = (one + one).recip();
         let dx = fx.recip() * half;
         HyperDual::new(
@@ -303,7 +333,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn cbrt(&self) -> Self {
         let fx = self.re.cbrt();
-        let one = T::one();
+        let one = T0::one();
         let third = (one + one + one).recip();
         let dx = fx / self.re * third;
         HyperDual::new(
@@ -375,8 +405,8 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
             0 => HyperDual::one(),
             1 => *self,
             _ => {
-                let e = T::from(F::from(exp).unwrap());
-                let e1 = T::from(F::from(exp - 1).unwrap());
+                let e = T0::from(F::from(exp).unwrap());
+                let e1 = T0::from(F::from(exp - 1).unwrap());
 
                 let pow = self.re.powi(exp - 2);
                 let fx = pow * self.re * self.re;
@@ -480,12 +510,12 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn tan(&self) -> Self {
         let fx = self.re.tan();
-        let dx = fx * fx + T::one();
+        let dx = fx * fx + T0::one();
         HyperDual::new(
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * (T::one() + T::one()) * fx) * dx,
+            (self.eps1eps2 + self.eps1 * self.eps2 * (T0::one() + T0::one()) * fx) * dx,
         )
     }
 
@@ -502,7 +532,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn asin(&self) -> Self {
         let fx = self.re.asin();
-        let dx = (T::one() - self.re * self.re).sqrt().recip();
+        let dx = (T0::one() - self.re * self.re).sqrt().recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
@@ -524,7 +554,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn acos(&self) -> Self {
         let fx = self.re.acos();
-        let dx = -(T::one() - self.re * self.re).sqrt().recip();
+        let dx = -(T0::one() - self.re * self.re).sqrt().recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
@@ -546,12 +576,12 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn atan(&self) -> Self {
         let fx = self.re.atan();
-        let dx = (T::one() + self.re * self.re).recip();
+        let dx = (T0::one() + self.re * self.re).recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * (T::one() + T::one()) * self.re * dx) * dx,
+            (self.eps1eps2 - self.eps1 * self.eps2 * (T0::one() + T0::one()) * self.re * dx) * dx,
         )
     }
 
@@ -612,12 +642,12 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn tanh(&self) -> Self {
         let fx = self.re.tanh();
-        let dx = T::one() - fx * fx;
+        let dx = T0::one() - fx * fx;
         HyperDual::new(
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * (T::one() + T::one()) * fx) * dx,
+            (self.eps1eps2 - self.eps1 * self.eps2 * (T0::one() + T0::one()) * fx) * dx,
         )
     }
 
@@ -634,7 +664,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn asinh(&self) -> Self {
         let fx = self.re.asinh();
-        let dx = (self.re * self.re + T::one()).sqrt().recip();
+        let dx = (self.re * self.re + T0::one()).sqrt().recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
@@ -656,7 +686,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn acosh(&self) -> Self {
         let fx = self.re.acosh();
-        let dx = (self.re * self.re - T::one()).sqrt().recip();
+        let dx = (self.re * self.re - T0::one()).sqrt().recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
@@ -678,12 +708,12 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     #[inline]
     fn atanh(&self) -> Self {
         let fx = self.re.atanh();
-        let dx = (T::one() - self.re * self.re).recip();
+        let dx = (T0::one() - self.re * self.re).recip();
         HyperDual::new(
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * (T::one() + T::one()) * self.re * dx) * dx,
+            (self.eps1eps2 + self.eps1 * self.eps2 * (T0::one() + T0::one()) * self.re * dx) * dx,
         )
     }
 
@@ -700,9 +730,9 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     fn sph_j0(&self) -> Self {
         let (fx, dx, dx2) = if self.re().abs() < F::epsilon() {
             (
-                T::one() - self.re * self.re / F::from(6.0).unwrap(),
+                T0::one() - self.re * self.re / F::from(6.0).unwrap(),
                 -self.re / F::from(3.0).unwrap(),
-                -T::from(F::from(1.0 / 3.0).unwrap()),
+                -T0::from(F::from(1.0 / 3.0).unwrap()),
             )
         } else {
             let (s, c) = self.re.sin_cos();
@@ -736,7 +766,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
         let (fx, dx, dx2) = if self.re().abs() < F::epsilon() {
             let one = F::one();
             let third = one / (one + one + one);
-            (self.re * third, T::from(third), T::zero())
+            (self.re * third, T0::from(third), T0::zero())
         } else {
             let (s, c) = self.re.sin_cos();
             let rec = self.re.recip();
@@ -770,7 +800,7 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
             (
                 self.re * self.re / F::from(15.0).unwrap(),
                 self.re / F::from(7.5).unwrap(),
-                T::from(F::from(1.0 / 7.5).unwrap()),
+                T0::from(F::from(1.0 / 7.5).unwrap()),
             )
         } else {
             let (s, c) = self.re.sin_cos();
@@ -797,60 +827,78 @@ impl<F: Float, T: DualNum<F>> DualNumMethods<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Inv for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Inv
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     type Output = Self;
     fn inv(self) -> Self {
         self.recip()
     }
 }
 
-impl<T: DualNum<F>, F: Float> Inv for &HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
-    fn inv(self) -> HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Inv
+    for &HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
+    type Output = HyperDual<T0, T1, T2, F>;
+    fn inv(self) -> HyperDual<T0, T1, T2, F> {
         self.recip()
     }
 }
 
 /* arithmetic */
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Mul<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
+    type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
-    fn mul(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
+    fn mul(self, other: &HyperDual<T0, T1, T2, F>) -> HyperDual<T0, T1, T2, F> {
         HyperDual::new(
             self.re * other.re,
-            self.re * other.eps1 + other.re * self.eps1,
-            self.re * other.eps2 + other.re * self.eps2,
-            self.re * other.eps1eps2
-                + other.re * self.eps1eps2
+            other.eps1 * self.re + self.eps1 * other.re,
+            other.eps2 * self.re + self.eps2 * other.re,
+            other.eps1eps2 * self.re
                 + self.eps1 * other.eps2
-                + self.eps2 * other.eps1,
+                + other.eps1 * self.eps2
+                + self.eps1eps2 * other.re,
         )
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Div<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
+    type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
-    fn div(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
-        let inv = T::one() / other.re;
+    fn div(self, other: &HyperDual<T0, T1, T2, F>) -> HyperDual<T0, T1, T2, F> {
+        let inv = other.re.recip();
         let inv2 = inv * inv;
         HyperDual::new(
             self.re * inv,
-            (self.eps1 * other.re - self.re * other.eps1) * inv2,
-            (self.eps2 * other.re - self.re * other.eps2) * inv2,
+            (self.eps1 * other.re - other.eps1 * self.re) * inv2,
+            (self.eps2 * other.re - other.eps2 * self.re) * inv2,
             self.eps1eps2 * inv
-                - (self.re * other.eps1eps2 + self.eps1 * other.eps2 + self.eps2 * other.eps1)
+                - (other.eps1eps2 * self.re + self.eps1 * other.eps2 + other.eps1 * self.eps2)
                     * inv2
-                + (T::one() + T::one()) * self.re * other.eps1 * other.eps2 * inv2 * inv,
+                + other.eps1 * other.eps2 * (T0::one() + T0::one()) * self.re * inv2 * inv,
         )
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Add<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Add<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
+{
+    type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
-    fn add(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
+    fn add(self, other: &HyperDual<T0, T1, T2, F>) -> HyperDual<T0, T1, T2, F> {
         HyperDual::new(
             self.re + other.re,
             self.eps1 + other.eps1,
@@ -860,10 +908,12 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Add<&'a HyperDual<T, F>> for &'b HyperDual
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Sub<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
+{
+    type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
-    fn sub(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
+    fn sub(self, other: &HyperDual<T0, T1, T2, F>) -> HyperDual<T0, T1, T2, F> {
         HyperDual::new(
             self.re - other.re,
             self.eps1 - other.eps1,
@@ -873,23 +923,27 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Sub<&'a HyperDual<T, F>> for &'b HyperDual
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Rem<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Rem<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
+{
+    type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
-    fn rem(self, _other: &HyperDual<T, F>) -> HyperDual<T, F> {
+    fn rem(self, _other: &HyperDual<T0, T1, T2, F>) -> HyperDual<T0, T1, T2, F> {
         unimplemented!()
     }
 }
 
-forward_binop!(HyperDual, Mul, *, mul);
-forward_binop!(HyperDual, Div, /, div);
-forward_binop!(HyperDual, Add, +, add);
-forward_binop!(HyperDual, Sub, -, sub);
-forward_binop!(HyperDual, Rem, %, rem);
+forward_binop_mat!(HyperDual, Mul, *, mul);
+forward_binop_mat!(HyperDual, Div, /, div);
+forward_binop_mat!(HyperDual, Add, +, add);
+forward_binop_mat!(HyperDual, Sub, -, sub);
+forward_binop_mat!(HyperDual, Rem, %, rem);
 
 /* Neg impl */
-impl<T: DualNum<F>, F: Float> Neg for HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Neg
+    for HyperDual<T0, T1, T2, F>
+{
+    type Output = HyperDual<T0, T1, T2, F>;
 
     #[inline]
     fn neg(self) -> Self {
@@ -897,17 +951,21 @@ impl<T: DualNum<F>, F: Float> Neg for HyperDual<T, F> {
     }
 }
 
-impl<'a, T: DualNum<F>, F: Float> Neg for &'a HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Neg
+    for &'a HyperDual<T0, T1, T2, F>
+{
+    type Output = HyperDual<T0, T1, T2, F>;
 
     #[inline]
-    fn neg(self) -> HyperDual<T, F> {
+    fn neg(self) -> HyperDual<T0, T1, T2, F> {
         -*self
     }
 }
 
 /* scalar operations */
-impl<T: DualNum<F>, F: Float> Mul<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Mul<F>
+    for HyperDual<T0, T1, T2, F>
+{
     type Output = Self;
     #[inline]
     fn mul(self, other: F) -> Self {
@@ -920,7 +978,9 @@ impl<T: DualNum<F>, F: Float> Mul<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Div<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Div<F>
+    for HyperDual<T0, T1, T2, F>
+{
     type Output = Self;
     #[inline]
     fn div(self, other: F) -> Self {
@@ -928,7 +988,9 @@ impl<T: DualNum<F>, F: Float> Div<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Add<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Add<F>
+    for HyperDual<T0, T1, T2, F>
+{
     type Output = Self;
     #[inline]
     fn add(self, other: F) -> Self {
@@ -936,7 +998,9 @@ impl<T: DualNum<F>, F: Float> Add<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Sub<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Sub<F>
+    for HyperDual<T0, T1, T2, F>
+{
     type Output = Self;
     #[inline]
     fn sub(self, other: F) -> Self {
@@ -944,7 +1008,9 @@ impl<T: DualNum<F>, F: Float> Sub<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Rem<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Rem<F>
+    for HyperDual<T0, T1, T2, F>
+{
     type Output = Self;
     #[inline]
     fn rem(self, _other: F) -> Self {
@@ -953,14 +1019,20 @@ impl<T: DualNum<F>, F: Float> Rem<F> for HyperDual<T, F> {
 }
 
 /* assign operations */
-impl<T: DualNum<F>, F: Float> MulAssign for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> MulAssign
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     #[inline]
     fn mul_assign(&mut self, other: Self) {
         *self = *self * other;
     }
 }
 
-impl<T: DualNum<F>, F: Float> MulAssign<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: MulAssign<F>, T2: MulAssign<F>, F: Float> MulAssign<F>
+    for HyperDual<T0, T1, T2, F>
+{
     #[inline]
     fn mul_assign(&mut self, other: F) {
         self.re *= other;
@@ -970,14 +1042,20 @@ impl<T: DualNum<F>, F: Float> MulAssign<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> DivAssign for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> DivAssign
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     #[inline]
     fn div_assign(&mut self, other: Self) {
         *self = *self / other;
     }
 }
 
-impl<T: DualNum<F>, F: Float> DivAssign<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DivAssign<F>, T2: DivAssign<F>, F: Float> DivAssign<F>
+    for HyperDual<T0, T1, T2, F>
+{
     #[inline]
     fn div_assign(&mut self, other: F) {
         self.re /= other;
@@ -987,7 +1065,9 @@ impl<T: DualNum<F>, F: Float> DivAssign<F> for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> AddAssign for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: AddAssign, T2: AddAssign, F: Float> AddAssign
+    for HyperDual<T0, T1, T2, F>
+{
     #[inline]
     fn add_assign(&mut self, other: Self) {
         self.re += other.re;
@@ -997,14 +1077,16 @@ impl<T: DualNum<F>, F: Float> AddAssign for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> AddAssign<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1, T2, F: Float> AddAssign<F> for HyperDual<T0, T1, T2, F> {
     #[inline]
     fn add_assign(&mut self, other: F) {
         self.re += other;
     }
 }
 
-impl<T: DualNum<F>, F: Float> SubAssign for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: SubAssign, T2: SubAssign, F: Float> SubAssign
+    for HyperDual<T0, T1, T2, F>
+{
     #[inline]
     fn sub_assign(&mut self, other: Self) {
         self.re -= other.re;
@@ -1014,21 +1096,21 @@ impl<T: DualNum<F>, F: Float> SubAssign for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> SubAssign<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1, T2, F: Float> SubAssign<F> for HyperDual<T0, T1, T2, F> {
     #[inline]
     fn sub_assign(&mut self, other: F) {
         self.re -= other;
     }
 }
 
-impl<T: DualNum<F>, F: Float> RemAssign for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1, T2, F: Float> RemAssign for HyperDual<T0, T1, T2, F> {
     #[inline]
     fn rem_assign(&mut self, _other: Self) {
         unimplemented!()
     }
 }
 
-impl<T: DualNum<F>, F: Float> RemAssign<F> for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1, T2, F: Float> RemAssign<F> for HyperDual<T0, T1, T2, F> {
     #[inline]
     fn rem_assign(&mut self, _other: F) {
         unimplemented!()
@@ -1036,7 +1118,11 @@ impl<T: DualNum<F>, F: Float> RemAssign<F> for HyperDual<T, F> {
 }
 
 /* constants */
-impl<T: DualNum<F>, F: Float> Zero for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Zero
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     #[inline]
     fn zero() -> Self {
         HyperDual::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
@@ -1048,7 +1134,11 @@ impl<T: DualNum<F>, F: Float> Zero for HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> One for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> One
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     #[inline]
     fn one() -> Self {
         HyperDual::new(One::one(), Zero::zero(), Zero::zero(), Zero::zero())
@@ -1061,7 +1151,9 @@ impl<T: DualNum<F>, F: Float> One for HyperDual<T, F> {
 }
 
 /* string conversions */
-impl<T: fmt::Display, F> fmt::Display for HyperDual<T, F> {
+impl<T0: fmt::Display, T1: fmt::Display, T2: fmt::Display, F> fmt::Display
+    for HyperDual<T0, T1, T2, F>
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -1072,7 +1164,11 @@ impl<T: fmt::Display, F> fmt::Display for HyperDual<T, F> {
 }
 
 /* iterator methods */
-impl<T: DualNum<F>, F: Float> Sum for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Sum
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -1081,16 +1177,24 @@ impl<T: DualNum<F>, F: Float> Sum for HyperDual<T, F> {
     }
 }
 
-impl<'a, T: DualNum<F>, F: Float> Sum<&'a HyperDual<T, F>> for HyperDual<T, F> {
+impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Sum<&'a HyperDual<T0, T1, T2, F>> for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a HyperDual<T, F>>,
+        I: Iterator<Item = &'a HyperDual<T0, T1, T2, F>>,
     {
         iter.fold(Self::zero(), |acc, c| acc + c)
     }
 }
 
-impl<T: DualNum<F>, F: Float> Product for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Product
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     fn product<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -1099,22 +1203,29 @@ impl<T: DualNum<F>, F: Float> Product for HyperDual<T, F> {
     }
 }
 
-impl<'a, T: DualNum<F>, F: Float> Product<&'a HyperDual<T, F>> for HyperDual<T, F> {
+impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
+    Product<&'a HyperDual<T0, T1, T2, F>> for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     fn product<I>(iter: I) -> Self
     where
-        I: Iterator<Item = &'a HyperDual<T, F>>,
+        I: Iterator<Item = &'a HyperDual<T0, T1, T2, F>>,
     {
         iter.fold(Self::one(), |acc, c| acc * c)
     }
 }
 
-impl<T: DualNum<F>, F: Float> Num for HyperDual<T, F> {
+impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Num
+    for HyperDual<T0, T1, T2, F>
+where
+    T1: Mul<Output = T2>,
+{
     type FromStrRadixErr = F::FromStrRadixErr;
     fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
         unimplemented!()
     }
 }
 
-impl_from_primitive!(HyperDual);
-impl_signed!(HyperDual);
-impl_float_const!(HyperDual);
+impl_from_primitive_mat!(HyperDual);
+impl_signed_mat!(HyperDual);
