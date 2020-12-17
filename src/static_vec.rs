@@ -108,7 +108,7 @@ impl<T: fmt::Display, const N: usize> fmt::Display for StaticVec<T, N> {
     }
 }
 
-impl<T, const N: usize, I> Index<I> for StaticVec<T, N>
+impl<T, I, const N: usize> Index<I> for StaticVec<T, N>
 where
     I: SliceIndex<[T]>,
 {
@@ -118,7 +118,7 @@ where
     }
 }
 
-impl<T, const N: usize, I> IndexMut<I> for StaticVec<T, N>
+impl<T, I, const N: usize> IndexMut<I> for StaticVec<T, N>
 where
     I: SliceIndex<[T]>,
 {

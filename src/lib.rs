@@ -423,14 +423,13 @@ mod bench {
 
     #[bench]
     fn bench_hyperdual(b: &mut Bencher) {
-        let (mut t_d, v_d, m_d) = init_state::<HyperDual64>();
-        t_d.eps1 = 1.0;
+        let (t_d, v_d, m_d) = init_state::<HyperDual64>();
         let hs = HSContribution {
             m: arr1(&[1.0, 2.5]),
             sigma: arr1(&[3.2, 3.5]),
             epsilon_k: arr1(&[150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive1(), v_d.derive2(), &m_d));
     }
 
     #[bench]
