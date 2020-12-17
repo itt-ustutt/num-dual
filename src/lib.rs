@@ -1,4 +1,4 @@
-#![feature(const_generics)]
+#![feature(min_const_generics)]
 #![feature(test)]
 extern crate test;
 
@@ -18,6 +18,7 @@ pub use dual::*;
 pub use hd3::*;
 pub use hd_scal::*;
 pub use hyperdual::*;
+pub use static_vec::*;
 
 pub trait DualNum<F>:
     DualNumMethods<F>
@@ -245,6 +246,13 @@ macro_rules! impl_dual_num_float {
                 }
             }
         }
+
+        impl OuterProduct for $float {
+            type Output = $float;
+            fn outer_product(self, other: Self) -> Self::Output {
+                self * other
+            }
+        }
     };
 }
 
@@ -256,41 +264,41 @@ mod bench {
     use super::dual::{Dual64, DualN64};
     use super::hd3::HD3_64;
     use super::hyperdual::{HyperDual64, HyperDualDual64};
+    use super::static_vec::StaticVec;
     use super::*;
-    use ndarray::*;
     use test::Bencher;
 
-    trait HelmholtzEnergy {
+    trait HelmholtzEnergy<const N: usize> {
         fn helmholtz_energy<T: DualNum<f64>>(
             &self,
             temperature: T,
             volume: T,
-            moles: &Array1<T>,
+            moles: StaticVec<T, N>,
         ) -> T;
     }
 
-    struct HSContribution {
-        m: Array1<f64>,
-        sigma: Array1<f64>,
-        epsilon_k: Array1<f64>,
+    struct HSContribution<const N: usize> {
+        m: StaticVec<f64, N>,
+        sigma: StaticVec<f64, N>,
+        epsilon_k: StaticVec<f64, N>,
     }
 
-    impl HelmholtzEnergy for HSContribution {
+    impl<const N: usize> HelmholtzEnergy<N> for HSContribution<N> {
         fn helmholtz_energy<T: DualNum<f64>>(
             &self,
             temperature: T,
             volume: T,
-            moles: &Array1<T>,
+            moles: StaticVec<T, N>,
         ) -> T {
             let vi = volume.recip();
-            let density = moles.mapv(|m| m * vi);
+            let density = moles * vi;
             let ti = temperature.recip() * -3.0;
-            let d = Array::from_shape_fn(self.m.len(), |i| {
-                -((ti * self.epsilon_k[i]).exp() * 0.12 - 1.0) * self.sigma[i]
-            });
+            let d = self
+                .epsilon_k
+                .map_zip(self.sigma, |e, s| -((ti * e).exp() * 0.12 - 1.0) * s);
             let mut zeta: [T; 4] = [T::zero(), T::zero(), T::zero(), T::zero()];
             let mut m_rho: T = T::zero();
-            for i in 0..self.m.len() {
+            for i in 0..N {
                 for k in 0..4 {
                     zeta[k] = zeta[k]
                         + density[i]
@@ -310,10 +318,10 @@ mod bench {
         }
     }
 
-    fn init_state<T: Clone + From<f64>>() -> (T, T, Array1<T>) {
+    fn init_state<T: Clone + From<f64>>() -> (T, T, StaticVec<T, 2>) {
         let temperature = T::from(300.0);
         let volume = T::from(1.0);
-        let moles = arr1(&[T::from(0.001), T::from(0.005)]);
+        let moles = StaticVec::new([T::from(0.001), T::from(0.005)]);
         (temperature, volume, moles)
     }
 
@@ -325,16 +333,16 @@ mod bench {
         let (t_hd3, v_hd3, m_hd3) = init_state::<HD3_64>();
 
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
 
-        let r_dt = hs.helmholtz_energy(t_d.derive(), v_d, &m_d);
-        let r_dv = hs.helmholtz_energy(t_d, v_d.derive(), &m_d);
-        let r_hd = hs.helmholtz_energy(t_hd.derive1(), v_hd.derive2(), &m_hd);
-        let r_dn = hs.helmholtz_energy(t_dn.derive(0), v_dn.derive(1), &m_dn);
-        let r_hd3 = hs.helmholtz_energy(t_hd3.derive(), v_hd3, &m_hd3);
+        let r_dt = hs.helmholtz_energy(t_d.derive(), v_d, m_d);
+        let r_dv = hs.helmholtz_energy(t_d, v_d.derive(), m_d);
+        let r_hd = hs.helmholtz_energy(t_hd.derive1(), v_hd.derive2(), m_hd);
+        let r_dn = hs.helmholtz_energy(t_dn.derive(0), v_dn.derive(1), m_dn);
+        let r_hd3 = hs.helmholtz_energy(t_hd3.derive(), v_hd3, m_hd3);
 
         assert_eq!(r_dt.eps, r_hd.eps1);
         assert_eq!(r_dv.eps, r_hd.eps2);
@@ -350,17 +358,17 @@ mod bench {
         let (t_hd3, v_hd3, m_hd3) = init_state::<HD3_64>();
 
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
 
-        let r_hd_tt = hs.helmholtz_energy(t_hd.derive1().derive2(), v_hd, &m_hd);
-        let r_hd_tv = hs.helmholtz_energy(t_hd.derive1(), v_hd.derive2(), &m_hd);
-        let r_hd_vv = hs.helmholtz_energy(t_hd, v_hd.derive1().derive2(), &m_hd);
-        let r_hdn = hs.helmholtz_energy(t_hdn.derive(0), v_hdn.derive(1), &m_hdn);
-        let r_hd3_ttt = hs.helmholtz_energy(t_hd3.derive(), v_hd3, &m_hd3);
-        let r_hd3_vvv = hs.helmholtz_energy(t_hd3, v_hd3.derive(), &m_hd3);
+        let r_hd_tt = hs.helmholtz_energy(t_hd.derive1().derive2(), v_hd, m_hd);
+        let r_hd_tv = hs.helmholtz_energy(t_hd.derive1(), v_hd.derive2(), m_hd);
+        let r_hd_vv = hs.helmholtz_energy(t_hd, v_hd.derive1().derive2(), m_hd);
+        let r_hdn = hs.helmholtz_energy(t_hdn.derive(0), v_hdn.derive(1), m_hdn);
+        let r_hd3_ttt = hs.helmholtz_energy(t_hd3.derive(), v_hd3, m_hd3);
+        let r_hd3_vvv = hs.helmholtz_energy(t_hd3, v_hd3.derive(), m_hd3);
 
         assert!((r_hd_tt.eps1eps2 - r_hd3_ttt.0[2]).abs() < 1e-10);
         assert!((r_hd_vv.eps1eps2 - r_hd3_vvv.0[2]).abs() < 1e-10);
@@ -379,79 +387,90 @@ mod bench {
         v_hd3 = v_hd3.derive();
 
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        let r_hdd = hs.helmholtz_energy(t_hdd, v_hdd, &m_hdd);
-        let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, &m_hd3);
+        let r_hdd = hs.helmholtz_energy(t_hdd, v_hdd, m_hdd);
+        let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, m_hd3);
         assert!((r_hdd.eps1eps2.eps - r_hd3.0[3]).abs() < 1e-10);
+    }
+
+    #[bench]
+    fn bench_f64(b: &mut Bencher) {
+        let (t_d, v_d, m_d) = init_state::<f64>();
+        let hs = HSContribution {
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
+        };
+        b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     }
 
     #[bench]
     fn bench_dual(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<Dual64>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d.derive(), v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive(), v_d, m_d));
     }
 
     #[bench]
     fn bench_dual_1(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<DualN64<1>>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d, m_d));
     }
 
     #[bench]
     fn bench_dual_2(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<DualN64<2>>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d.derive(1), &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d.derive(1), m_d));
     }
 
     #[bench]
     fn bench_hyperdual(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<HyperDual64>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d.derive1(), v_d.derive2(), &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive1(), v_d.derive2(), m_d));
     }
 
     #[bench]
     fn bench_hyperdual_1(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<HyperDualN64<1>>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d, m_d));
     }
 
     #[bench]
     fn bench_hyperdual_2(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<HyperDualN64<2>>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d.derive(1), &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d.derive(0), v_d.derive(1), m_d));
     }
 
     // #[bench]
@@ -463,7 +482,7 @@ mod bench {
     //         sigma: arr1(&[3.2, 3.5]),
     //         epsilon_k: arr1(&[150., 220.]),
     //     };
-    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     // }
 
     // #[bench]
@@ -475,7 +494,7 @@ mod bench {
     //         sigma: arr1(&[3.2, 3.5]),
     //         epsilon_k: arr1(&[150., 220.]),
     //     };
-    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     // }
 
     // #[bench]
@@ -487,7 +506,7 @@ mod bench {
     //         sigma: arr1(&[3.2, 3.5]),
     //         epsilon_k: arr1(&[150., 220.]),
     //     };
-    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     // }
 
     // #[bench]
@@ -499,7 +518,7 @@ mod bench {
     //         sigma: arr1(&[3.2, 3.5]),
     //         epsilon_k: arr1(&[150., 220.]),
     //     };
-    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     // }
 
     // #[bench]
@@ -511,7 +530,7 @@ mod bench {
     //         sigma: arr1(&[3.2, 3.5]),
     //         epsilon_k: arr1(&[150., 220.]),
     //     };
-    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+    //     b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     // }
 
     #[bench]
@@ -519,32 +538,32 @@ mod bench {
         let (mut t_d, v_d, m_d) = init_state::<HD3_64>();
         t_d = t_d.derive();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     }
 
     #[bench]
     fn bench_hyperdualdual(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<HyperDualDual64>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     }
 
     #[bench]
     fn bench_hd3dual(b: &mut Bencher) {
         let (t_d, v_d, m_d) = init_state::<HD3Dual64>();
         let hs = HSContribution {
-            m: arr1(&[1.0, 2.5]),
-            sigma: arr1(&[3.2, 3.5]),
-            epsilon_k: arr1(&[150., 220.]),
+            m: StaticVec::new([1.0, 2.5]),
+            sigma: StaticVec::new([3.2, 3.5]),
+            epsilon_k: StaticVec::new([150., 220.]),
         };
-        b.iter(|| hs.helmholtz_energy(t_d, v_d, &m_d));
+        b.iter(|| hs.helmholtz_energy(t_d, v_d, m_d));
     }
 }

@@ -65,7 +65,7 @@ macro_rules! forward_binop_vec {
 macro_rules! forward_binop_mat {
     ($struct:ident, $trt:ident, $operator:tt, $mth:ident) => {
         impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> $trt<$struct<T0, T1, T2, F>> for &$struct<T0, T1, T2, F>
-        where T1: Mul<Output=T2>
+        where T1: OuterProduct<Output=T2>
         {
             type Output = $struct<T0, T1, T2, F>;
             #[inline]
@@ -75,7 +75,7 @@ macro_rules! forward_binop_mat {
         }
 
         impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> $trt<&$struct<T0, T1, T2, F>> for $struct<T0, T1, T2, F>
-        where T1: Mul<Output=T2>
+        where T1: OuterProduct<Output=T2>
         {
             type Output = $struct<T0, T1, T2, F>;
             #[inline]
@@ -85,7 +85,7 @@ macro_rules! forward_binop_mat {
         }
 
         impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> $trt for $struct<T0, T1, T2, F>
-        where T1: Mul<Output=T2>
+        where T1: OuterProduct<Output=T2>
         {
             type Output = $struct<T0, T1, T2, F>;
             #[inline]
@@ -441,7 +441,7 @@ macro_rules! impl_signed_mat {
         impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float + Signed> Signed
             for $struct<T0, T1, T2, F>
         where
-            T1: Mul<Output = T2>,
+            T1: OuterProduct<Output = T2>,
         {
             fn abs(&self) -> Self {
                 if self.is_positive() {

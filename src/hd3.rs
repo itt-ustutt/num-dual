@@ -1,3 +1,4 @@
+use crate::static_vec::OuterProduct;
 use crate::{Dual32, Dual64, DualNum, DualNumMethods};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -978,6 +979,13 @@ impl<T: DualNum<F>, F: Float> Num for HD3<T, F> {
     type FromStrRadixErr = F::FromStrRadixErr;
     fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
         unimplemented!()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> OuterProduct for HD3<T, F> {
+    type Output = Self;
+    fn outer_product(self, other: Self) -> Self::Output {
+        self * other
     }
 }
 

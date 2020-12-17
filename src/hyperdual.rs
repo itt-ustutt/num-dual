@@ -1,5 +1,5 @@
 use crate::dual::{Dual32, Dual64};
-use crate::static_vec::{StaticMat, StaticVec};
+use crate::static_vec::{OuterProduct, StaticMat, StaticVec};
 use crate::{DualNum, DualNumMethods, DualVec};
 use num_traits::{Float, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -85,7 +85,7 @@ impl<T0: DualNum<F>, T1: Zero, T2: Zero, F> From<F> for HyperDual<T0, T1, T2, F>
 impl<F: Float, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>> DualNumMethods<F>
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     const NDERIV: usize = T0::NDERIV + 2;
 
@@ -113,7 +113,7 @@ where
             recip_re,
             -self.eps1 * recip_re2,
             -self.eps2 * recip_re2,
-            (self.eps1 * self.eps2 * two * recip_re - self.eps1eps2) * recip_re2,
+            (self.eps1.outer_product(self.eps2) * two * recip_re - self.eps1eps2) * recip_re2,
         )
     }
 
@@ -134,7 +134,7 @@ where
             fx,
             self.eps1 * fx,
             self.eps2 * fx,
-            self.eps1eps2 * fx + self.eps1 * self.eps2 * fx,
+            self.eps1eps2 * fx + self.eps1.outer_product(self.eps2) * fx,
         )
     }
 
@@ -156,7 +156,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx + self.eps1 * self.eps2 * dx,
+            self.eps1eps2 * dx + self.eps1.outer_product(self.eps2) * dx,
         )
     }
 
@@ -179,7 +179,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * ln_two) * dx,
+            (self.eps1eps2 + self.eps1.outer_product(self.eps2) * ln_two) * dx,
         )
     }
 
@@ -201,7 +201,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * dx) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * dx) * dx,
         )
     }
 
@@ -224,7 +224,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * dx * lnb) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * dx * lnb) * dx,
         )
     }
 
@@ -246,7 +246,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * dx) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * dx) * dx,
         )
     }
 
@@ -269,7 +269,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * dx * ln2) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * dx * ln2) * dx,
         )
     }
 
@@ -292,7 +292,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * dx * ln10) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * dx * ln10) * dx,
         )
     }
 
@@ -316,7 +316,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * half / self.re) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * half / self.re) * dx,
         )
     }
 
@@ -340,7 +340,8 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * (one + one) * third / self.re) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * (one + one) * third / self.re)
+                * dx,
         )
     }
 
@@ -376,7 +377,8 @@ where
                 fx,
                 self.eps1 * dx,
                 self.eps2 * dx,
-                self.eps1eps2 * dx + self.eps1 * self.eps2 * exp * (exp - F::one()) * pow,
+                self.eps1eps2 * dx
+                    + self.eps1.outer_product(self.eps2) * exp * (exp - F::one()) * pow,
             )
         }
     }
@@ -415,7 +417,7 @@ where
                     fx,
                     self.eps1 * dx,
                     self.eps2 * dx,
-                    (self.eps1eps2 * self.re + self.eps1 * self.eps2 * e1) * e * pow,
+                    (self.eps1eps2 * self.re + self.eps1.outer_product(self.eps2) * e1) * e * pow,
                 )
             }
         }
@@ -438,7 +440,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx - self.eps1 * self.eps2 * fx,
+            self.eps1eps2 * dx - self.eps1.outer_product(self.eps2) * fx,
         )
     }
 
@@ -460,7 +462,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx - self.eps1 * self.eps2 * fx,
+            self.eps1eps2 * dx - self.eps1.outer_product(self.eps2) * fx,
         )
     }
 
@@ -486,13 +488,13 @@ where
                 s,
                 self.eps1 * c,
                 self.eps2 * c,
-                self.eps1eps2 * c - self.eps1 * self.eps2 * s,
+                self.eps1eps2 * c - self.eps1.outer_product(self.eps2) * s,
             ),
             HyperDual::new(
                 c,
                 -self.eps1 * s,
                 -self.eps2 * s,
-                -self.eps1eps2 * s - self.eps1 * self.eps2 * c,
+                -self.eps1eps2 * s - self.eps1.outer_product(self.eps2) * c,
             ),
         )
     }
@@ -515,7 +517,8 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * (T0::one() + T0::one()) * fx) * dx,
+            (self.eps1eps2 + self.eps1.outer_product(self.eps2) * (T0::one() + T0::one()) * fx)
+                * dx,
         )
     }
 
@@ -537,7 +540,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * self.re * dx * dx) * dx,
+            (self.eps1eps2 + self.eps1.outer_product(self.eps2) * self.re * dx * dx) * dx,
         )
     }
 
@@ -559,7 +562,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * self.re * dx * dx) * dx,
+            (self.eps1eps2 + self.eps1.outer_product(self.eps2) * self.re * dx * dx) * dx,
         )
     }
 
@@ -581,7 +584,9 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * (T0::one() + T0::one()) * self.re * dx) * dx,
+            (self.eps1eps2
+                - self.eps1.outer_product(self.eps2) * (T0::one() + T0::one()) * self.re * dx)
+                * dx,
         )
     }
 
@@ -603,7 +608,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx + self.eps1 * self.eps2 * fx,
+            self.eps1eps2 * dx + self.eps1.outer_product(self.eps2) * fx,
         )
     }
 
@@ -625,7 +630,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx + self.eps1 * self.eps2 * fx,
+            self.eps1eps2 * dx + self.eps1.outer_product(self.eps2) * fx,
         )
     }
 
@@ -647,7 +652,8 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * (T0::one() + T0::one()) * fx) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * (T0::one() + T0::one()) * fx)
+                * dx,
         )
     }
 
@@ -669,7 +675,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * self.re * dx * dx) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * self.re * dx * dx) * dx,
         )
     }
 
@@ -691,7 +697,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 - self.eps1 * self.eps2 * self.re * dx * dx) * dx,
+            (self.eps1eps2 - self.eps1.outer_product(self.eps2) * self.re * dx * dx) * dx,
         )
     }
 
@@ -713,7 +719,9 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            (self.eps1eps2 + self.eps1 * self.eps2 * (T0::one() + T0::one()) * self.re * dx) * dx,
+            (self.eps1eps2
+                + self.eps1.outer_product(self.eps2) * (T0::one() + T0::one()) * self.re * dx)
+                * dx,
         )
     }
 
@@ -748,7 +756,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx + self.eps1 * self.eps2 * dx2,
+            self.eps1eps2 * dx + self.eps1.outer_product(self.eps2) * dx2,
         )
     }
 
@@ -781,7 +789,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx + self.eps1 * self.eps2 * dx2,
+            self.eps1eps2 * dx + self.eps1.outer_product(self.eps2) * dx2,
         )
     }
 
@@ -822,7 +830,7 @@ where
             fx,
             self.eps1 * dx,
             self.eps2 * dx,
-            self.eps1eps2 * dx + self.eps1 * self.eps2 * dx2,
+            self.eps1eps2 * dx + self.eps1.outer_product(self.eps2) * dx2,
         )
     }
 }
@@ -830,7 +838,7 @@ where
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Inv
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     type Output = Self;
     fn inv(self) -> Self {
@@ -841,7 +849,7 @@ where
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Inv
     for &HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     type Output = HyperDual<T0, T1, T2, F>;
     fn inv(self) -> HyperDual<T0, T1, T2, F> {
@@ -854,7 +862,7 @@ where
 impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
     Mul<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
@@ -864,8 +872,8 @@ where
             other.eps1 * self.re + self.eps1 * other.re,
             other.eps2 * self.re + self.eps2 * other.re,
             other.eps1eps2 * self.re
-                + self.eps1 * other.eps2
-                + other.eps1 * self.eps2
+                + self.eps1.outer_product(other.eps2)
+                + other.eps1.outer_product(self.eps2)
                 + self.eps1eps2 * other.re,
         )
     }
@@ -874,7 +882,7 @@ where
 impl<'a, 'b, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
     Div<&'a HyperDual<T0, T1, T2, F>> for &'b HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     type Output = HyperDual<T0, T1, T2, F>;
     #[inline]
@@ -886,9 +894,15 @@ where
             (self.eps1 * other.re - other.eps1 * self.re) * inv2,
             (self.eps2 * other.re - other.eps2 * self.re) * inv2,
             self.eps1eps2 * inv
-                - (other.eps1eps2 * self.re + self.eps1 * other.eps2 + other.eps1 * self.eps2)
+                - (other.eps1eps2 * self.re
+                    + self.eps1.outer_product(other.eps2)
+                    + other.eps1.outer_product(self.eps2))
                     * inv2
-                + other.eps1 * other.eps2 * (T0::one() + T0::one()) * self.re * inv2 * inv,
+                + other.eps1.outer_product(other.eps2)
+                    * (T0::one() + T0::one())
+                    * self.re
+                    * inv2
+                    * inv,
         )
     }
 }
@@ -1022,7 +1036,7 @@ impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Rem<F>
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> MulAssign
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     #[inline]
     fn mul_assign(&mut self, other: Self) {
@@ -1045,7 +1059,7 @@ impl<T0: DualNum<F>, T1: MulAssign<F>, T2: MulAssign<F>, F: Float> MulAssign<F>
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> DivAssign
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     #[inline]
     fn div_assign(&mut self, other: Self) {
@@ -1121,7 +1135,7 @@ impl<T0: DualNum<F>, T1, T2, F: Float> RemAssign<F> for HyperDual<T0, T1, T2, F>
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Zero
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     #[inline]
     fn zero() -> Self {
@@ -1137,7 +1151,7 @@ where
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> One
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     #[inline]
     fn one() -> Self {
@@ -1167,7 +1181,7 @@ impl<T0: fmt::Display, T1: fmt::Display, T2: fmt::Display, F> fmt::Display
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Sum
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     fn sum<I>(iter: I) -> Self
     where
@@ -1180,7 +1194,7 @@ where
 impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
     Sum<&'a HyperDual<T0, T1, T2, F>> for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     fn sum<I>(iter: I) -> Self
     where
@@ -1193,7 +1207,7 @@ where
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Product
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     fn product<I>(iter: I) -> Self
     where
@@ -1206,7 +1220,7 @@ where
 impl<'a, T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float>
     Product<&'a HyperDual<T0, T1, T2, F>> for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     fn product<I>(iter: I) -> Self
     where
@@ -1219,11 +1233,21 @@ where
 impl<T0: DualNum<F>, T1: DualVec<T0, F>, T2: DualVec<T0, F>, F: Float> Num
     for HyperDual<T0, T1, T2, F>
 where
-    T1: Mul<Output = T2>,
+    T1: OuterProduct<Output = T2>,
 {
     type FromStrRadixErr = F::FromStrRadixErr;
     fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
         unimplemented!()
+    }
+}
+
+impl<T: DualNum<F>, F: Float> OuterProduct for HyperDual<T, T, T, F>
+where
+    T: OuterProduct<Output = T>,
+{
+    type Output = Self;
+    fn outer_product(self, other: Self) -> Self::Output {
+        self * other
     }
 }
 
