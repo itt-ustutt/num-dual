@@ -2,17 +2,17 @@
 #![feature(test)]
 extern crate test;
 
-use num_traits::{FromPrimitive, Inv, NumAssignOps, NumOps, Signed, Zero};
+use num_traits::{FromPrimitive, Inv, NumAssignOps, NumOps, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::ops::{Add, Neg, Sub};
+use std::ops::Neg;
 #[macro_use]
 mod macros;
 pub mod dual;
 pub mod hd3;
 pub mod hd_scal;
 pub mod hyperdual;
-// pub mod linalg;
+pub mod linalg;
 pub mod static_vec;
 pub use dual::*;
 pub use hd3::*;
@@ -58,24 +58,38 @@ impl<D, F> DualNum<F> for D where
 pub trait DualVec<T, F>:
     Copy
     + Zero
+    + One
+    + NumOps
+    + NumAssignOps
+    + NumAssignOps<F>
     + NumOps<T, Self>
     + NumOps<F, Self>
-    + Add<Output = Self>
-    + Sub<Output = Self>
     + Neg<Output = Self>
     + PartialEq
+    + From<T>
+    + fmt::Display
+    + Sync
+    + Send
+    + 'static
 {
 }
 
 impl<T, F, D> DualVec<T, F> for D where
     D: Copy
+        + One
         + Zero
+        + NumOps
+        + NumAssignOps
+        + NumAssignOps<F>
         + NumOps<T, Self>
         + NumOps<F, Self>
-        + Add<Output = Self>
-        + Sub<Output = Self>
         + Neg<Output = Self>
         + PartialEq
+        + From<T>
+        + fmt::Display
+        + Sync
+        + Send
+        + 'static
 {
 }
 

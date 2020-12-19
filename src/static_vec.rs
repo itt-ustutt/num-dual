@@ -1,4 +1,4 @@
-use num_traits::Zero;
+use num_traits::{One, Zero};
 use std::fmt;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Rem, RemAssign, Sub,
@@ -71,6 +71,12 @@ impl<T: Copy + AddAssign + Zero, const N: usize> Zero for StaticVec<T, N> {
     }
 }
 
+impl<T: Copy + One + AddAssign + MulAssign, const N: usize> One for StaticVec<T, N> {
+    fn one() -> Self {
+        Self([T::one(); N])
+    }
+}
+
 impl<T: Copy + Neg<Output = T> + Zero, const N: usize> Neg for StaticVec<T, N> {
     type Output = Self;
     fn neg(mut self) -> Self {
@@ -97,6 +103,12 @@ impl<T: fmt::Display, const N: usize> fmt::Display for StaticVec<T, N> {
             }
         }
         write!(f, "]")
+    }
+}
+
+impl<T: Copy, const N: usize> From<T> for StaticVec<T, N> {
+    fn from(t: T) -> Self {
+        Self([t; N])
     }
 }
 
@@ -144,37 +156,61 @@ impl<T: Copy, const N: usize> StaticVec<T, N> {
         }
         StaticVec(res)
     }
+
+    pub fn dot<B: Copy, const M: usize>(&self, other: &StaticMat<B, M, N>) -> StaticVec<T, M>
+    where
+        T: Zero + Mul<B, Output = T> + AddAssign,
+    {
+        let mut res = [T::zero(); M];
+        for i in 0..M {
+            for j in 0..N {
+                res[i] += self.0[j] * other.0[i][j]
+            }
+        }
+        StaticVec(res)
+    }
+
+    pub fn dot_outer<B: Copy, C, const M: usize>(
+        &self,
+        other: &StaticMat<B, M, N>,
+    ) -> StaticVec<C, M>
+    where
+        C: Copy + Zero + AddAssign,
+        T: OuterProduct<B, Output = C>,
+    {
+        let mut res = [C::zero(); M];
+        for i in 0..M {
+            for j in 0..N {
+                res[i] += self.0[j].outer_product(other.0[i][j]);
+            }
+        }
+        StaticVec(res)
+    }
 }
 
 #[derive(Clone, Copy)]
 pub struct StaticMat<T, const M: usize, const N: usize>([[T; N]; M]);
 
-impl<T: Copy + AddAssign, const M: usize, const N: usize> Add for StaticMat<T, M, N> {
-    type Output = StaticMat<T, M, N>;
-    fn add(mut self, other: Self) -> Self {
-        for i in 0..M {
-            for j in 0..N {
-                self.0[i][j] += other.0[i][j];
-            }
-        }
-        self
-    }
-}
-
-impl<T: Copy + SubAssign, const M: usize, const N: usize> Sub for StaticMat<T, M, N> {
-    type Output = StaticMat<T, M, N>;
-    fn sub(mut self, other: Self) -> Self {
-        for i in 0..M {
-            for j in 0..N {
-                self.0[i][j] -= other.0[i][j];
-            }
-        }
-        self
+impl<T, const M: usize, const N: usize> StaticMat<T, M, N> {
+    pub fn new(vec: [[T; N]; M]) -> Self {
+        Self(vec)
     }
 }
 
 macro_rules! impl_op {
     ($trt:ident, $mth:ident, $trt_assign:ident, $op_assign:tt, $mth_assign:ident) => {
+        impl<T: Copy + $trt_assign, const M: usize, const N: usize> $trt for StaticMat<T, M, N> {
+            type Output = StaticMat<T, M, N>;
+            fn $mth(mut self, other: Self) -> Self {
+                for i in 0..M {
+                    for j in 0..N {
+                        self.0[i][j] $op_assign other.0[i][j];
+                    }
+                }
+                self
+            }
+        }
+
         impl<T: Copy + $trt_assign, const M: usize, const N: usize> $trt_assign for StaticMat<T, M, N> {
             fn $mth_assign(&mut self, other: Self) {
                 for i in 0..M {
@@ -225,6 +261,14 @@ impl<T: Copy + Zero + AddAssign, const M: usize, const N: usize> Zero for Static
     }
 }
 
+impl<T: Copy + One + AddAssign + MulAssign, const M: usize, const N: usize> One
+    for StaticMat<T, M, N>
+{
+    fn one() -> Self {
+        Self([[T::one(); N]; M])
+    }
+}
+
 impl<T: Copy + Neg<Output = T>, const M: usize, const N: usize> Neg for StaticMat<T, M, N> {
     type Output = Self;
     fn neg(mut self) -> Self {
@@ -263,6 +307,12 @@ impl<T: fmt::Display, const M: usize, const N: usize> fmt::Display for StaticMat
     }
 }
 
+impl<T: Copy, const M: usize, const N: usize> From<T> for StaticMat<T, M, N> {
+    fn from(t: T) -> Self {
+        Self([[t; N]; M])
+    }
+}
+
 impl<T, const M: usize, const N: usize> Index<(usize, usize)> for StaticMat<T, M, N> {
     type Output = T;
     fn index(&self, i: (usize, usize)) -> &Self::Output {
@@ -273,6 +323,96 @@ impl<T, const M: usize, const N: usize> Index<(usize, usize)> for StaticMat<T, M
 impl<T, const M: usize, const N: usize> IndexMut<(usize, usize)> for StaticMat<T, M, N> {
     fn index_mut(&mut self, i: (usize, usize)) -> &mut Self::Output {
         &mut self.0[i.0][i.1]
+    }
+}
+
+impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
+    pub fn map<B, F>(self, f: F) -> StaticMat<B, M, N>
+    where
+        B: Copy + Zero,
+        F: Fn(T) -> B,
+    {
+        let mut res = [[B::zero(); N]; M];
+        for i in 0..M {
+            for j in 0..N {
+                res[i][j] = f(self.0[i][j])
+            }
+        }
+        StaticMat(res)
+    }
+
+    pub fn map_zip<B, C, F>(self, other: StaticMat<B, M, N>, f: F) -> StaticMat<C, M, N>
+    where
+        B: Copy,
+        C: Copy + Zero,
+        F: Fn(T, B) -> C,
+    {
+        let mut res = [[C::zero(); N]; M];
+        for i in 0..M {
+            for j in 0..N {
+                res[i][j] = f(self.0[i][j], other.0[i][j])
+            }
+        }
+        StaticMat(res)
+    }
+
+    pub fn dot<B: Copy>(&self, other: &StaticVec<B, N>) -> StaticVec<T, M>
+    where
+        T: Zero + Mul<B, Output = T> + AddAssign,
+    {
+        let mut res = [T::zero(); M];
+        for i in 0..M {
+            for j in 0..N {
+                res[i] += self.0[i][j] * other.0[j];
+            }
+        }
+        StaticVec(res)
+    }
+
+    pub fn dot_outer<B: Copy, C>(&self, other: &StaticVec<B, N>) -> StaticVec<C, M>
+    where
+        C: Copy + Zero + AddAssign,
+        T: OuterProduct<B, Output = C>,
+    {
+        let mut res = [C::zero(); M];
+        for i in 0..M {
+            for j in 0..N {
+                res[i] += self.0[i][j].outer_product(other.0[j]);
+            }
+        }
+        StaticVec(res)
+    }
+
+    pub fn matmul<B: Copy, C, const O: usize>(
+        &self,
+        other: &StaticMat<B, N, O>,
+    ) -> StaticMat<C, M, O>
+    where
+        C: Copy + Zero + AddAssign,
+        T: Mul<B, Output = C>,
+    {
+        let mut res = [[C::zero(); O]; M];
+        for i in 0..M {
+            for j in 0..N {
+                for k in 0..O {
+                    res[i][k] += self.0[i][j] * other.0[j][k];
+                }
+            }
+        }
+        StaticMat(res)
+    }
+
+    pub fn t(&self) -> StaticMat<T, N, M>
+    where
+        T: Zero,
+    {
+        let mut res = [[T::zero(); M]; N];
+        for i in 0..M {
+            for j in 0..N {
+                res[j][i] = self.0[i][j];
+            }
+        }
+        StaticMat(res)
     }
 }
 
