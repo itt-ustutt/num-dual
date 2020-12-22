@@ -24,4 +24,9 @@ intel-mkl-static = ["ndarray-linalg/intel-mkl-static"]
 intel-mkl-system = ["ndarray-linalg/intel-mkl-system"]
 
 [dev-dependencies]
+criterion = "0.3"
 approx = "0.3"
+
+[[bench]]
+name = "benchmark"
+harness = false
