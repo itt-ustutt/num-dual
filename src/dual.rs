@@ -1,5 +1,5 @@
 use crate::{DualNum, DualNumMethods};
-use num_traits::{Float, FromPrimitive, Inv, Num, One, Signed, Zero};
+use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -823,3 +823,4 @@ impl<T: DualNum<F>, F: Float> Num for Dual<T, F> {
 
 impl_from_primitive!(Dual);
 impl_signed!(Dual);
+impl_float_const!(Dual);
