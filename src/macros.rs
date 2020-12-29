@@ -132,3 +132,73 @@ macro_rules! impl_signed {
         }
     };
 }
+
+macro_rules! impl_float_const {
+    ($struct:ident) => {
+        impl<T: DualNum<F>, F: Float + FloatConst> FloatConst for $struct<T, F> {
+            fn E() -> Self {
+                Self::from(F::E())
+            }
+
+            fn FRAC_1_PI() -> Self {
+                Self::from(F::FRAC_1_PI())
+            }
+
+            fn FRAC_1_SQRT_2() -> Self {
+                Self::from(F::FRAC_1_SQRT_2())
+            }
+
+            fn FRAC_2_PI() -> Self {
+                Self::from(F::FRAC_2_PI())
+            }
+
+            fn FRAC_2_SQRT_PI() -> Self {
+                Self::from(F::FRAC_2_SQRT_PI())
+            }
+
+            fn FRAC_PI_2() -> Self {
+                Self::from(F::FRAC_PI_2())
+            }
+
+            fn FRAC_PI_3() -> Self {
+                Self::from(F::FRAC_PI_3())
+            }
+
+            fn FRAC_PI_4() -> Self {
+                Self::from(F::FRAC_PI_4())
+            }
+
+            fn FRAC_PI_6() -> Self {
+                Self::from(F::FRAC_PI_6())
+            }
+
+            fn FRAC_PI_8() -> Self {
+                Self::from(F::FRAC_PI_8())
+            }
+
+            fn LN_10() -> Self {
+                Self::from(F::LN_10())
+            }
+
+            fn LN_2() -> Self {
+                Self::from(F::LN_2())
+            }
+
+            fn LOG10_E() -> Self {
+                Self::from(F::LOG10_E())
+            }
+
+            fn LOG2_E() -> Self {
+                Self::from(F::LOG2_E())
+            }
+
+            fn PI() -> Self {
+                Self::from(F::PI())
+            }
+
+            fn SQRT_2() -> Self {
+                Self::from(F::SQRT_2())
+            }
+        }
+    };
+}
