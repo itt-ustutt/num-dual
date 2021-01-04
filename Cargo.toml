@@ -6,8 +6,8 @@ authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
 edition = "2018"
 
 [dependencies]
-ndarray = "0.13"
-ndarray-linalg = { git = "https://github.com/rust-ndarray/ndarray-linalg" }
+ndarray = "0.14"
+ndarray-linalg = { git = "https://github.com/kngwyu/ndarray-linalg", branch = "ndarray-014" }
 num-integer = "0.1"
 smallvec = "1.4"
 num-traits = {version = "0.2", default-features = false}
