@@ -49,6 +49,16 @@ impl<T: One, F, const N: usize> DualN<T, F, N> {
     }
 }
 
+impl<T: One, F, const N: usize> StaticVec<DualN<T, F, N>, N> {
+    #[inline]
+    pub fn derive(mut self) -> Self {
+        for i in 0..N {
+            self[i].eps[i] = T::one();
+        }
+        self
+    }
+}
+
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const N: usize> DualN<T, F, N> {
     #[inline]

@@ -1,5 +1,5 @@
 use super::Scale;
-use num_traits::Zero;
+use num_traits::{One, Zero};
 use std::fmt;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Rem, RemAssign, Sub,
@@ -83,6 +83,12 @@ impl_op!(Mul, mul, MulAssign, *=, mul_assign);
 impl_op!(Div, div, DivAssign, /=, div_assign);
 impl_op!(Rem, rem, RemAssign, %=, rem_assign);
 
+impl<T: Zero + Copy, const N: usize> StaticVec<T, N> {
+    pub fn sum(&self) -> T {
+        self.0[0].iter().fold(T::zero(), |acc, &x| acc + x)
+    }
+}
+
 impl<T: Copy + Zero + AddAssign, const M: usize, const N: usize> Zero for StaticMat<T, M, N> {
     fn zero() -> Self {
         Self([[T::zero(); N]; M])
@@ -90,6 +96,12 @@ impl<T: Copy + Zero + AddAssign, const M: usize, const N: usize> Zero for Static
 
     fn is_zero(&self) -> bool {
         self.0.iter().all(|r| r.iter().all(T::is_zero))
+    }
+}
+
+impl<T: Copy + One + MulAssign, const M: usize, const N: usize> One for StaticMat<T, M, N> {
+    fn one() -> Self {
+        Self([[T::one(); N]; M])
     }
 }
 

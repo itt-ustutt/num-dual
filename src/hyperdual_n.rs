@@ -58,6 +58,16 @@ impl<T: One, F, const N: usize> HyperDualN<T, F, N> {
     }
 }
 
+impl<T: One, F, const N: usize> StaticVec<HyperDualN<T, F, N>, N> {
+    #[inline]
+    pub fn derive(mut self) -> Self {
+        for i in 0..N {
+            self[i].gradient[i] = T::one();
+        }
+        self
+    }
+}
+
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const N: usize> HyperDualN<T, F, N> {
     #[inline]
