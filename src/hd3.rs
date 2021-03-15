@@ -1,6 +1,6 @@
 use crate::linalg::Scale;
 use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumMethods};
-use num_traits::{Float, FromPrimitive, Inv, Num, One, Signed, Zero};
+use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;

@@ -429,8 +429,8 @@ macro_rules! impl_signed {
 }
 
 macro_rules! impl_float_const {
-    ($struct:ident) => {
-        impl<T: DualNum<F>, F: Float + FloatConst> FloatConst for $struct<T, F> {
+    ($struct:ident, [$($const:tt),*]) => {
+        impl<T: DualNum<F>, F: Float + FloatConst, $(const $const: usize,)*> FloatConst for $struct<T, F$(, $const)*> {
             fn E() -> Self {
                 Self::from(F::E())
             }
@@ -498,46 +498,6 @@ macro_rules! impl_float_const {
     };
 }
 
-macro_rules! impl_signed_vec {
-    ($struct:ident) => {
-        impl<T0: DualNum<F>, T1: DualVec<T0, F>, F: Float + Signed> Signed for $struct<T0, T1, F> {
-            fn abs(&self) -> Self {
-                if self.is_positive() {
-                    *self
-                } else {
-                    -self
-                }
-            }
-
-            fn abs_sub(&self, other: &Self) -> Self {
-                if self.re() > other.re() {
-                    self - other
-                } else {
-                    Self::zero()
-                }
-            }
-
-            fn signum(&self) -> Self {
-                if self.is_positive() {
-                    Self::one()
-                } else if self.is_zero() {
-                    Self::zero()
-                } else {
-                    -Self::one()
-                }
-            }
-
-            fn is_positive(&self) -> bool {
-                self.re().is_positive()
-            }
-
-            fn is_negative(&self) -> bool {
-                self.re().is_negative()
-            }
-        }
-    };
-}
-
 macro_rules! impl_num {
     ($struct:ident, [$($const:tt),*]) => {
         impl<T: DualNum<F> + Signed, F: Float, $(const $const: usize,)*> Num for $struct<T, F$(, $const)*> {
@@ -580,5 +540,6 @@ macro_rules! impl_dual {
         impl_signed!($struct, [$($const),*]);
         impl_num!($struct, [$($const),*]);
         impl_scale!($struct, [$($const),*], [$($im),*]);
+        impl_float_const!($struct, [$($const),*]);
     };
 }
