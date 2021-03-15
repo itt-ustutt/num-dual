@@ -1,6 +1,5 @@
 mod lu;
 mod static_mat;
-mod static_sym_mat;
 
 pub use lu::LU;
 pub use static_mat::{StaticMat, StaticVec};
