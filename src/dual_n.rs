@@ -1,4 +1,4 @@
-use crate::linalg::{Scale, StaticVec};
+use crate::linalg::{Scale, StaticMat, StaticVec};
 use crate::{DualNum, DualNumMethods};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -56,6 +56,21 @@ impl<T: One, F, const N: usize> StaticVec<DualN<T, F, N>, N> {
             self[i].eps[i] = T::one();
         }
         self
+    }
+}
+
+impl<T: One + Zero + Copy + AddAssign, F, const M: usize, const N: usize>
+    StaticVec<DualN<T, F, N>, M>
+{
+    #[inline]
+    pub fn jacobian(&self) -> StaticMat<T, M, N> {
+        let mut res = StaticMat::zero();
+        for i in 0..M {
+            for j in 0..N {
+                res[(i, j)] = self[i].eps[j];
+            }
+        }
+        res
     }
 }
 
