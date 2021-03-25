@@ -42,11 +42,11 @@ impl<T, F, const N: usize> HyperDualN<T, F, N> {
     }
 }
 
-impl<T: Copy + Zero, F, const N: usize> HyperDualN<T, F, N> {
+impl<T: Copy + Zero + AddAssign, F, const N: usize> HyperDualN<T, F, N> {
     /// Create a new hyperdual number from the real part
     #[inline]
     pub fn from_re(re: T) -> Self {
-        HyperDualN::new(re, StaticVec::new_zero(), StaticMat::new_zero())
+        HyperDualN::new(re, StaticVec::zero(), StaticMat::zero())
     }
 }
 
@@ -75,7 +75,7 @@ impl<T: DualNum<F>, F: Float, const N: usize> HyperDualN<T, F, N> {
         Self::new(
             f0,
             self.gradient * f1,
-            self.hessian * f1 + self.gradient.matmul_transpose(&self.gradient) * f2,
+            self.hessian * f1 + self.gradient.transpose_matmul(&self.gradient) * f2,
         )
     }
 }
@@ -91,8 +91,8 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a HyperDualN<T, F, N
             self.re * other.re,
             other.gradient * self.re + self.gradient * other.re,
             other.hessian * self.re
-                + self.gradient.matmul_transpose(&other.gradient)
-                + other.gradient.matmul_transpose(&self.gradient)
+                + self.gradient.transpose_matmul(&other.gradient)
+                + other.gradient.transpose_matmul(&self.gradient)
                 + self.hessian * other.re,
         )
     }
@@ -112,10 +112,10 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a HyperDualN<T, F, N
             (self.gradient * other.re - other.gradient * self.re) * inv2,
             self.hessian * inv
                 - (other.hessian * self.re
-                    + self.gradient.matmul_transpose(&other.gradient)
-                    + other.gradient.matmul_transpose(&self.gradient))
+                    + self.gradient.transpose_matmul(&other.gradient)
+                    + other.gradient.transpose_matmul(&self.gradient))
                     * inv2
-                + other.gradient.matmul_transpose(&other.gradient)
+                + other.gradient.transpose_matmul(&other.gradient)
                     * ((T::one() + T::one()) * self.re * inv2 * inv),
         )
     }

@@ -2,7 +2,7 @@
 
 macro_rules! impl_from_f {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: Copy + Zero + From<F>, F, $(const $const: usize,)*> From<F> for $struct<T, F$(, $const)*> {
+        impl<T: Copy + Zero + AddAssign + From<F>, F, $(const $const: usize,)*> From<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn from(float: F) -> Self {
                 Self::from_re(T::from(float))

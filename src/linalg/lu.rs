@@ -1,7 +1,7 @@
 use super::static_mat::{StaticMat, StaticVec};
 use super::LinAlgErr;
 use crate::DualNum;
-use num_traits::Float;
+use num_traits::{Float, Zero};
 use std::iter::Product;
 use std::marker::PhantomData;
 
@@ -69,7 +69,7 @@ impl<T: DualNum<F>, F: Float, const N: usize> LU<T, F, N> {
     }
 
     pub fn solve(&self, b: &StaticVec<T, N>) -> StaticVec<T, N> {
-        let mut x = StaticVec::new_zero();
+        let mut x = StaticVec::zero();
 
         for i in 0..N {
             x[i] = b[self.p[i]];
@@ -105,7 +105,7 @@ impl<T: DualNum<F>, F: Float, const N: usize> LU<T, F, N> {
     }
 
     pub fn inverse(&self) -> StaticMat<T, N, N> {
-        let mut ia = StaticMat::new_zero();
+        let mut ia = StaticMat::zero();
 
         for j in 0..N {
             for i in 0..N {

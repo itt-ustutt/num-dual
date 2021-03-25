@@ -278,7 +278,7 @@ mod bench {
             let ti = temperature.recip() * -3.0;
             let d = self
                 .epsilon_k
-                .map_zip(self.sigma, |e, s| -((ti * e).exp() * 0.12 - 1.0) * s);
+                .map_zip(&self.sigma, |e, s| -((ti * e).exp() * 0.12 - 1.0) * s);
             let mut zeta: [T; 4] = [T::zero(), T::zero(), T::zero(), T::zero()];
             let mut m_rho: T = T::zero();
             for i in 0..N {

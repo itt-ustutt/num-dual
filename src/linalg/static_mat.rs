@@ -1,10 +1,12 @@
 use super::Scale;
-use num_traits::{One, Zero};
+use num_traits::{Float, One, Zero};
 use std::fmt;
+use std::iter::Flatten;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Rem, RemAssign, Sub,
     SubAssign,
 };
+use std::slice::Iter;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub struct StaticMat<T, const M: usize, const N: usize>([[T; N]; M]);
@@ -23,9 +25,13 @@ impl<T, const N: usize> StaticVec<T, N> {
     }
 }
 
-impl<T: Copy + Zero, const M: usize, const N: usize> StaticMat<T, M, N> {
-    pub fn new_zero() -> Self {
-        Self([[T::zero(); N]; M])
+impl<T: Copy + Zero + One + AddAssign, const N: usize> StaticMat<T, N, N> {
+    pub fn eye() -> Self {
+        let mut res = Self::zero();
+        for i in 0..N {
+            res[(i, i)] = T::one()
+        }
+        res
     }
 }
 
@@ -86,6 +92,15 @@ impl_op!(Rem, rem, RemAssign, %=, rem_assign);
 impl<T: Zero + Copy, const N: usize> StaticVec<T, N> {
     pub fn sum(&self) -> T {
         self.0[0].iter().fold(T::zero(), |acc, &x| acc + x)
+    }
+}
+
+impl<T: Float, const N: usize> StaticVec<T, N> {
+    pub fn norm(&self) -> T {
+        self.0[0]
+            .iter()
+            .fold(T::zero(), |acc, &x| acc + x.powi(2))
+            .sqrt()
     }
 }
 
@@ -164,7 +179,7 @@ impl<T, const N: usize> IndexMut<usize> for StaticVec<T, N> {
 }
 
 impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
-    pub fn map<B, F>(self, f: F) -> StaticMat<B, M, N>
+    pub fn map<B, F>(&self, f: F) -> StaticMat<B, M, N>
     where
         B: Copy + Zero,
         F: Fn(T) -> B,
@@ -178,7 +193,7 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
         StaticMat(res)
     }
 
-    pub fn map_zip<B, C, F>(self, other: StaticMat<B, M, N>, f: F) -> StaticMat<C, M, N>
+    pub fn map_zip<B, C, F>(&self, other: &StaticMat<B, M, N>, f: F) -> StaticMat<C, M, N>
     where
         B: Copy,
         C: Copy + Zero,
@@ -191,6 +206,10 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
             }
         }
         StaticMat(res)
+    }
+
+    pub fn iter(&self) -> Flatten<Iter<'_, [T; N]>> {
+        self.0.iter().flatten()
     }
 
     pub fn matmul<B: Copy, C, const O: usize>(
@@ -212,7 +231,7 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
         StaticMat(res)
     }
 
-    pub fn matmul_transpose<B: Copy, C, const O: usize>(
+    pub fn transpose_matmul<B: Copy, C, const O: usize>(
         &self,
         other: &StaticMat<B, M, O>,
     ) -> StaticMat<C, N, O>
@@ -231,6 +250,25 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
         StaticMat(res)
     }
 
+    pub fn matmul_transpose<B: Copy, C, const O: usize>(
+        &self,
+        other: &StaticMat<B, O, N>,
+    ) -> StaticMat<C, M, O>
+    where
+        C: Copy + Zero + AddAssign,
+        T: Mul<B, Output = C>,
+    {
+        let mut res = [[C::zero(); O]; M];
+        for i in 0..M {
+            for j in 0..N {
+                for k in 0..O {
+                    res[i][k] += self.0[i][j] * other.0[k][i];
+                }
+            }
+        }
+        StaticMat(res)
+    }
+
     pub fn t(&self) -> StaticMat<T, N, M>
     where
         T: Zero,
@@ -242,6 +280,31 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
             }
         }
         StaticMat(res)
+    }
+}
+
+impl<T: Copy + Zero, const N: usize> StaticVec<T, N> {
+    pub fn first<const M: usize>(&self) -> StaticVec<T, M> {
+        let mut res = [[T::zero(); M]; 1];
+        for i in 0..M {
+            res[0][i] = self[i];
+        }
+        StaticMat(res)
+    }
+
+    pub fn last<const M: usize>(&self) -> StaticVec<T, M> {
+        let mut res = [[T::zero(); M]; 1];
+        for i in 0..M {
+            res[0][i] = self[i + N - M];
+        }
+        StaticMat(res)
+    }
+
+    pub fn dot(&self, other: &StaticVec<T, N>) -> T
+    where
+        T: Mul<Output = T> + AddAssign,
+    {
+        self.matmul_transpose(other)[0]
     }
 }
 

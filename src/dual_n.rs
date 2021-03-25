@@ -33,11 +33,11 @@ impl<T, F, const N: usize> DualN<T, F, N> {
     }
 }
 
-impl<T: Copy + Zero, F, const N: usize> DualN<T, F, N> {
+impl<T: Copy + Zero + AddAssign, F, const N: usize> DualN<T, F, N> {
     /// Create a new dual number from the real part
     #[inline]
     pub fn from_re(re: T) -> Self {
-        Self::new(re, StaticVec::new_zero())
+        Self::new(re, StaticVec::zero())
     }
 }
 
