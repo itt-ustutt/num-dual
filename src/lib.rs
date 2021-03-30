@@ -1,7 +1,3 @@
-#![feature(min_const_generics)]
-#![feature(test)]
-extern crate test;
-
 use num_traits::{FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
 use std::iter::{Product, Sum};
