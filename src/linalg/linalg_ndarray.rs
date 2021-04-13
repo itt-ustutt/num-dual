@@ -117,6 +117,54 @@ where
     }
 }
 
+impl<D: DualNum<f64> + 'static> SolveDual<DualN<D, f64, 2>> for Array2<DualN<D, f64, 2>>
+where
+    Array2<D>: SolveDual<D>,
+{
+    /// Solves a system of linear equations `A * x = b` where `A` is `self`, `b`
+    /// is the argument, and `x` is the successful result.
+    /// ```
+    /// # use approx::assert_abs_diff_eq;
+    /// # use num_hyperdual::{DualN64, StaticVec};
+    /// # use num_hyperdual::linalg::SolveDual;
+    /// # use ndarray::{arr1, arr2};
+    /// let a = arr2(&[[DualN64::new(1.0, StaticVec::new_vec([2.0, 1.0])), DualN64::new(3.0, StaticVec::new_vec([4.0, 1.0]))],
+    ///                [DualN64::new(5.0, StaticVec::new_vec([6.0, 1.0])), DualN64::new(7.0, StaticVec::new_vec([8.0, 1.0]))]]);
+    /// let b = arr1(&[DualN64::new(10.0, StaticVec::new_vec([28.0, 18.0])), DualN64::new(26.0, StaticVec::new_vec([68.0, 42.0]))]);
+    /// let x = a.solve_into(b).unwrap();
+    /// assert_abs_diff_eq!(x[0].re, 1.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[0].eps[0], 2.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[0].eps[1], 2.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[1].re, 3.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[1].eps[0], 4.0, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(x[1].eps[1], 4.0, epsilon = 1e-14);
+    /// ```
+    fn solve_recursive_inplace<'a>(
+        &self,
+        lu: &LU64,
+        b: &'a mut Array1<DualN<D, f64, 2>>,
+    ) -> Result<&'a mut Array1<DualN<D, f64, 2>>> {
+        let f = self.mapv(|s| s.re);
+        let dx0 = f.solve_recursive_into(lu, b.mapv(|b| b.re))?;
+        let dx1_0 = f.solve_recursive_into(
+            lu,
+            b.mapv(|b| b.eps[0]) - &self.mapv(|s| s.eps[0]).dot(&dx0),
+        )?;
+        let dx1_1 = f.solve_recursive_into(
+            lu,
+            b.mapv(|b| b.eps[1]) - &self.mapv(|s| s.eps[1]).dot(&dx0),
+        )?;
+        Zip::from(&dx0)
+            .and(&dx1_0)
+            .and(&dx1_1)
+            .and(&mut *b)
+            .apply(|&dx0, &dx1_0, &dx1_1, b| {
+                *b = DualN::new(dx0, StaticVec::new_vec([dx1_0, dx1_1]))
+            });
+        Ok(b)
+    }
+}
+
 impl<D: DualNum<f64> + 'static> SolveDual<HyperDual<D, f64>> for Array2<HyperDual<D, f64>>
 where
     Array2<D>: SolveDual<D>,
