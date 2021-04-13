@@ -1,6 +1,8 @@
+mod linalg_ndarray;
 mod lu;
 mod static_mat;
 
+pub use linalg_ndarray::*;
 pub use lu::LU;
 pub use static_mat::{StaticMat, StaticVec};
 

@@ -1,4 +1,3 @@
-#![feature(min_const_generics)]
 use criterion::{criterion_group, criterion_main, Criterion};
 use num_hyperdual::*;
 
