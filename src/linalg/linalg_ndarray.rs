@@ -261,3 +261,60 @@ impl EighDual<Dual64> for Array2<Dual64> {
         Ok((l, v))
     }
 }
+
+impl EighDual<DualN64<2>> for Array2<DualN64<2>> {
+    /// Caculates the eigenvalues and eigenvectors of a symmetric matrix
+    /// ```
+    /// # use approx::assert_abs_diff_eq;
+    /// # use num_hyperdual::{DualN64, StaticVec};
+    /// # use num_hyperdual::linalg::EighDual;
+    /// # use ndarray::{arr1, arr2};
+    /// # use ndarray_linalg::UPLO;
+    /// let a = arr2(&[[DualN64::new(2.0, StaticVec::new_vec([1.0, 1.0])), DualN64::new(2.0, StaticVec::new_vec([2.0, 1.0]))],
+    ///                [DualN64::new(2.0, StaticVec::new_vec([2.0, 1.0])), DualN64::new(5.0, StaticVec::new_vec([3.0, 1.0]))]]);
+    /// let (l, v) = a.eigh(UPLO::Upper).unwrap();
+    /// let av = a.dot(&v);
+    /// assert_abs_diff_eq!(av[(0,0)].re, (l[0]*v[(0,0)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,0)].re, (l[0]*v[(1,0)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,1)].re, (l[1]*v[(0,1)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,1)].re, (l[1]*v[(1,1)]).re, epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,0)].eps[0], (l[0]*v[(0,0)]).eps[0], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,0)].eps[0], (l[0]*v[(1,0)]).eps[0], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,1)].eps[0], (l[1]*v[(0,1)]).eps[0], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,1)].eps[0], (l[1]*v[(1,1)]).eps[0], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,0)].eps[1], (l[0]*v[(0,0)]).eps[1], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,0)].eps[1], (l[0]*v[(1,0)]).eps[1], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(0,1)].eps[1], (l[1]*v[(0,1)]).eps[1], epsilon = 1e-14);
+    /// assert_abs_diff_eq!(av[(1,1)].eps[1], (l[1]*v[(1,1)]).eps[1], epsilon = 1e-14);
+    /// ```
+    fn eigh(&self, uplo: UPLO) -> Result<(Array1<DualN64<2>>, Array2<DualN64<2>>)> {
+        let s1_0 = self.map(|x| x.eps[0]);
+        let s1_1 = self.map(|x| x.eps[1]);
+        let (l0, v0) = self.map(|x| x.re).eigh(uplo)?;
+        let m_0 = v0.t().dot(&s1_0).dot(&v0);
+        let m_1 = v0.t().dot(&s1_1).dot(&v0);
+        let a_0 = Array::from_shape_fn((l0.len(), l0.len()), |(i, j)| {
+            if i == j {
+                0.0
+            } else {
+                m_0[(i, j)] / (l0[i] - l0[j])
+            }
+        });
+        let a_1 = Array::from_shape_fn((l0.len(), l0.len()), |(i, j)| {
+            if i == j {
+                0.0
+            } else {
+                m_1[(i, j)] / (l0[i] - l0[j])
+            }
+        });
+        let l = Zip::from(&l0)
+            .and(&m_0.diag())
+            .and(&m_1.diag())
+            .apply_collect(|&l0, &l1_0, &l1_1| DualN64::new(l0, StaticVec::new_vec([l1_0, l1_1])));
+        let v = Zip::from(&v0)
+            .and(&a_0.dot(&v0))
+            .and(&a_1.dot(&v0))
+            .apply_collect(|&v0, &v1_0, &v1_1| DualN64::new(v0, StaticVec::new_vec([v1_0, v1_1])));
+        Ok((l, v))
+    }
+}
