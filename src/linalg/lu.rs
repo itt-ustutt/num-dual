@@ -80,7 +80,6 @@ impl<T: DualNum<F>, F: Float, const N: usize> LU<T, F, N> {
         }
 
         for i in (0..N).rev() {
-            println!("{}", i);
             for k in i + 1..N {
                 x[i] = x[i] - self.a[(i, k)] * x[k];
             }
