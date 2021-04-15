@@ -20,8 +20,8 @@ impl<T> LinAlgNum for T where T: Copy + Signed + PartialOrd + From<f64> {}
 pub struct LinAlgErr();
 
 impl fmt::Display for LinAlgErr {
-    fn fmt(&self, _f: &mut fmt::Formatter) -> fmt::Result {
-        unimplemented!()
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "The matrix appears to be singular.")
     }
 }
 
