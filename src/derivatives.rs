@@ -41,7 +41,7 @@ macro_rules! impl_derivatives {
                     Self::one()
                 } else if n.is_one() {
                     *self
-                } else if n - F::one() - F::one() < F::epsilon() {
+                } else if (n - F::one() - F::one()).abs() < F::epsilon() {
                     self * self
                 } else {
                     let n1 = n - F::one();
