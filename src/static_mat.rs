@@ -140,7 +140,9 @@ impl<T: Copy + Neg<Output = T>, const M: usize, const N: usize> Neg for StaticMa
 
 impl<T: fmt::Display, const M: usize, const N: usize> fmt::Display for StaticMat<T, M, N> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[")?;
+        if M > 1 {
+            write!(f, "[")?;
+        }
         for i in 0..M {
             write!(f, "[")?;
             for j in 0..N {
@@ -154,7 +156,10 @@ impl<T: fmt::Display, const M: usize, const N: usize> fmt::Display for StaticMat
                 write!(f, ", ")?;
             }
         }
-        write!(f, "]")
+        if M > 1 {
+            write!(f, "]")?;
+        }
+        Ok(())
     }
 }
 

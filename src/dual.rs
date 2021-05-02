@@ -1,4 +1,4 @@
-use crate::{DualNum, DualNumMethods};
+use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -43,7 +43,7 @@ impl<T: Zero, F> Dual<T, F> {
 impl<T: One, F> Dual<T, F> {
     /// Derive a dual number, i.e. set the derivative part to 1.
     /// ```
-    /// # use num_hyperdual::{Dual, DualNumMethods};
+    /// # use num_hyperdual::{Dual, DualNum};
     /// let x = Dual::from_re(5.0).derive().powi(2);
     /// assert_eq!(x.re, 25.0);
     /// assert_eq!(x.eps, 10.0);

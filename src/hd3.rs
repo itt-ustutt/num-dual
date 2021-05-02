@@ -1,4 +1,4 @@
-use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumMethods};
+use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -51,7 +51,7 @@ impl<T: Zero, F> HD3<T, F> {
 impl<T: Clone + Zero + One, F> HD3<T, F> {
     /// Derive a hyper dual number, i.e. set the first derivative part to 1.
     /// ```
-    /// # use num_hyperdual::{HD3, DualNumMethods};
+    /// # use num_hyperdual::{HD3, DualNum};
     /// let x = HD3::from_re(5.0).derive().powi(3);
     /// assert_eq!(x.re, 125.0);
     /// assert_eq!(x.v1, 75.0);

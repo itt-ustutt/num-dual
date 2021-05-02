@@ -1,5 +1,5 @@
 use num_hyperdual::HyperDual64;
-use num_hyperdual::DualNumMethods;
+use num_hyperdual::DualNum;
 
 #[test]
 fn test_hyperdual_recip() {

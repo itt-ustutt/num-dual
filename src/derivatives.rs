@@ -1,6 +1,6 @@
 macro_rules! impl_derivatives {
     ($deriv:ident, $nderiv:expr, $struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> DualNumMethods<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> DualNum<F> for $struct<T, F$(, $const)*> {
             const NDERIV: usize = T::NDERIV + $nderiv;
 
             #[inline]

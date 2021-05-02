@@ -1,6 +1,6 @@
 use crate::dual::{Dual32, Dual64};
 use crate::dual_n::{DualN32, DualN64};
-use crate::{DualNum, DualNumMethods};
+use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -61,7 +61,7 @@ impl<T: One, F> HyperDual<T, F> {
     }
     /// Derive a hyperdual number w.r.t. to the second variable.
     /// ```
-    /// # use num_hyperdual::{HyperDual, DualNumMethods};
+    /// # use num_hyperdual::{HyperDual, DualNum};
     /// let x = HyperDual::from_re(5.0).derive1();
     /// let y = HyperDual::from_re(3.0).derive2();
     /// let z = x * y.powi(2);

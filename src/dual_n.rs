@@ -1,4 +1,4 @@
-use crate::{DualNum, DualNumMethods, StaticMat, StaticVec};
+use crate::{DualNum, DualNumFloat, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -43,7 +43,7 @@ impl<T: Copy + Zero + AddAssign, F, const N: usize> DualN<T, F, N> {
 impl<T: One, F, const N: usize> DualN<T, F, N> {
     /// Derive a dual number w.r.t. the i-th variable.
     /// ```
-    /// # use num_hyperdual::{DualN64, DualNumMethods};
+    /// # use num_hyperdual::{DualN64, DualNum};
     /// let x = DualN64::<2>::from_re(5.0).derive(1).powi(2);
     /// assert_eq!(x.re, 25.0);
     /// assert_eq!(x.eps[0], 0.0);
@@ -60,7 +60,7 @@ impl<T: One, F, const N: usize> StaticVec<DualN<T, F, N>, N> {
     /// Derive a Vector of dual numbers.
     /// ```
     /// # use approx::assert_relative_eq;
-    /// # use num_hyperdual::{DualN64, DualNumMethods, StaticVec};
+    /// # use num_hyperdual::{DualN64, DualNum, StaticVec};
     /// let v = StaticVec::new_vec([4.0, 3.0]).map(DualN64::<2>::from_re).derive();
     /// let n = (v[0].powi(2) + v[1].powi(2)).sqrt();
     /// assert_eq!(n.re, 5.0);
@@ -81,7 +81,7 @@ impl<T: One + Zero + Copy + AddAssign, F, const M: usize, const N: usize>
 {
     /// Extract the Jacobian from a vector of DualN numbers.
     /// ```
-    /// # use num_hyperdual::{DualN64, DualNumMethods, StaticVec};
+    /// # use num_hyperdual::{DualN64, DualNum, StaticVec};
     /// let x = DualN64::<2>::from(5.0).derive(0);
     /// let y = DualN64::<2>::from(3.0).derive(1);
     /// let j = StaticVec::new_vec([x * y.powi(3), x.powi(2) * y]).jacobian();
