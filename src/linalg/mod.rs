@@ -1,20 +1,19 @@
+#[cfg(feature = "linalg")]
 mod linalg_ndarray;
+#[cfg(feature = "linalg")]
+pub use linalg_ndarray::*;
+
 mod lu;
 mod static_mat;
 
-pub use linalg_ndarray::*;
 pub use lu::LU;
 pub use static_mat::{StaticMat, StaticVec};
 
-use num_traits::Signed;
 use std::fmt;
 
 pub trait Scale<F> {
     fn scale(&mut self, f: F);
 }
-
-pub trait LinAlgNum: Copy + Signed + PartialOrd + From<f64> {}
-impl<T> LinAlgNum for T where T: Copy + Signed + PartialOrd + From<f64> {}
 
 #[derive(Debug)]
 pub struct LinAlgErr();

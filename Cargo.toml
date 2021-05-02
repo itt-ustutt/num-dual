@@ -6,14 +6,15 @@ authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
 edition = "2018"
 
 [dependencies]
-ndarray = "0.14"
-ndarray-linalg = "0.13"
 num-traits = "0.2"
+ndarray = { version = "0.14", optional = true }
+ndarray-linalg = { version = "0.13", optional = true }
 
 [features]
 default = ["std"]
 std = ["num-traits/std"]
 libm = ["num-traits/libm"]
+linalg = ["ndarray", "ndarray-linalg"]
 openblas-system = ["ndarray-linalg/openblas-system"]
 openblas-static = ["ndarray-linalg/openblas-static"]
 netlib-system = ["ndarray-linalg/netlib-system"]

@@ -9,12 +9,14 @@ mod derivatives;
 
 pub mod dual;
 pub mod dual_n;
+pub mod hd2;
 pub mod hd3;
 pub mod hyperdual;
 pub mod hyperdual_n;
 pub mod linalg;
 pub use dual::*;
 pub use dual_n::*;
+pub use hd2::*;
 pub use hd3::*;
 pub use hyperdual::*;
 pub use hyperdual_n::*;
