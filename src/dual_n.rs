@@ -1,4 +1,3 @@
-use crate::linalg::Scale;
 use crate::{DualNum, DualNumMethods, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -154,5 +153,5 @@ impl<T: fmt::Display, F, const N: usize> fmt::Display for DualN<T, F, N> {
     }
 }
 
-impl_first_derivatives!(DualN, [N]);
+impl_first_derivatives!(DualN, [N], [eps]);
 impl_dual!(DualN, [N], [eps]);

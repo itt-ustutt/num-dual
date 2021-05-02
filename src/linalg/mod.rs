@@ -10,10 +10,6 @@ pub use lu::LU;
 
 use std::fmt;
 
-pub trait Scale<F> {
-    fn scale(&mut self, f: F);
-}
-
 #[derive(Debug)]
 pub struct LinAlgErr();
 

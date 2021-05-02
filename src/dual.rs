@@ -1,4 +1,3 @@
-use crate::linalg::Scale;
 use crate::{DualNum, DualNumMethods};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -97,5 +96,5 @@ impl<T: fmt::Display, F> fmt::Display for Dual<T, F> {
     }
 }
 
-impl_first_derivatives!(Dual, []);
+impl_first_derivatives!(Dual, [], [eps]);
 impl_dual!(Dual, [], [eps]);

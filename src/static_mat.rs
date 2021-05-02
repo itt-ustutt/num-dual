@@ -1,4 +1,3 @@
-use super::Scale;
 use num_traits::{Float, One, Zero};
 use std::fmt;
 use std::iter::Flatten;
@@ -189,8 +188,8 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
     /// Apply a function elementwise to all elements of the matrix and return a new matrix with the results.
     pub fn map<B, F>(&self, f: F) -> StaticMat<B, M, N>
     where
-    B: Copy + Zero,
-    F: Fn(T) -> B,
+        B: Copy + Zero,
+        F: Fn(T) -> B,
     {
         let mut res = [[B::zero(); N]; M];
         for i in 0..M {
@@ -200,7 +199,6 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
         }
         StaticMat(res)
     }
-    
     /// Apply a function elementwise to all elements of the matrix and a second matrix.
     /// Return a new matrix with the results.
     pub fn map_zip<B, C, F>(&self, other: &StaticMat<B, M, N>, f: F) -> StaticMat<C, M, N>
@@ -335,7 +333,6 @@ impl<T: Copy + Zero, const N: usize> StaticVec<T, N> {
         }
         StaticMat(res)
     }
-    
     /// Return a new vector containing the last M elements of self.
     pub fn last<const M: usize>(&self) -> StaticVec<T, M> {
         let mut res = [[T::zero(); M]; 1];
@@ -360,11 +357,15 @@ impl<T: Copy + Zero, const N: usize> StaticVec<T, N> {
     }
 }
 
-impl<T: Scale<F>, F: Copy, const M: usize, const N: usize> Scale<F> for StaticMat<T, M, N> {
-    fn scale(&mut self, f: F) {
+impl<T, const M: usize, const N: usize> StaticMat<T, M, N> {
+    /// multiply each matrix element with f in place.
+    pub fn scale<F: Copy>(&mut self, f: F)
+    where
+        T: MulAssign<F>,
+    {
         for i in 0..M {
             for j in 0..N {
-                self.0[i][j].scale(f);
+                self.0[i][j] *= f;
             }
         }
     }

@@ -1,6 +1,5 @@
 use crate::dual::{Dual32, Dual64};
 use crate::dual_n::{DualN32, DualN64};
-use crate::linalg::Scale;
 use crate::{DualNum, DualNumMethods, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -156,5 +155,5 @@ impl<T: fmt::Display, F: fmt::Display, const N: usize> fmt::Display for HyperDua
     }
 }
 
-impl_second_derivatives!(HyperDualN, [N]);
+impl_second_derivatives!(HyperDualN, [N], [gradient, hessian]);
 impl_dual!(HyperDualN, [N], [gradient, hessian]);

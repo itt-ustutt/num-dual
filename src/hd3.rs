@@ -1,4 +1,3 @@
-use crate::linalg::Scale;
 use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumMethods};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -121,5 +120,5 @@ impl<T: fmt::Display, F> fmt::Display for HD3<T, F> {
     }
 }
 
-impl_third_derivatives!(HD3, []);
+impl_third_derivatives!(HD3, [], [v1, v2, v3]);
 impl_dual!(HD3, [], [v1, v2, v3]);

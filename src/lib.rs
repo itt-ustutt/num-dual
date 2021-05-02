@@ -29,7 +29,6 @@ pub use hyperdual_n::{
     HyperDualN, HyperDualN32, HyperDualN64, HyperDualNDual32, HyperDualNDual64, HyperDualNDualN32,
     HyperDualNDualN64,
 };
-pub use linalg::Scale;
 pub use static_mat::{StaticMat, StaticVec};
 
 #[cfg(feature = "linalg")]
@@ -41,7 +40,6 @@ pub trait DualNum<F>:
     + NumOps<F>
     + NumAssignOps
     + NumAssignOps<F>
-    + Scale<F>
     + Copy
     + Inv<Output = Self>
     + Sum
@@ -60,7 +58,6 @@ impl<D, F> DualNum<F> for D where
         + NumOps<F>
         + NumAssignOps
         + NumAssignOps<F>
-        + Scale<F>
         + Copy
         + Inv<Output = Self>
         + Sum
@@ -77,6 +74,9 @@ impl<D, F> DualNum<F> for D where
 pub trait DualNumMethods<F>: Clone + NumOps {
     /// indicates the highest derivative that can be calculated with this struct
     const NDERIV: usize;
+
+    /// Multiply the number with the scalar f
+    fn scale(&mut self, f: F);
 
     /// returns the real part (the 0th derivative) of the number
     fn re(&self) -> F;
@@ -129,6 +129,10 @@ macro_rules! impl_dual_num_float {
 
             fn re(&self) -> $float {
                 *self
+            }
+
+            fn scale(&mut self, f: $float) {
+                *self *= f;
             }
 
             fn mul_add(&self, a: Self, b: Self) -> Self {
@@ -239,12 +243,6 @@ macro_rules! impl_dual_num_float {
                     let s2 = self * self;
                     ((3.0 - s2) * sc.0 - 3.0 * self * sc.1) / (self * s2)
                 }
-            }
-        }
-
-        impl Scale<$float> for $float {
-            fn scale(&mut self, f: $float) {
-                *self *= f;
             }
         }
     };
