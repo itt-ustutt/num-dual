@@ -8,9 +8,7 @@ edition = "2018"
 [dependencies]
 ndarray = "0.14"
 ndarray-linalg = "0.13"
-num-integer = "0.1"
-smallvec = "1.4"
-num-traits = {version = "0.2", default-features = false}
+num-traits = "0.2"
 
 [features]
 default = ["std"]
