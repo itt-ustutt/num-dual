@@ -3,11 +3,10 @@ mod linalg_ndarray;
 #[cfg(feature = "linalg")]
 pub use linalg_ndarray::*;
 
+#[cfg(feature = "linalg")]
 mod lu;
-mod static_mat;
-
+#[cfg(feature = "linalg")]
 pub use lu::LU;
-pub use static_mat::{StaticMat, StaticVec};
 
 use std::fmt;
 

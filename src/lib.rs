@@ -1,3 +1,5 @@
+//! Generalized, recursive, scalar and vector (hyper) dual numbers for the automatic and exact calculation of (partial) derivatives.
+
 use num_traits::{FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -7,19 +9,30 @@ mod macros;
 #[macro_use]
 mod derivatives;
 
-pub mod dual;
-pub mod dual_n;
-pub mod hd2;
-pub mod hd3;
-pub mod hyperdual;
-pub mod hyperdual_n;
-pub mod linalg;
-pub use dual::*;
-pub use dual_n::*;
-pub use hd2::*;
-pub use hd3::*;
-pub use hyperdual::*;
-pub use hyperdual_n::*;
+mod dual;
+mod dual_n;
+mod hd2;
+mod hd3;
+mod hyperdual;
+mod hyperdual_n;
+mod linalg;
+mod static_mat;
+pub use dual::{Dual, Dual32, Dual64};
+pub use dual_n::{DualN, DualN32, DualN64};
+pub use hd2::{HD2Dual32, HD2Dual64, HD2DualN32, HD2DualN64, HD2, HD2_32, HD2_64};
+pub use hd3::{HD3Dual32, HD3Dual64, HD3DualN32, HD3DualN64, HD3, HD3_32, HD3_64};
+pub use hyperdual::{
+    HyperDual, HyperDual32, HyperDual64, HyperDualDual32, HyperDualDual64, HyperDualDualN32,
+    HyperDualDualN64,
+};
+pub use hyperdual_n::{
+    HyperDualN, HyperDualN32, HyperDualN64, HyperDualNDual32, HyperDualNDual64, HyperDualNDualN32,
+    HyperDualNDualN64,
+};
+pub use linalg::Scale;
+pub use static_mat::{StaticMat, StaticVec};
+
+#[cfg(feature = "linalg")]
 pub use linalg::*;
 
 pub trait DualNum<F>:
@@ -239,141 +252,3 @@ macro_rules! impl_dual_num_float {
 
 impl_dual_num_float!(f32);
 impl_dual_num_float!(f64);
-
-#[cfg(test)]
-mod bench {
-    use super::dual::Dual64;
-    use super::dual_n::DualN64;
-    use super::hd3::HD3_64;
-    use super::hyperdual::{HyperDual64, HyperDualDual64};
-    use super::linalg::StaticVec;
-    use super::*;
-
-    trait HelmholtzEnergy<const N: usize> {
-        fn helmholtz_energy<T: DualNum<f64>>(
-            &self,
-            temperature: T,
-            volume: T,
-            moles: StaticVec<T, N>,
-        ) -> T;
-    }
-
-    struct HSContribution<const N: usize> {
-        m: StaticVec<f64, N>,
-        sigma: StaticVec<f64, N>,
-        epsilon_k: StaticVec<f64, N>,
-    }
-
-    impl<const N: usize> HelmholtzEnergy<N> for HSContribution<N> {
-        fn helmholtz_energy<T: DualNum<f64>>(
-            &self,
-            temperature: T,
-            volume: T,
-            moles: StaticVec<T, N>,
-        ) -> T {
-            let vi = volume.recip();
-            let density = moles * vi;
-            let ti = temperature.recip() * -3.0;
-            let d = self
-                .epsilon_k
-                .map_zip(&self.sigma, |e, s| -((ti * e).exp() * 0.12 - 1.0) * s);
-            let mut zeta: [T; 4] = [T::zero(), T::zero(), T::zero(), T::zero()];
-            let mut m_rho: T = T::zero();
-            for i in 0..N {
-                for k in 0..4 {
-                    zeta[k] = zeta[k]
-                        + density[i]
-                            * d[i].powi(k as i32)
-                            * (std::f64::consts::PI / 6.0 * self.m[i]);
-                }
-                m_rho = m_rho + density[i] * self.m[i];
-            }
-            let frac_1mz3 = -(zeta[3] - 1.0).recip();
-            let frac_z3 = zeta[3].recip();
-            volume
-                * m_rho
-                * zeta[0].recip()
-                * (zeta[1] * zeta[2] * frac_z3 * 3.0
-                    + zeta[2].powi(3) * frac_1mz3.powi(2) * frac_z3
-                    + (zeta[2].powi(3) * frac_z3.powi(2) - zeta[0]) * (zeta[3] * (-1.0)).ln_1p())
-        }
-    }
-
-    fn init_state<T: Clone + From<f64>>() -> (T, T, StaticVec<T, 2>) {
-        let temperature = T::from(300.0);
-        let volume = T::from(1.0);
-        let moles = StaticVec::new_vec([T::from(0.001), T::from(0.005)]);
-        (temperature, volume, moles)
-    }
-
-    #[test]
-    fn test_first_derivative() {
-        let (t_d, v_d, m_d) = init_state::<Dual64>();
-        let (t_hd, v_hd, m_hd) = init_state::<HyperDual64>();
-        let (t_dn, v_dn, m_dn) = init_state::<DualN64<2>>();
-        let (t_hd3, v_hd3, m_hd3) = init_state::<HD3_64>();
-
-        let hs = HSContribution {
-            m: StaticVec::new_vec([1.0, 2.5]),
-            sigma: StaticVec::new_vec([3.2, 3.5]),
-            epsilon_k: StaticVec::new_vec([150., 220.]),
-        };
-
-        let r_dt = hs.helmholtz_energy(t_d.derive(), v_d, m_d);
-        let r_dv = hs.helmholtz_energy(t_d, v_d.derive(), m_d);
-        let r_hd = hs.helmholtz_energy(t_hd.derive1(), v_hd.derive2(), m_hd);
-        let r_dn = hs.helmholtz_energy(t_dn.derive(0), v_dn.derive(1), m_dn);
-        let r_hd3 = hs.helmholtz_energy(t_hd3.derive(), v_hd3, m_hd3);
-
-        assert_eq!(r_dt.eps, r_hd.eps1);
-        assert_eq!(r_dv.eps, r_hd.eps2);
-        assert_eq!(r_dt.eps, r_dn.eps[0]);
-        assert_eq!(r_dv.eps, r_dn.eps[1]);
-        assert_eq!(r_dt.eps, r_hd3.v1);
-    }
-
-    #[test]
-    fn test_second_derivative() {
-        let (t_hd, v_hd, m_hd) = init_state::<HyperDual64>();
-        let (t_hdn, v_hdn, m_hdn) = init_state::<HyperDualN64<2>>();
-        let (t_hd3, v_hd3, m_hd3) = init_state::<HD3_64>();
-
-        let hs = HSContribution {
-            m: StaticVec::new_vec([1.0, 2.5]),
-            sigma: StaticVec::new_vec([3.2, 3.5]),
-            epsilon_k: StaticVec::new_vec([150., 220.]),
-        };
-
-        let r_hd_tt = hs.helmholtz_energy(t_hd.derive1().derive2(), v_hd, m_hd);
-        let r_hd_tv = hs.helmholtz_energy(t_hd.derive1(), v_hd.derive2(), m_hd);
-        let r_hd_vv = hs.helmholtz_energy(t_hd, v_hd.derive1().derive2(), m_hd);
-        let r_hdn = hs.helmholtz_energy(t_hdn.derive(0), v_hdn.derive(1), m_hdn);
-        let r_hd3_ttt = hs.helmholtz_energy(t_hd3.derive(), v_hd3, m_hd3);
-        let r_hd3_vvv = hs.helmholtz_energy(t_hd3, v_hd3.derive(), m_hd3);
-
-        assert!((r_hd_tt.eps1eps2 - r_hd3_ttt.v2).abs() < 1e-10);
-        assert!((r_hd_vv.eps1eps2 - r_hd3_vvv.v2).abs() < 1e-10);
-        assert!((r_hd_tt.eps1eps2 - r_hdn.hessian[(0, 0)]).abs() < 1e-10);
-        assert!((r_hd_tv.eps1eps2 - r_hdn.hessian[(0, 1)]).abs() < 1e-10);
-        assert!((r_hd_vv.eps1eps2 - r_hdn.hessian[(1, 1)]).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_third_derivative() {
-        let (t_hdd, mut v_hdd, m_hdd) = init_state::<HyperDualDual64>();
-        v_hdd.re.eps = 1.0;
-        v_hdd.eps1.re = 1.0;
-        v_hdd.eps2.re = 1.0;
-        let (t_hd3, mut v_hd3, m_hd3) = init_state::<HD3_64>();
-        v_hd3 = v_hd3.derive();
-
-        let hs = HSContribution {
-            m: StaticVec::new_vec([1.0, 2.5]),
-            sigma: StaticVec::new_vec([3.2, 3.5]),
-            epsilon_k: StaticVec::new_vec([150., 220.]),
-        };
-        let r_hdd = hs.helmholtz_energy(t_hdd, v_hdd, m_hdd);
-        let r_hd3 = hs.helmholtz_energy(t_hd3, v_hd3, m_hd3);
-        assert!((r_hdd.eps1eps2.eps - r_hd3.v3).abs() < 1e-10);
-    }
-}

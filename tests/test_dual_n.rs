@@ -1,4 +1,4 @@
-use num_hyperdual::dual_n::DualN64;
+use num_hyperdual::DualN64;
 use num_hyperdual::DualNumMethods;
 
 #[test]

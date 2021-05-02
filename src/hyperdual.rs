@@ -9,16 +9,16 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A hyper dual number.
+/// A scalar hyper dual number for the calculation of second partial derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 pub struct HyperDual<T, F = T> {
     /// Real part of the hyper dual number
     pub re: T,
-    /// Eps1 part
+    /// Partial derivative part of the hyper dual number
     pub eps1: T,
-    /// Eps2 part
+    /// Partial derivative part of the hyper dual number
     pub eps2: T,
-    /// Eps1eps2 part
+    /// Second partial derivative part of the hyper dual number
     pub eps1eps2: T,
     f: PhantomData<F>,
 }
@@ -31,7 +31,7 @@ pub type HyperDualDualN32<const N: usize> = HyperDual<DualN32<N>, f32>;
 pub type HyperDualDualN64<const N: usize> = HyperDual<DualN64<N>, f64>;
 
 impl<T, F> HyperDual<T, F> {
-    /// Create a new hyperdual number
+    /// Create a new hyperdual number from its fields.
     #[inline]
     pub fn new(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
         HyperDual {
@@ -45,7 +45,7 @@ impl<T, F> HyperDual<T, F> {
 }
 
 impl<T: Zero, F> HyperDual<T, F> {
-    /// Create a new hyperdual number from the real part
+    /// Create a new hyperdual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         HyperDual::new(re, T::zero(), T::zero(), T::zero())
@@ -53,12 +53,24 @@ impl<T: Zero, F> HyperDual<T, F> {
 }
 
 impl<T: One, F> HyperDual<T, F> {
+    /// Derive a hyperdual number w.r.t. to the first variable.
     #[inline]
     pub fn derive1(mut self) -> Self {
         self.eps1 = T::one();
         self
     }
-
+    
+    /// Derive a hyperdual number w.r.t. to the second variable.
+    /// ```
+    /// # use num_hyperdual::{HyperDual, DualNumMethods};
+    /// let x = HyperDual::from_re(5.0).derive1();
+    /// let y = HyperDual::from_re(3.0).derive2();
+    /// let z = x * y.powi(2);
+    /// assert_eq!(z.re, 45.0);         // xy²
+    /// assert_eq!(z.eps1, 9.0);        // y²
+    /// assert_eq!(z.eps2, 30.0);       // 2xy
+    /// assert_eq!(z.eps1eps2, 6.0);    // 2y
+    /// ```
     #[inline]
     pub fn derive2(mut self) -> Self {
         self.eps2 = T::one();
