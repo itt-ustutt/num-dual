@@ -1,11 +1,17 @@
 macro_rules! impl_derivatives {
-    ($deriv:ident, $nderiv:expr, $struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> DualNumMethods<F> for $struct<T, F$(, $const)*> {
+    ($deriv:ident, $nderiv:expr, $struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> DualNum<F> for $struct<T, F$(, $const)*> {
             const NDERIV: usize = T::NDERIV + $nderiv;
 
             #[inline]
             fn re(&self) -> F {
                 self.re.re()
+            }
+
+            #[inline]
+            fn scale(&mut self, f: F) {
+                self.re.scale(f);
+                $(self.$im.scale(f);)*
             }
 
             #[inline]
@@ -321,19 +327,19 @@ macro_rules! chain_rule {
 }
 
 macro_rules! impl_first_derivatives {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl_derivatives!(first, 1, $struct, [$($const),*]);
+    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
+        impl_derivatives!(first, 1, $struct, [$($const),*], [$($im),*]);
     };
 }
 
 macro_rules! impl_second_derivatives {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl_derivatives!(second, 2, $struct, [$($const),*]);
+    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
+        impl_derivatives!(second, 2, $struct, [$($const),*], [$($im),*]);
     };
 }
 
 macro_rules! impl_third_derivatives {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl_derivatives!(third, 3, $struct, [$($const),*]);
+    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
+        impl_derivatives!(third, 3, $struct, [$($const),*], [$($im),*]);
     };
 }

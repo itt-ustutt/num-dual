@@ -168,7 +168,7 @@ macro_rules! impl_assign_ops {
 
 macro_rules! impl_scalar_op {
     ($struct:ident, [$($const:tt),*]) => {
-        impl<T: Scale<F>, F: Float, $(const $const: usize,)*> Mul<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Mul<F> for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn mul(mut self, other: F) -> Self {
@@ -177,14 +177,14 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: Scale<F>, F: Float, $(const $const: usize,)*> MulAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> MulAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn mul_assign(&mut self, other: F) {
                 self.scale(other);
             }
         }
 
-        impl<T: Scale<F>, F: Float, $(const $const: usize,)*> Div<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Div<F> for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn div(mut self, other: F) -> Self {
@@ -193,7 +193,7 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: Scale<F>, F: Float, $(const $const: usize,)*> DivAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> DivAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn div_assign(&mut self, other: F) {
                 self.scale(other.recip());
@@ -251,7 +251,7 @@ macro_rules! impl_scalar_op {
 
 macro_rules! impl_inv {
     ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Inv for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Inv for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn inv(self) -> Self {
@@ -385,7 +385,7 @@ macro_rules! impl_from_primitive {
 
 macro_rules! impl_signed {
     ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: Float + Signed, $(const $const: usize,)*> Signed for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Signed for $struct<T, F$(, $const)*> {
             #[inline]
             fn abs(&self) -> Self {
                 if self.is_positive() {
@@ -510,17 +510,6 @@ macro_rules! impl_num {
     };
 }
 
-macro_rules! impl_scale {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: Scale<F>, F: Float $(, const $const: usize)*> Scale<F> for $struct<T, F $(,$const)*> {
-            fn scale(&mut self, f: F) {
-                self.re.scale(f);
-                $(self.$im.scale(f);)*
-            }
-        }
-    };
-}
-
 macro_rules! impl_dual {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl_from_f!($struct, [$($const),*], [$($im),*]);
@@ -539,7 +528,6 @@ macro_rules! impl_dual {
         impl_from_primitive!($struct, [$($const),*]);
         impl_signed!($struct, [$($const),*]);
         impl_num!($struct, [$($const),*]);
-        impl_scale!($struct, [$($const),*], [$($im),*]);
         impl_float_const!($struct, [$($const),*]);
     };
 }

@@ -1,16 +1,20 @@
-use crate::linalg::Scale;
-use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumMethods};
+use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::*;
 
+/// A scalar hyper dual number for the calculation of third derivatives.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct HD3<T, F = T> {
+    /// Real part of the hyper dual number
     pub re: T,
+    /// First derivative part of the hyper dual number
     pub v1: T,
+    /// Second derivative part of the hyper dual number
     pub v2: T,
+    /// Third derivative part of the hyper dual number
     pub v3: T,
     f: PhantomData<F>,
 }
@@ -23,6 +27,7 @@ pub type HD3DualN32<const N: usize> = HD3<DualN32<N>, f32>;
 pub type HD3DualN64<const N: usize> = HD3<DualN64<N>, f64>;
 
 impl<T, F> HD3<T, F> {
+    /// Create a new hyper dual number from its fields.
     #[inline]
     pub fn new(re: T, v1: T, v2: T, v3: T) -> Self {
         Self {
@@ -36,6 +41,7 @@ impl<T, F> HD3<T, F> {
 }
 
 impl<T: Zero, F> HD3<T, F> {
+    /// Create a new hyper dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(re, T::zero(), T::zero(), T::zero())
@@ -43,6 +49,15 @@ impl<T: Zero, F> HD3<T, F> {
 }
 
 impl<T: Clone + Zero + One, F> HD3<T, F> {
+    /// Derive a hyper dual number, i.e. set the first derivative part to 1.
+    /// ```
+    /// # use num_hyperdual::{HD3, DualNum};
+    /// let x = HD3::from_re(5.0).derive().powi(3);
+    /// assert_eq!(x.re, 125.0);
+    /// assert_eq!(x.v1, 75.0);
+    /// assert_eq!(x.v2, 30.0);
+    /// assert_eq!(x.v3, 6.0);
+    /// ```
     #[inline]
     pub fn derive(mut self) -> Self {
         self.v1 = T::one();
@@ -105,5 +120,5 @@ impl<T: fmt::Display, F> fmt::Display for HD3<T, F> {
     }
 }
 
-impl_third_derivatives!(HD3, []);
+impl_third_derivatives!(HD3, [], [v1, v2, v3]);
 impl_dual!(HD3, [], [v1, v2, v3]);
