@@ -8,6 +8,9 @@ license = "MIT OR Apache-2.0"
 description = "Generalized (hyper) dual numbers for the calculation of exact (partial) derivatives"
 homepage = "https://github.com/itt-ustutt/num-hyperdual"
 repository = "https://github.com/itt-ustutt/num-hyperdual"
+keywords = ["mathematics", "numerics", "automatic differentiation"]
+categories = ["data-structures", "science", "mathematics"]
+exclude = ["/.github/*", "*.ipynb"]
 
 [dependencies]
 num-traits = "0.2"
