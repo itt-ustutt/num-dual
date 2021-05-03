@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Generalized (hyper) dual numbers for the calculation of exact (partial) derivatives"
+homepage = "https://github.com/itt-ustutt/num-hyperdual"
+repository = "https://github.com/itt-ustutt/num-hyperdual"
 
 [dependencies]
 num-traits = "0.2"
