@@ -173,13 +173,13 @@ pub trait DualNum<F>:
     /// Area hyperbolic tangent
     fn atanh(&self) -> Self;
 
-    /// 0th Order spherical bessel function of the first kind
+    /// 0th order spherical bessel function of the first kind
     fn sph_j0(&self) -> Self;
 
-    /// 1st Order spherical bessel function of the first kind
+    /// 1st order spherical bessel function of the first kind
     fn sph_j1(&self) -> Self;
 
-    /// 2nd Order spherical bessel function of the first kind
+    /// 2nd order spherical bessel function of the first kind
     fn sph_j2(&self) -> Self;
 
     /// Fused multiply-add
