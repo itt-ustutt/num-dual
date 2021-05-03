@@ -1,11 +1,7 @@
-#[cfg(feature = "linalg")]
 mod linalg_ndarray;
-#[cfg(feature = "linalg")]
 pub use linalg_ndarray::*;
 
-#[cfg(feature = "linalg")]
 mod lu;
-#[cfg(feature = "linalg")]
 pub use lu::LU;
 
 use std::fmt;
