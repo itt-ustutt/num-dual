@@ -5,7 +5,7 @@ use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::*;
 
-/// A scalar hyper dual number for the calculation of third derivatives
+/// A scalar hyper dual number for the calculation of third derivatives.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct HD3<T, F = T> {
     /// Real part of the hyper dual number
