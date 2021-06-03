@@ -17,7 +17,7 @@ num-hyperdual = "0.1"
 
 
 ## Example
-This example defines a generic function that can be called using any (hyper) dual number and automatically calculates vatives.
+This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
 ```rust
 use num_hyperdual::*;
 fn f<D: DualNum<f64>>(x: D, y: D) -> D {
