@@ -25,7 +25,7 @@
 //!     // Calculate a Hessian
 //!     let x_hyperdual2 = HyperDualN64::<2>::from(x).derive(0);
 //!     let y_hyperdual2 = HyperDualN64::<2>::from(y).derive(1);
-//!     println!("{}", f(x_hyperdual2, y_hyperdual2).hessian);  // [[480, 600], [600, 250]]
+//!     println!("{}", f(x_hyperdual2, y_hyperdual2).v2);       // [[480, 600], [600, 250]]
 //!
 //!     // for x=cos(t) and y=sin(t) calculate the third derivative w.r.t. t
 //!     let t = HD3_64::from(1.0).derive();
@@ -47,6 +47,7 @@ mod dual_n;
 mod hd2;
 mod hd3;
 mod hyperdual;
+mod hyperdual_mn;
 mod hyperdual_n;
 mod static_mat;
 pub use dual::{Dual, Dual32, Dual64};
@@ -57,6 +58,7 @@ pub use hyperdual::{
     HyperDual, HyperDual32, HyperDual64, HyperDualDual32, HyperDualDual64, HyperDualDualN32,
     HyperDualDualN64,
 };
+pub use hyperdual_mn::{HyperDualMN, HyperDualMN32, HyperDualMN64};
 pub use hyperdual_n::{
     HyperDualN, HyperDualN32, HyperDualN64, HyperDualNDual32, HyperDualNDual64, HyperDualNDualN32,
     HyperDualNDualN64,

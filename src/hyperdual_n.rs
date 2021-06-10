@@ -15,9 +15,9 @@ pub struct HyperDualN<T, F, const N: usize> {
     /// Real part of the hyper dual number
     pub re: T,
     /// Gradient part of the hyper dual number
-    pub gradient: StaticVec<T, N>,
+    pub v1: StaticVec<T, N>,
     /// Hessian part of the hyper dual number
-    pub hessian: StaticMat<T, N, N>,
+    pub v2: StaticMat<T, N, N>,
     f: PhantomData<F>,
 }
 
@@ -31,11 +31,11 @@ pub type HyperDualNDualN64<const M: usize, const N: usize> = HyperDualN<DualN64<
 impl<T, F, const N: usize> HyperDualN<T, F, N> {
     /// Create a new hyperdual number from its fields.
     #[inline]
-    pub fn new(re: T, gradient: StaticVec<T, N>, hessian: StaticMat<T, N, N>) -> Self {
+    pub fn new(re: T, v1: StaticVec<T, N>, v2: StaticMat<T, N, N>) -> Self {
         Self {
             re,
-            gradient,
-            hessian,
+            v1,
+            v2,
             f: PhantomData,
         }
     }
@@ -56,17 +56,17 @@ impl<T: One, F, const N: usize> HyperDualN<T, F, N> {
     /// let x = HyperDualN64::<2>::from_re(5.0).derive(0);
     /// let y = HyperDualN64::<2>::from_re(3.0).derive(1);
     /// let z = x * y.powi(2);
-    /// assert_eq!(z.re, 45.0);                 // xy²
-    /// assert_eq!(z.gradient[0], 9.0);         // y²
-    /// assert_eq!(z.gradient[1], 30.0);        // 2xy
-    /// assert_eq!(z.hessian[(0,0)], 0.0);      // 0
-    /// assert_eq!(z.hessian[(0,1)], 6.0);      // 2y
-    /// assert_eq!(z.hessian[(1,0)], 6.0);      // 2y
-    /// assert_eq!(z.hessian[(1,1)], 10.0);     // 2x
+    /// assert_eq!(z.re, 45.0);            // xy²
+    /// assert_eq!(z.v1[0], 9.0);          // y²
+    /// assert_eq!(z.v1[1], 30.0);         // 2xy
+    /// assert_eq!(z.v2[(0,0)], 0.0);      // 0
+    /// assert_eq!(z.v2[(0,1)], 6.0);      // 2y
+    /// assert_eq!(z.v2[(1,0)], 6.0);      // 2y
+    /// assert_eq!(z.v2[(1,1)], 10.0);     // 2x
     /// ```
     #[inline]
     pub fn derive(mut self, i: usize) -> Self {
-        self.gradient[i] = T::one();
+        self.v1[i] = T::one();
         self
     }
 }
@@ -79,17 +79,17 @@ impl<T: One, F, const N: usize> StaticVec<HyperDualN<T, F, N>, N> {
     /// let v = StaticVec::new_vec([4.0, 3.0]).map(HyperDualN64::<2>::from_re).derive();
     /// let n = (v[0].powi(2) + v[1].powi(2)).sqrt();
     /// assert_eq!(n.re, 5.0);
-    /// assert_relative_eq!(n.gradient[0], 0.8);
-    /// assert_relative_eq!(n.gradient[1], 0.6);
-    /// assert_relative_eq!(n.hessian[(0,0)], 0.072);
-    /// assert_relative_eq!(n.hessian[(0,1)], -0.096);
-    /// assert_relative_eq!(n.hessian[(1,0)], -0.096);
-    /// assert_relative_eq!(n.hessian[(1,1)], 0.128);
+    /// assert_relative_eq!(n.v1[0], 0.8);
+    /// assert_relative_eq!(n.v1[1], 0.6);
+    /// assert_relative_eq!(n.v2[(0,0)], 0.072);
+    /// assert_relative_eq!(n.v2[(0,1)], -0.096);
+    /// assert_relative_eq!(n.v2[(1,0)], -0.096);
+    /// assert_relative_eq!(n.v2[(1,1)], 0.128);
     /// ```
     #[inline]
     pub fn derive(mut self) -> Self {
         for i in 0..N {
-            self[i].gradient[i] = T::one();
+            self[i].v1[i] = T::one();
         }
         self
     }
@@ -101,8 +101,8 @@ impl<T: DualNum<F>, F: Float, const N: usize> HyperDualN<T, F, N> {
     fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
         Self::new(
             f0,
-            self.gradient * f1,
-            self.hessian * f1 + self.gradient.transpose_matmul(&self.gradient) * f2,
+            self.v1 * f1,
+            self.v2 * f1 + self.v1.transpose_matmul(&self.v1) * f2,
         )
     }
 }
@@ -116,11 +116,11 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a HyperDualN<T, F, N
     fn mul(self, other: &HyperDualN<T, F, N>) -> HyperDualN<T, F, N> {
         HyperDualN::new(
             self.re * other.re,
-            other.gradient * self.re + self.gradient * other.re,
-            other.hessian * self.re
-                + self.gradient.transpose_matmul(&other.gradient)
-                + other.gradient.transpose_matmul(&self.gradient)
-                + self.hessian * other.re,
+            other.v1 * self.re + self.v1 * other.re,
+            other.v2 * self.re
+                + self.v1.transpose_matmul(&other.v1)
+                + other.v1.transpose_matmul(&self.v1)
+                + self.v2 * other.re,
         )
     }
 }
@@ -136,13 +136,13 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a HyperDualN<T, F, N
         let inv2 = inv * inv;
         HyperDualN::new(
             self.re * inv,
-            (self.gradient * other.re - other.gradient * self.re) * inv2,
-            self.hessian * inv
-                - (other.hessian * self.re
-                    + self.gradient.transpose_matmul(&other.gradient)
-                    + other.gradient.transpose_matmul(&self.gradient))
+            (self.v1 * other.re - other.v1 * self.re) * inv2,
+            self.v2 * inv
+                - (other.v2 * self.re
+                    + self.v1.transpose_matmul(&other.v1)
+                    + other.v1.transpose_matmul(&self.v1))
                     * inv2
-                + other.gradient.transpose_matmul(&other.gradient)
+                + other.v1.transpose_matmul(&other.v1)
                     * ((T::one() + T::one()) * self.re * inv2 * inv),
         )
     }
@@ -151,9 +151,9 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a HyperDualN<T, F, N
 /* string conversions */
 impl<T: fmt::Display, F: fmt::Display, const N: usize> fmt::Display for HyperDualN<T, F, N> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} + {}ε1 + {}ε1²", self.re, self.gradient, self.hessian)
+        write!(f, "{} + {}ε1 + {}ε1²", self.re, self.v1, self.v2)
     }
 }
 
-impl_second_derivatives!(HyperDualN, [N], [gradient, hessian]);
-impl_dual!(HyperDualN, [N], [gradient, hessian]);
+impl_second_derivatives!(HyperDualN, [N], [v1, v2]);
+impl_dual!(HyperDualN, [N], [v1, v2]);
