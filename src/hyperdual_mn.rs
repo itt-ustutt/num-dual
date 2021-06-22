@@ -1,5 +1,3 @@
-use crate::dual::{Dual32, Dual64};
-use crate::dual_n::{DualN32, DualN64};
 use crate::{DualNum, DualNumFloat, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -25,10 +23,6 @@ pub struct HyperDualMN<T, F, const M: usize, const N: usize> {
 
 pub type HyperDualMN32<const M: usize, const N: usize> = HyperDualMN<f32, f32, M, N>;
 pub type HyperDualMN64<const M: usize, const N: usize> = HyperDualMN<f64, f64, M, N>;
-// pub type HyperDualMNDual32<const N: usize> = HyperDualMN<Dual32, f32, N>;
-// pub type HyperDualMNDual64<const N: usize> = HyperDualMN<Dual64, f64, N>;
-// pub type HyperDualMNDualN32<const M: usize, const N: usize> = HyperDualMN<DualN32<M>, f32, N>;
-// pub type HyperDualMNDualN64<const M: usize, const N: usize> = HyperDualMN<DualN64<M>, f64, N>;
 
 impl<T, F, const M: usize, const N: usize> HyperDualMN<T, F, M, N> {
     /// Create a new hyperdual number from its fields.

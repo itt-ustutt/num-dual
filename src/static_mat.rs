@@ -28,6 +28,20 @@ impl<T, const N: usize> StaticVec<T, N> {
     }
 }
 
+impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
+    /// Return the data of the StaticVec as array.
+    pub fn raw_data(&self) -> &[[T; N]; M] {
+        &self.0
+    }
+}
+
+impl<T: Copy, const N: usize> StaticVec<T, N> {
+    /// Return the data of the StaticVec as array.
+    pub fn raw_array(&self) -> &[T; N] {
+        &self.0[0]
+    }
+}
+
 impl<T: Copy + Zero + One + AddAssign, const N: usize> StaticMat<T, N, N> {
     /// Create a NxN unity matrix.
     pub fn eye() -> Self {
