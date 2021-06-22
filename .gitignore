@@ -1,3 +1,5 @@
 /target
 Cargo.lock
 *.so
+*.ipynb_checkpoints
+*.vscode
