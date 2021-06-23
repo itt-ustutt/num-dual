@@ -19,12 +19,22 @@ impl<T, const M: usize, const N: usize> StaticMat<T, M, N> {
     pub fn new(mat: [[T; N]; M]) -> Self {
         Self(mat)
     }
+
+    /// Return a reference to the raw data in the StaticMat.
+    pub fn raw_data(&self) -> &[[T; N]; M] {
+        &self.0
+    }
 }
 
 impl<T, const N: usize> StaticVec<T, N> {
     /// Create a new StaticVec from an array.
     pub fn new_vec(vec: [T; N]) -> Self {
         Self([vec])
+    }
+
+    /// Return a reference to the raw data in the StaticVec.
+    pub fn raw_array(&self) -> &[T; N] {
+        &self.0[0]
     }
 }
 
