@@ -1,6 +1,6 @@
 [package]
 name = "num-hyperdual"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
 edition = "2018"
