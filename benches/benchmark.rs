@@ -67,6 +67,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         group.bench_function("f64", |b| b.iter(|| bench::<f64>()));
         group.bench_function("Dual64", |b| b.iter(|| bench::<Dual64>()));
         group.bench_function("HyperDual64", |b| b.iter(|| bench::<HyperDual64>()));
+        group.bench_function("HD2_64", |b| b.iter(|| bench::<HD2_64>()));
         group.bench_function("HD3_64", |b| b.iter(|| bench::<HD3_64>()));
         group.bench_function("DualN64<1>", |b| b.iter(|| bench::<DualN64<1>>()));
         group.bench_function("DualN64<2>", |b| b.iter(|| bench::<DualN64<2>>()));

@@ -19,6 +19,11 @@ impl<T, const M: usize, const N: usize> StaticMat<T, M, N> {
     pub fn new(mat: [[T; N]; M]) -> Self {
         Self(mat)
     }
+
+    /// Return a reference to the raw data in the StaticMat.
+    pub fn raw_data(&self) -> &[[T; N]; M] {
+        &self.0
+    }
 }
 
 impl<T, const N: usize> StaticVec<T, N> {
@@ -26,17 +31,8 @@ impl<T, const N: usize> StaticVec<T, N> {
     pub fn new_vec(vec: [T; N]) -> Self {
         Self([vec])
     }
-}
 
-impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
-    /// Return the data of the StaticVec as array.
-    pub fn raw_data(&self) -> &[[T; N]; M] {
-        &self.0
-    }
-}
-
-impl<T: Copy, const N: usize> StaticVec<T, N> {
-    /// Return the data of the StaticVec as array.
+    /// Return a reference to the raw data in the StaticVec.
     pub fn raw_array(&self) -> &[T; N] {
         &self.0[0]
     }
