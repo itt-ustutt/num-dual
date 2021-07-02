@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use num_hyperdual::*;
+use num_dual::*;
 
 trait HelmholtzEnergy<const N: usize> {
     fn helmholtz_energy<T: DualNum<f64>>(
@@ -66,26 +66,31 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut group = c.benchmark_group("Hard sphere contribution");
         group.bench_function("f64", |b| b.iter(|| bench::<f64>()));
         group.bench_function("Dual64", |b| b.iter(|| bench::<Dual64>()));
+        group.bench_function("DualVec64<2>", |b| b.iter(|| bench::<DualVec64<2>>()));
+        group.bench_function("DualVec64<3>", |b| b.iter(|| bench::<DualVec64<3>>()));
         group.bench_function("HyperDual64", |b| b.iter(|| bench::<HyperDual64>()));
-        group.bench_function("HD2_64", |b| b.iter(|| bench::<HD2_64>()));
-        group.bench_function("HD3_64", |b| b.iter(|| bench::<HD3_64>()));
-        group.bench_function("DualN64<1>", |b| b.iter(|| bench::<DualN64<1>>()));
-        group.bench_function("DualN64<2>", |b| b.iter(|| bench::<DualN64<2>>()));
-        group.bench_function("DualN64<3>", |b| b.iter(|| bench::<DualN64<3>>()));
-        group.bench_function("HyperDualN64<1>", |b| b.iter(|| bench::<HyperDualN64<1>>()));
-        group.bench_function("HyperDualN64<2>", |b| b.iter(|| bench::<HyperDualN64<2>>()));
-        group.bench_function("HyperDualN64<3>", |b| b.iter(|| bench::<HyperDualN64<3>>()));
-        group.bench_function("HyperDualMN64<1,1>", |b| {
-            b.iter(|| bench::<HyperDualMN64<1, 1>>())
+        group.bench_function("HyperDualVec64<1,2>", |b| {
+            b.iter(|| bench::<HyperDualVec64<1, 2>>())
         });
-        group.bench_function("HyperDualDual64", |b| b.iter(|| bench::<HyperDualDual64>()));
-        group.bench_function("HD3Dual64", |b| b.iter(|| bench::<HD3Dual64>()));
+        group.bench_function("HyperDualVec64<2,2>", |b| {
+            b.iter(|| bench::<HyperDualVec64<2, 2>>())
+        });
+        group.bench_function("Dual2_64", |b| b.iter(|| bench::<Dual2_64>()));
+        group.bench_function("Dual2Vec64<2>", |b| b.iter(|| bench::<Dual2Vec64<2>>()));
+        group.bench_function("Dual2Vec64<3>", |b| b.iter(|| bench::<Dual2Vec64<3>>()));
+        group.bench_function("Dual3_64", |b| b.iter(|| bench::<Dual3_64>()));
     }
     let mut group = c.benchmark_group("Recursive numbers");
-    group.bench_function("HyperDualDualN64<2>", |b| {
-        b.iter(|| bench::<HyperDualDualN64<2>>())
+    group.bench_function("HyperDualDual64", |b| {
+        b.iter(|| bench::<HyperDual<Dual64, f64>>())
     });
-    group.bench_function("HD3DualN64<2>", |b| b.iter(|| bench::<HD3DualN64<2>>()));
+    group.bench_function("Dual3Dual64", |b| b.iter(|| bench::<Dual3<Dual64, f64>>()));
+    group.bench_function("HyperDualDualVec64<2>", |b| {
+        b.iter(|| bench::<HyperDual<DualVec64<2>, f64>>())
+    });
+    group.bench_function("Dual3DualVec64<2>", |b| {
+        b.iter(|| bench::<Dual3<DualVec64<2>, f64>>())
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);

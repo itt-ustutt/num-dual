@@ -238,7 +238,7 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
 
     /// Perform a matrix-matrix multiplication.
     /// ```
-    /// use num_hyperdual::StaticMat;
+    /// use num_dual::StaticMat;
     /// let a = StaticMat::new([[1, 2], [3, 4]]);
     /// let b = StaticMat::new([[2, 1], [4, 3]]);
     /// let x = a.matmul(&b);
@@ -268,7 +268,7 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
 
     /// Perform a matrix-matrix multiplication in which the first matrix is transposed.
     /// ```
-    /// use num_hyperdual::StaticVec;
+    /// use num_dual::StaticVec;
     /// let a = StaticVec::new_vec([1, 2]);
     /// let b = StaticVec::new_vec([2, 1]);
     /// let x = a.transpose_matmul(&b);
@@ -298,7 +298,7 @@ impl<T: Copy, const M: usize, const N: usize> StaticMat<T, M, N> {
 
     /// Perform a matrix-matrix multiplication in which the second matrix is transposed.
     /// ```
-    /// use num_hyperdual::{StaticMat, StaticVec};
+    /// use num_dual::{StaticMat, StaticVec};
     /// let a = StaticMat::new([[1, 2], [3, 4]]);
     /// let b = StaticVec::new_vec([2, 1]);
     /// let x = a.matmul_transpose(&b);
@@ -359,7 +359,7 @@ impl<T: Copy + Zero, const N: usize> StaticVec<T, N> {
 
     /// Calculate the dot product of two vectors.
     /// ```
-    /// use num_hyperdual::StaticVec;
+    /// use num_dual::StaticVec;
     /// let a = StaticVec::new_vec([1, 2, 3, 4]);
     /// let b = StaticVec::new_vec([2, 1, 4, 3]);
     /// assert_eq!(a.dot(&b), 28);

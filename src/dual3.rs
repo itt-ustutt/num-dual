@@ -1,33 +1,29 @@
-use crate::{Dual32, Dual64, DualN32, DualN64, DualNum, DualNumFloat};
+use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::*;
 
-/// A scalar hyper dual number for the calculation of third derivatives.
+/// A scalar third order dual number for the calculation of third derivatives.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub struct HD3<T, F = T> {
-    /// Real part of the hyper dual number
+pub struct Dual3<T, F = T> {
+    /// Real part of the third order dual number
     pub re: T,
-    /// First derivative part of the hyper dual number
+    /// First derivative part of the third order dual number
     pub v1: T,
-    /// Second derivative part of the hyper dual number
+    /// Second derivative part of the third order dual number
     pub v2: T,
-    /// Third derivative part of the hyper dual number
+    /// Third derivative part of the third order dual number
     pub v3: T,
     f: PhantomData<F>,
 }
 
-pub type HD3_32 = HD3<f32>;
-pub type HD3_64 = HD3<f64>;
-pub type HD3Dual32 = HD3<Dual32, f32>;
-pub type HD3Dual64 = HD3<Dual64, f64>;
-pub type HD3DualN32<const N: usize> = HD3<DualN32<N>, f32>;
-pub type HD3DualN64<const N: usize> = HD3<DualN64<N>, f64>;
+pub type Dual3_32 = Dual3<f32>;
+pub type Dual3_64 = Dual3<f64>;
 
-impl<T, F> HD3<T, F> {
-    /// Create a new hyper dual number from its fields.
+impl<T, F> Dual3<T, F> {
+    /// Create a new third order dual number from its fields.
     #[inline]
     pub fn new(re: T, v1: T, v2: T, v3: T) -> Self {
         Self {
@@ -40,19 +36,19 @@ impl<T, F> HD3<T, F> {
     }
 }
 
-impl<T: Zero, F> HD3<T, F> {
-    /// Create a new hyper dual number from the real part.
+impl<T: Zero, F> Dual3<T, F> {
+    /// Create a new third order dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(re, T::zero(), T::zero(), T::zero())
     }
 }
 
-impl<T: Clone + Zero + One, F> HD3<T, F> {
+impl<T: Clone + Zero + One, F> Dual3<T, F> {
     /// Derive a hyper dual number, i.e. set the first derivative part to 1.
     /// ```
-    /// # use num_hyperdual::{HD3, DualNum};
-    /// let x = HD3::from_re(5.0).derive().powi(3);
+    /// # use num_dual::{Dual3, DualNum};
+    /// let x = Dual3::from_re(5.0).derive().powi(3);
     /// assert_eq!(x.re, 125.0);
     /// assert_eq!(x.v1, 75.0);
     /// assert_eq!(x.v2, 30.0);
@@ -65,7 +61,7 @@ impl<T: Clone + Zero + One, F> HD3<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> HD3<T, F> {
+impl<T: DualNum<F>, F: Float> Dual3<T, F> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
         let three = T::one() + T::one() + T::one();
@@ -78,13 +74,13 @@ impl<T: DualNum<F>, F: Float> HD3<T, F> {
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HD3<T, F>> for &'b HD3<T, F> {
-    type Output = HD3<T, F>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual3<T, F>> for &'b Dual3<T, F> {
+    type Output = Dual3<T, F>;
     #[inline]
-    fn mul(self, rhs: &HD3<T, F>) -> HD3<T, F> {
+    fn mul(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
         let two = T::one() + T::one();
         let three = two + T::one();
-        HD3::new(
+        Dual3::new(
             self.re * rhs.re,
             self.v1 * rhs.re + self.re * rhs.v1,
             self.v2 * rhs.re + two * self.v1 * rhs.v1 + self.re * rhs.v2,
@@ -96,10 +92,10 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HD3<T, F>> for &'b HD3<T, F> {
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HD3<T, F>> for &'b HD3<T, F> {
-    type Output = HD3<T, F>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a Dual3<T, F>> for &'b Dual3<T, F> {
+    type Output = Dual3<T, F>;
     #[inline]
-    fn div(self, rhs: &HD3<T, F>) -> HD3<T, F> {
+    fn div(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
         let rec = T::one() / rhs.re;
         let f0 = rec;
         let f1 = -f0 * rec;
@@ -110,7 +106,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HD3<T, F>> for &'b HD3<T, F> {
 }
 
 /* string conversions */
-impl<T: fmt::Display, F> fmt::Display for HD3<T, F> {
+impl<T: fmt::Display, F> fmt::Display for Dual3<T, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -120,5 +116,5 @@ impl<T: fmt::Display, F> fmt::Display for HD3<T, F> {
     }
 }
 
-impl_third_derivatives!(HD3, [], [v1, v2, v3]);
-impl_dual!(HD3, [], [v1, v2, v3]);
+impl_third_derivatives!(Dual3, [], [v1, v2, v3]);
+impl_dual!(Dual3, [], [v1, v2, v3]);
