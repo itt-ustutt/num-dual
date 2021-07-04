@@ -8,7 +8,7 @@ use std::ops::{
 };
 
 /// A hyper dual number for the calculation of second partial derivatives.
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub struct HyperDualVec<T, F, const M: usize, const N: usize> {
     /// Real part of the hyper dual number
     pub re: T,

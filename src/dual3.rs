@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::ops::*;
 
 /// A scalar third order dual number for the calculation of third derivatives.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub struct Dual3<T, F = T> {
     /// Real part of the third order dual number
     pub re: T,

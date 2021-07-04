@@ -1,5 +1,3 @@
-#[macro_use]
-
 macro_rules! impl_from_f {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl<T: Copy + Zero + AddAssign + From<F>, F, $(const $const: usize,)*> From<F> for $struct<T, F$(, $const)*> {

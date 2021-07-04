@@ -8,7 +8,7 @@ use std::ops::{
 };
 
 /// A second order dual number for the calculation of Hessians.
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub struct Dual2Vec<T, F, const N: usize> {
     /// Real part of the second order dual number
     pub re: T,
