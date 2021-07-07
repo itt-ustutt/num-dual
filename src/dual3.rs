@@ -45,7 +45,7 @@ impl<T: Zero, F> Dual3<T, F> {
 }
 
 impl<T: Clone + Zero + One, F> Dual3<T, F> {
-    /// Derive a hyper dual number, i.e. set the first derivative part to 1.
+    /// Derive a third order dual number, i.e. set the first derivative part to 1.
     /// ```
     /// # use num_dual::{Dual3, DualNum};
     /// let x = Dual3::from_re(5.0).derive().powi(3);
