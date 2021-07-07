@@ -3,7 +3,7 @@
 //! ## Example
 //! This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
 //! ```
-//! use num_hyperdual::*;
+//! use num_dual::*;
 //!
 //! fn f<D: DualNum<f64>>(x: D, y: D) -> D {
 //!     x.powi(3) * y.powi(2)
@@ -15,20 +15,18 @@
 //!     // Calculate a simple derivative
 //!     let x_dual = Dual64::from(x).derive();
 //!     let y_dual = Dual64::from(y);
-//!     println!("{}", f(x_dual, y_dual));                      // 2000 + 1200ε
+//!     println!("{}", f(x_dual, y_dual));                      // 2000 + [1200]ε
 //!
 //!     // Calculate a gradient
-//!     let x_dual2 = DualN64::<2>::from(x).derive(0);
-//!     let y_dual2 = DualN64::<2>::from(y).derive(1);
-//!     println!("{}", f(x_dual2, y_dual2).eps);                // [1200, 1000]
+//!     let xy_dual_vec = StaticVec::new_vec([x,y]).map(DualVec64::<2>::from).derive();
+//!     println!("{}", f(xy_dual_vec[0], xy_dual_vec[1]).eps);  // [1200, 1000]
 //!
 //!     // Calculate a Hessian
-//!     let x_hyperdual2 = HyperDualN64::<2>::from(x).derive(0);
-//!     let y_hyperdual2 = HyperDualN64::<2>::from(y).derive(1);
-//!     println!("{}", f(x_hyperdual2, y_hyperdual2).v2);       // [[480, 600], [600, 250]]
+//!     let xy_dual2 = StaticVec::new_vec([x,y]).map(Dual2Vec64::<2>::from).derive();
+//!     println!("{}", f(xy_dual2[0], xy_dual2[1]).v2);         // [[480, 600], [600, 250]]
 //!
 //!     // for x=cos(t) and y=sin(t) calculate the third derivative w.r.t. t
-//!     let t = HD3_64::from(1.0).derive();
+//!     let t = Dual3_64::from(1.0).derive();
 //!     println!("{}", f(t.cos(), t.sin()).v3);                 // 7.358639755305733
 //! }
 //! ```
@@ -43,25 +41,15 @@ mod macros;
 mod derivatives;
 
 mod dual;
-mod dual_n;
-mod hd2;
-mod hd3;
+mod dual2;
+mod dual3;
 mod hyperdual;
-mod hyperdual_mn;
-mod hyperdual_n;
 mod static_mat;
-pub use dual::{Dual, Dual32, Dual64};
-pub use dual_n::{DualN, DualN32, DualN64};
-pub use hd2::{HD2Dual32, HD2Dual64, HD2DualN32, HD2DualN64, HD2, HD2_32, HD2_64};
-pub use hd3::{HD3Dual32, HD3Dual64, HD3DualN32, HD3DualN64, HD3, HD3_32, HD3_64};
+pub use dual::{Dual, Dual32, Dual64, DualVec, DualVec32, DualVec64};
+pub use dual2::{Dual2, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64};
+pub use dual3::{Dual3, Dual3_32, Dual3_64};
 pub use hyperdual::{
-    HyperDual, HyperDual32, HyperDual64, HyperDualDual32, HyperDualDual64, HyperDualDualN32,
-    HyperDualDualN64,
-};
-pub use hyperdual_mn::{HyperDualMN, HyperDualMN32, HyperDualMN64};
-pub use hyperdual_n::{
-    HyperDualN, HyperDualN32, HyperDualN64, HyperDualNDual32, HyperDualNDual64, HyperDualNDualN32,
-    HyperDualNDualN64,
+    HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
 pub use static_mat::{StaticMat, StaticVec};
 

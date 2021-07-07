@@ -1,5 +1,3 @@
-use crate::dual::{Dual32, Dual64};
-use crate::dual_n::{DualN32, DualN64};
 use crate::{DualNum, DualNumFloat, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
@@ -9,27 +7,26 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A vector hyper dual number for the calculation of Hessians.
-#[derive(PartialEq, Copy, Clone)]
-pub struct HyperDualN<T, F, const N: usize> {
-    /// Real part of the hyper dual number
+/// A second order dual number for the calculation of Hessians.
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub struct Dual2Vec<T, F, const N: usize> {
+    /// Real part of the second order dual number
     pub re: T,
-    /// Gradient part of the hyper dual number
+    /// Gradient part of the second order dual number
     pub v1: StaticVec<T, N>,
-    /// Hessian part of the hyper dual number
+    /// Hessian part of the second order dual number
     pub v2: StaticMat<T, N, N>,
     f: PhantomData<F>,
 }
 
-pub type HyperDualN32<const N: usize> = HyperDualN<f32, f32, N>;
-pub type HyperDualN64<const N: usize> = HyperDualN<f64, f64, N>;
-pub type HyperDualNDual32<const N: usize> = HyperDualN<Dual32, f32, N>;
-pub type HyperDualNDual64<const N: usize> = HyperDualN<Dual64, f64, N>;
-pub type HyperDualNDualN32<const M: usize, const N: usize> = HyperDualN<DualN32<M>, f32, N>;
-pub type HyperDualNDualN64<const M: usize, const N: usize> = HyperDualN<DualN64<M>, f64, N>;
+pub type Dual2Vec32<const N: usize> = Dual2Vec<f32, f32, N>;
+pub type Dual2Vec64<const N: usize> = Dual2Vec<f64, f64, N>;
+pub type Dual2<T, F> = Dual2Vec<T, F, 1>;
+pub type Dual2_32 = Dual2<f32, f32>;
+pub type Dual2_64 = Dual2<f64, f64>;
 
-impl<T, F, const N: usize> HyperDualN<T, F, N> {
-    /// Create a new hyperdual number from its fields.
+impl<T, F, const N: usize> Dual2Vec<T, F, N> {
+    /// Create a new second order dual number from its fields.
     #[inline]
     pub fn new(re: T, v1: StaticVec<T, N>, v2: StaticMat<T, N, N>) -> Self {
         Self {
@@ -41,21 +38,28 @@ impl<T, F, const N: usize> HyperDualN<T, F, N> {
     }
 }
 
-impl<T: Copy + Zero + AddAssign, F, const N: usize> HyperDualN<T, F, N> {
-    /// Create a new hyperdual number from the real part.
+impl<T, F> Dual2<T, F> {
+    /// Create a new scalar second order dual number from its fields.
     #[inline]
-    pub fn from_re(re: T) -> Self {
-        HyperDualN::new(re, StaticVec::zero(), StaticMat::zero())
+    pub fn new_scalar(re: T, v1: T, v2: T) -> Self {
+        Self::new(re, StaticVec::new_vec([v1]), StaticMat::new([[v2]]))
     }
 }
 
-impl<T: One, F, const N: usize> HyperDualN<T, F, N> {
-    /// Derive a dual number w.r.t. the i-th variable.
+impl<T: Copy + Zero + AddAssign, F, const N: usize> Dual2Vec<T, F, N> {
+    /// Create a new second order dual number from the real part.
+    #[inline]
+    pub fn from_re(re: T) -> Self {
+        Dual2Vec::new(re, StaticVec::zero(), StaticMat::zero())
+    }
+}
+
+impl<T: One, F> Dual2<T, F> {
+    /// Derive a scalar second order dual number
     /// ```
-    /// # use num_hyperdual::{HyperDualN64, DualNum};
-    /// let x = HyperDualN64::<2>::from_re(5.0).derive(0);
-    /// let y = HyperDualN64::<2>::from_re(3.0).derive(1);
-    /// let z = x * y.powi(2);
+    /// # use num_dual::{Dual2Vec64, DualNum, StaticVec};
+    /// let xy = StaticVec::new_vec([5.0, 3.0]).map(Dual2Vec64::<2>::from).derive();
+    /// let z = xy[0] * xy[1].powi(2);
     /// assert_eq!(z.re, 45.0);            // xy²
     /// assert_eq!(z.v1[0], 9.0);          // y²
     /// assert_eq!(z.v1[1], 30.0);         // 2xy
@@ -65,18 +69,18 @@ impl<T: One, F, const N: usize> HyperDualN<T, F, N> {
     /// assert_eq!(z.v2[(1,1)], 10.0);     // 2x
     /// ```
     #[inline]
-    pub fn derive(mut self, i: usize) -> Self {
-        self.v1[i] = T::one();
+    pub fn derive(mut self) -> Self {
+        self.v1[0] = T::one();
         self
     }
 }
 
-impl<T: One, F, const N: usize> StaticVec<HyperDualN<T, F, N>, N> {
-    /// Derive a Vector of hyper dual numbers.
+impl<T: One, F, const N: usize> StaticVec<Dual2Vec<T, F, N>, N> {
+    /// Derive a vector of second order dual numbers.
     /// ```
     /// # use approx::assert_relative_eq;
-    /// # use num_hyperdual::{HyperDualN64, DualNum, StaticVec};
-    /// let v = StaticVec::new_vec([4.0, 3.0]).map(HyperDualN64::<2>::from_re).derive();
+    /// # use num_dual::{Dual2Vec64, DualNum, StaticVec};
+    /// let v = StaticVec::new_vec([4.0, 3.0]).map(Dual2Vec64::<2>::from_re).derive();
     /// let n = (v[0].powi(2) + v[1].powi(2)).sqrt();
     /// assert_eq!(n.re, 5.0);
     /// assert_relative_eq!(n.v1[0], 0.8);
@@ -96,7 +100,7 @@ impl<T: One, F, const N: usize> StaticVec<HyperDualN<T, F, N>, N> {
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float, const N: usize> HyperDualN<T, F, N> {
+impl<T: DualNum<F>, F: Float, const N: usize> Dual2Vec<T, F, N> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
         Self::new(
@@ -108,13 +112,13 @@ impl<T: DualNum<F>, F: Float, const N: usize> HyperDualN<T, F, N> {
 }
 
 /* product rule */
-impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a HyperDualN<T, F, N>>
-    for &'b HyperDualN<T, F, N>
+impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a Dual2Vec<T, F, N>>
+    for &'b Dual2Vec<T, F, N>
 {
-    type Output = HyperDualN<T, F, N>;
+    type Output = Dual2Vec<T, F, N>;
     #[inline]
-    fn mul(self, other: &HyperDualN<T, F, N>) -> HyperDualN<T, F, N> {
-        HyperDualN::new(
+    fn mul(self, other: &Dual2Vec<T, F, N>) -> Dual2Vec<T, F, N> {
+        Dual2Vec::new(
             self.re * other.re,
             other.v1 * self.re + self.v1 * other.re,
             other.v2 * self.re
@@ -126,15 +130,15 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a HyperDualN<T, F, N
 }
 
 /* quotient rule */
-impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a HyperDualN<T, F, N>>
-    for &'b HyperDualN<T, F, N>
+impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a Dual2Vec<T, F, N>>
+    for &'b Dual2Vec<T, F, N>
 {
-    type Output = HyperDualN<T, F, N>;
+    type Output = Dual2Vec<T, F, N>;
     #[inline]
-    fn div(self, other: &HyperDualN<T, F, N>) -> HyperDualN<T, F, N> {
+    fn div(self, other: &Dual2Vec<T, F, N>) -> Dual2Vec<T, F, N> {
         let inv = other.re.recip();
         let inv2 = inv * inv;
-        HyperDualN::new(
+        Dual2Vec::new(
             self.re * inv,
             (self.v1 * other.re - other.v1 * self.re) * inv2,
             self.v2 * inv
@@ -149,11 +153,11 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a HyperDualN<T, F, N
 }
 
 /* string conversions */
-impl<T: fmt::Display, F: fmt::Display, const N: usize> fmt::Display for HyperDualN<T, F, N> {
+impl<T: fmt::Display, F: fmt::Display, const N: usize> fmt::Display for Dual2Vec<T, F, N> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}ε1 + {}ε1²", self.re, self.v1, self.v2)
     }
 }
 
-impl_second_derivatives!(HyperDualN, [N], [v1, v2]);
-impl_dual!(HyperDualN, [N], [v1, v2]);
+impl_second_derivatives!(Dual2Vec, [N], [v1, v2]);
+impl_dual!(Dual2Vec, [N], [v1, v2]);

@@ -147,15 +147,20 @@ mod tests {
     #[test]
     fn test_solve_dual64() {
         let a = StaticMat::new([
-            [Dual64::new(4.0, 3.0), Dual64::new(3.0, 3.0)],
-            [Dual64::new(6.0, 1.0), Dual64::new(3.0, 2.0)],
+            [Dual64::new_scalar(4.0, 3.0), Dual64::new_scalar(3.0, 3.0)],
+            [Dual64::new_scalar(6.0, 1.0), Dual64::new_scalar(3.0, 2.0)],
         ]);
-        let b = StaticVec::new_vec([Dual64::new(10.0, 20.0), Dual64::new(12.0, 20.0)]);
+        let b = StaticVec::new_vec([
+            Dual64::new_scalar(10.0, 20.0),
+            Dual64::new_scalar(12.0, 20.0),
+        ]);
         let lu = LU::new(a).unwrap();
-        assert_eq!(lu.determinant(), Dual64::new(-6.0, -4.0));
+        let det = lu.determinant();
+        assert_eq!((det.re, det.eps[0]), (-6.0, -4.0));
+        let x = lu.solve(&b);
         assert_eq!(
-            lu.solve(&b),
-            StaticVec::new_vec([Dual64::new(1.0, 2.0), Dual64::new(2.0, 1.0)])
+            (x[0].re, x[0].eps[0], x[1].re, x[1].eps[0]),
+            (1.0, 2.0, 2.0, 1.0)
         );
     }
 }
