@@ -114,7 +114,7 @@ where
         Zip::from(&dx0)
             .and(&dx1)
             .and(&mut *b)
-            .apply(|&dx0, &dx1, b| *b = Dual::new_scalar(dx0, dx1));
+            .for_each(|&dx0, &dx1, b| *b = Dual::new_scalar(dx0, dx1));
         Ok(b)
     }
 }
@@ -160,7 +160,7 @@ where
             .and(&dx1_0)
             .and(&dx1_1)
             .and(&mut *b)
-            .apply(|&dx0, &dx1_0, &dx1_1, b| {
+            .for_each(|&dx0, &dx1_0, &dx1_1, b| {
                 *b = DualVec::new(dx0, StaticVec::new_vec([dx1_0, dx1_1]))
             });
         Ok(b)
@@ -211,7 +211,7 @@ where
             .and(&dx2)
             .and(&dx12)
             .and(&mut *b)
-            .apply(|&dx0, &dx1, &dx2, &dx12, b| *b = HyperDual::new_scalar(dx0, dx1, dx2, dx12));
+            .for_each(|&dx0, &dx1, &dx2, &dx12, b| *b = HyperDual::new_scalar(dx0, dx1, dx2, dx12));
         Ok(b)
     }
 }
@@ -262,7 +262,7 @@ where
             .and(&dx2)
             .and(&dx3)
             .and(&mut *b)
-            .apply(|&dx0, &dx1, &dx2, &dx3, b| *b = Dual3::new(dx0, dx1, dx2, dx3));
+            .for_each(|&dx0, &dx1, &dx2, &dx3, b| *b = Dual3::new(dx0, dx1, dx2, dx3));
         Ok(b)
     }
 }
@@ -305,10 +305,10 @@ impl EighDual<Dual64> for Array2<Dual64> {
         });
         let l = Zip::from(&l0)
             .and(&m.diag())
-            .apply_collect(|&l0, &l1| Dual64::new_scalar(l0, l1));
+            .map_collect(|&l0, &l1| Dual64::new_scalar(l0, l1));
         let v = Zip::from(&v0)
             .and(&a.dot(&v0))
-            .apply_collect(|&v0, &v1| Dual64::new_scalar(v0, v1));
+            .map_collect(|&v0, &v1| Dual64::new_scalar(v0, v1));
         Ok((l, v))
     }
 }
@@ -361,15 +361,11 @@ impl EighDual<DualVec64<2>> for Array2<DualVec64<2>> {
         let l = Zip::from(&l0)
             .and(&m_0.diag())
             .and(&m_1.diag())
-            .apply_collect(|&l0, &l1_0, &l1_1| {
-                DualVec64::new(l0, StaticVec::new_vec([l1_0, l1_1]))
-            });
+            .map_collect(|&l0, &l1_0, &l1_1| DualVec64::new(l0, StaticVec::new_vec([l1_0, l1_1])));
         let v = Zip::from(&v0)
             .and(&a_0.dot(&v0))
             .and(&a_1.dot(&v0))
-            .apply_collect(|&v0, &v1_0, &v1_1| {
-                DualVec64::new(v0, StaticVec::new_vec([v1_0, v1_1]))
-            });
+            .map_collect(|&v0, &v1_0, &v1_1| DualVec64::new(v0, StaticVec::new_vec([v1_0, v1_1])));
         Ok((l, v))
     }
 }

@@ -12,7 +12,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-dual = "0.1"
+num-dual = "0.2"
 ```
 
 
