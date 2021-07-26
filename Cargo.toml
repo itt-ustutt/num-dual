@@ -1,6 +1,6 @@
 [package]
 name = "num-dual"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
 edition = "2018"
@@ -14,11 +14,11 @@ exclude = ["/.github/*", "*.ipynb"]
 
 [dependencies]
 num-traits = "0.2"
-ndarray = { version = "0.14", optional = true }
-ndarray-linalg = { version = "0.13", optional = true }
+ndarray = { version = "0.15", optional = true }
+ndarray-linalg = { version = "0.14", optional = true }
 
 [features]
-default = ["std"]
+default = ["std", "linalg"]
 std = ["num-traits/std"]
 libm = ["num-traits/libm"]
 linalg = ["ndarray", "ndarray-linalg"]
@@ -31,7 +31,7 @@ intel-mkl-system = ["ndarray-linalg/intel-mkl-system"]
 
 [dev-dependencies]
 criterion = "0.3"
-approx = "0.3"
+approx = "0.4"
 
 [[bench]]
 name = "benchmark"
