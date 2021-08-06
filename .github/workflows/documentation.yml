@@ -26,10 +26,10 @@ jobs:
         with:
           manylinux: auto
           command: build
-          args: --release --out dist --no-sdist
+          args: --release --out dist --no-sdist --python
       - name: Install module
         run: |
-          pip install dualnum --no-index --find-links dist --force-reinstall
+          pip install num_dual --no-index --find-links dist --force-reinstall
       - name: Build documentation
         run: sphinx-build docs/ public/ -b html
       - name: Upload artifacts
