@@ -11,15 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          default: true
       - uses: actions/setup-python@v2
         with:
           python-version: 3.9
+      - name: Install python dependencies
+        run: |
+          virtualenv venv
+          source venv/bin/activate
+          pip install maturin numpy
       - name: Build Wheels
-        uses: messense/maturin-action@v1
-        with:
-          manylinux: auto
-          command: build
-          args: --release --out dist --no-sdist
+        run: |
+          source venv/bin/activate
+          maturin build --release --cargo-extra-args="--features python" --no-sdist -o dist
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -40,15 +49,19 @@ jobs:
           toolchain: stable
           profile: minimal
           default: true
-      - name: Build wheels - x86_64
-        uses: messense/maturin-action@v1
-        with:
-          target: x86_64
-          args: --release --out dist --no-sdist
-      - name: Build wheels - universal2
-        uses: messense/maturin-action@v1
-        with:
-          args: --release --universal2 --out dist --no-sdist
+      - name: Install python dependencies
+        run: |
+          virtualenv venv
+          source venv/bin/activate
+          pip install maturin numpy
+      - name: Build Wheels
+        run: |
+          source venv/bin/activate
+          maturin build --release --cargo-extra-args="--features python" --no-sdist -o dist
+      - name: Build Wheels universal
+        run: |
+          source venv/bin/activate
+          maturin build --release --cargo-extra-args="--features python" --no-sdist -o dist --universal2
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -72,11 +85,10 @@ jobs:
           toolchain: stable
           profile: minimal
           default: true
-      - name: Build wheels
-        uses: messense/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          args: --release --out dist --no-sdist
+      - name: Build Wheels
+        run: |
+          source venv/bin/activate
+          maturin build --release --cargo-extra-args="--features python" --no-sdist -o dist
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:

@@ -28,7 +28,7 @@ optional = true
 features = ["extension-module", "abi3", "abi3-py36", "multiple-pymethods"]
 
 [features]
-default = ["python"]
+default = []
 python = ["pyo3"]
 linalg = ["ndarray", "ndarray-linalg"]
 openblas-system = ["ndarray-linalg/openblas-system"]
