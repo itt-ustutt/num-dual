@@ -26,7 +26,7 @@ jobs:
         with:
           manylinux: auto
           command: build
-          args: --release --out dist --no-sdist --cargo-extra-args="--features python"
+          args: --release --out dist --no-sdist
       - name: Install module
         run: |
           pip install num_dual --no-index --find-links dist --force-reinstall
