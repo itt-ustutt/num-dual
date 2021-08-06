@@ -3,3 +3,5 @@ Cargo.lock
 *.so
 *.ipynb_checkpoints
 *.vscode
+/docs/_build
+/docs/generated

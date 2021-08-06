@@ -58,6 +58,10 @@ mod linalg;
 #[cfg(feature = "linalg")]
 pub use linalg::*;
 
+#[cfg(feature = "python")]
+pub mod python;
+
+
 /// A generalized (hyper) dual number.
 pub trait DualNum<F>:
     NumOps
