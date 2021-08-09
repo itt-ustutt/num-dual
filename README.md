@@ -3,10 +3,27 @@
 [![crate](https://img.shields.io/crates/v/num-dual.svg)](https://crates.io/crates/num-dual)
 [![documentation](https://docs.rs/num-dual/badge.svg)](https://docs.rs/num-dual)
 [![minimum rustc 1.51](https://img.shields.io/badge/rustc-1.51+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![documentation](https://img.shields.io/badge/docs-github--pages-blue)](https://itt-ustutt.github.io/num-dual/)
+[![PyPI version](https://badge.fury.io/py/num_dual.svg)](https://badge.fury.io/py/num_dual)
 
 Generalized, recursive, scalar and vector (hyper) dual numbers for the automatic and exact calculation of (partial) derivatives.
+Including bindings for python.
 
-## Usage
+
+## Installation and Usage
+
+### Python
+
+You can install the python package either from pypi:
+```
+pip install num_dual
+```
+or from source (you need a rust compiler for that):
+```
+pip install git+https://github.com/itt-ustutt/num-dual
+```
+
+### Rust
 
 Add this to your `Cargo.toml`:
 
@@ -15,8 +32,27 @@ Add this to your `Cargo.toml`:
 num-dual = "0.2"
 ```
 
-
 ## Example
+
+### Python
+
+Compute the first and second derivative of a scalar-valued function.
+
+```python
+from num_dual import derive2
+import numpy as np
+
+def f(x):
+    return np.exp(x) / np.sqrt(np.sin(x)**3 + np.cos(x)**3)
+
+x = derive2(1.5)
+result = f(x)
+print('f(x)    = {}'.format(result.value))
+print('df/dx   = {}'.format(result.first_derivative))
+print('d2f/dx2 = {}'.format(result.second_derivative))
+```
+
+### Rust
 This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
 ```rust
 use num_dual::*;
@@ -40,3 +76,18 @@ fn main() {
     println!("{}", f(t.cos(), t.sin()).v3);                 // 7.358639755305733
 }
 ```
+
+## Documentation
+
+- You can find the documentation of the rust crate [here](https://docs.rs/num-dual/0.2.0/num_dual/).
+- The documentation of the python package can be found [here](https://itt-ustutt.github.io/num-dual/).
+
+### Python
+
+For the following commands to work you have to have the package installed (see: installing from source).
+
+```
+cd docs
+make html
+```
+Open `_build/html/index.html` in your browser.

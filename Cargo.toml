@@ -4,23 +4,32 @@ version = "0.2.0"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
 edition = "2018"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 description = "Generalized (hyper) dual numbers for the calculation of exact (partial) derivatives"
 homepage = "https://github.com/itt-ustutt/num-dual"
 repository = "https://github.com/itt-ustutt/num-dual"
 keywords = ["mathematics", "numerics", "differentiation"]
 categories = ["data-structures", "science", "mathematics"]
-exclude = ["/.github/*", "*.ipynb"]
+exclude = ["/.github/*", "*.ipynb", "./docs/*"]
+
+[lib]
+name = "num_dual"
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 num-traits = "0.2"
 ndarray = { version = "0.15", optional = true }
 ndarray-linalg = { version = "0.14", optional = true }
 
+[dependencies.pyo3]
+version = "0.14"
+optional = true
+features = ["extension-module", "abi3", "abi3-py36", "multiple-pymethods"]
+
 [features]
-default = ["std", "linalg"]
-std = ["num-traits/std"]
-libm = ["num-traits/libm"]
+default = []
+python = ["pyo3"]
 linalg = ["ndarray", "ndarray-linalg"]
 openblas-system = ["ndarray-linalg/openblas-system"]
 openblas-static = ["ndarray-linalg/openblas-static"]
