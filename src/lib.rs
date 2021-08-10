@@ -31,6 +31,9 @@
 //! }
 //! ```
 
+#![warn(clippy::all)]
+#![allow(clippy::needless_range_loop)]
+
 use num_traits::{Float, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -60,7 +63,6 @@ pub use linalg::*;
 
 #[cfg(feature = "python")]
 pub mod python;
-
 
 /// A generalized (hyper) dual number.
 pub trait DualNum<F>:
@@ -179,13 +181,13 @@ pub trait DualNum<F>:
     /// Fused multiply-add
     #[inline]
     fn mul_add(&self, a: Self, b: Self) -> Self {
-        self.clone() * a + b
+        *self * a + b
     }
 
     /// Power with dual exponent `x^n`
     #[inline]
-    fn powd(&self, exp: &Self) -> Self {
-        (self.ln() * exp.clone()).exp()
+    fn powd(&self, exp: Self) -> Self {
+        (self.ln() * exp).exp()
     }
 }
 
@@ -224,8 +226,8 @@ macro_rules! impl_dual_num_float {
             fn powf(&self, n: Self) -> Self {
                 <$float>::powf(*self, n)
             }
-            fn powd(&self, n: &Self) -> Self {
-                <$float>::powf(*self, *n)
+            fn powd(&self, n: Self) -> Self {
+                <$float>::powf(*self, n)
             }
             fn sqrt(&self) -> Self {
                 <$float>::sqrt(*self)

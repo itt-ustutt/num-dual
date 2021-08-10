@@ -30,23 +30,19 @@ use pyo3::prelude::*;
 /// 18
 /// >>> fx.first_derivative
 /// 8.25
-pub struct PyDual64 {
-    pub _data: Dual64,
-}
+pub struct PyDual64(Dual64);
 
 #[pymethods]
 impl PyDual64 {
     #[new]
     pub fn new(re: f64, eps: f64) -> Self {
-        Self {
-            _data: Dual64::new_scalar(re, eps),
-        }
+        Self(Dual64::new_scalar(re, eps))
     }
 
     #[getter]
     /// Dual part.
     pub fn get_first_derivative(&self) -> f64 {
-        self._data.eps[0]
+        self.0.eps[0]
     }
 }
 
@@ -56,15 +52,11 @@ macro_rules! impl_dual_n {
     ($py_type_name:ident, $n:literal) => {
         #[pyclass(name = "DualVec64")]
         #[derive(Clone, Copy)]
-        pub struct $py_type_name {
-            pub _data: DualVec64<$n>,
-        }
+        pub struct $py_type_name(DualVec64<$n>);
 
         impl $py_type_name {
             pub fn new(re: f64, eps: [f64; $n]) -> Self {
-                Self {
-                    _data: DualVec64::new(re, StaticVec::new_vec(eps)),
-                }
+                DualVec64::new(re, StaticVec::new_vec(eps)).into()
             }
         }
 
@@ -73,7 +65,7 @@ macro_rules! impl_dual_n {
             #[getter]
             /// Dual part.
             pub fn get_first_derivative(&self) -> [f64; $n] {
-                *self._data.eps.raw_array()
+                *self.0.eps.raw_array()
             }
         }
 
