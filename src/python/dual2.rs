@@ -7,9 +7,7 @@ use pyo3::prelude::*;
 #[pyclass(name = "Dual2_64")]
 #[derive(Clone)]
 /// Hyper dual number using 64-bit-floats.
-pub struct PyDual2_64 {
-    pub _data: Dual2_64,
-}
+pub struct PyDual2_64(Dual2_64);
 
 #[pymethods]
 impl PyDual2_64 {
@@ -21,13 +19,13 @@ impl PyDual2_64 {
     #[getter]
     /// First hyperdual part.
     fn get_first_derivative(&self) -> f64 {
-        self._data.v1[0]
+        self.0.v1[0]
     }
 
     #[getter]
     /// Second hyperdual part.
     fn get_second_derivative(&self) -> f64 {
-        self._data.v2[0]
+        self.0.v2[0]
     }
 }
 
@@ -36,27 +34,25 @@ impl_dual_num!(PyDual2_64, Dual2_64, f64);
 #[pyclass(name = "Dual2Dual64")]
 #[derive(Clone)]
 /// Hyper dual number using 64-bit-floats.
-pub struct PyDual2Dual64 {
-    pub _data: Dual2<Dual64, f64>,
-}
+pub struct PyDual2Dual64(Dual2<Dual64, f64>);
 
 #[pymethods]
 impl PyDual2Dual64 {
     #[new]
     pub fn new(v0: PyDual64, v1: PyDual64, v2: PyDual64) -> Self {
-        Dual2::new_scalar(v0._data, v1._data, v2._data).into()
+        Dual2::new_scalar(v0.into(), v1.into(), v2.into()).into()
     }
 
     #[getter]
     /// First hyperdual part.
     fn get_first_derivative(&self) -> PyDual64 {
-        self._data.v1[0].into()
+        self.0.v1[0].into()
     }
 
     #[getter]
     /// Second hyperdual part.
     fn get_second_derivative(&self) -> PyDual64 {
-        self._data.v2[(0, 0)].into()
+        self.0.v2[(0, 0)].into()
     }
 }
 

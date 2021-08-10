@@ -34,29 +34,25 @@ use pyo3::prelude::*;
 /// (24.0, -39.0) # df/dx, df/dy
 /// fxy.second_derivative
 /// 6.0
-pub struct PyHyperDual64 {
-    pub _data: HyperDual64,
-}
+pub struct PyHyperDual64(HyperDual64);
 
 #[pymethods]
 impl PyHyperDual64 {
     #[new]
     pub fn new(re: f64, eps1: f64, eps2: f64, eps1eps2: f64) -> Self {
-        Self {
-            _data: HyperDual::new_scalar(re, eps1, eps2, eps1eps2),
-        }
+        HyperDual::new_scalar(re, eps1, eps2, eps1eps2).into()
     }
 
     #[getter]
     /// First hyperdual part.
     fn get_first_derivative(&self) -> (f64, f64) {
-        (self._data.eps1[0], self._data.eps2[0])
+        (self.0.eps1[0], self.0.eps2[0])
     }
 
     #[getter]
     /// Third hyperdual part.
     fn get_second_derivative(&self) -> f64 {
-        self._data.eps1eps2[(0, 0)]
+        self.0.eps1eps2[(0, 0)]
     }
 }
 
@@ -65,29 +61,25 @@ impl_dual_num!(PyHyperDual64, HyperDual64, f64);
 #[pyclass(name = "HyperDualDual64")]
 #[derive(Clone)]
 /// Hyper dual number using dual numbers of 64-bit-floats.
-pub struct PyHyperDualDual64 {
-    pub _data: HyperDual<Dual64, f64>,
-}
+pub struct PyHyperDualDual64(HyperDual<Dual64, f64>);
 
 #[pymethods]
 impl PyHyperDualDual64 {
     #[new]
     pub fn new(re: PyDual64, eps1: PyDual64, eps2: PyDual64, eps1eps2: PyDual64) -> Self {
-        Self {
-            _data: HyperDual::new_scalar(re._data, eps1._data, eps2._data, eps1eps2._data),
-        }
+        HyperDual::new_scalar(re.into(), eps1.into(), eps2.into(), eps1eps2.into()).into()
     }
 
     #[getter]
     /// First hyperdual part.
     fn get_first_derivative(&self) -> (PyDual64, PyDual64) {
-        (self._data.eps1[0].into(), self._data.eps2[0].into())
+        (self.0.eps1[0].into(), self.0.eps2[0].into())
     }
 
     #[getter]
     /// Third hyperdual part.
     fn get_second_derivative(&self) -> PyDual64 {
-        self._data.eps1eps2[(0, 0)].into()
+        self.0.eps1eps2[(0, 0)].into()
     }
 }
 
@@ -97,15 +89,11 @@ macro_rules! impl_hyper_dual_n {
     ($py_type_name:ident, $n:literal) => {
         #[pyclass(name = "Dual2Vec64")]
         #[derive(Clone, Copy)]
-        pub struct $py_type_name {
-            pub _data: Dual2Vec64<$n>,
-        }
+        pub struct $py_type_name(Dual2Vec64<$n>);
 
         impl $py_type_name {
             pub fn new(re: f64, v1: [f64; $n], v2: [[f64; $n]; $n]) -> Self {
-                Self {
-                    _data: Dual2Vec64::new(re, StaticVec::new_vec(v1), StaticMat::new(v2)),
-                }
+                Dual2Vec64::new(re, StaticVec::new_vec(v1), StaticMat::new(v2)).into()
             }
         }
 
@@ -114,18 +102,13 @@ macro_rules! impl_hyper_dual_n {
             #[getter]
             /// Gradient.
             pub fn get_first_derivative(&self) -> [f64; $n] {
-                *self._data.v1.raw_array()
+                *self.0.v1.raw_array()
             }
 
             #[getter]
             /// Hessian.
             pub fn get_second_derivative(&self) -> Vec<Vec<f64>> {
-                self._data
-                    .v2
-                    .raw_data()
-                    .iter()
-                    .map(|a| a.to_vec())
-                    .collect()
+                self.0.v2.raw_data().iter().map(|a| a.to_vec()).collect()
             }
         }
 
@@ -137,9 +120,7 @@ macro_rules! impl_hyper_dual_mn {
     ($py_type_name:ident, $m:literal, $n:literal) => {
         #[pyclass(name = "HyperDualVec64")]
         #[derive(Clone, Copy)]
-        pub struct $py_type_name {
-            pub _data: HyperDualVec64<$m, $n>,
-        }
+        pub struct $py_type_name(HyperDualVec64<$m, $n>);
 
         impl $py_type_name {
             pub fn new(
@@ -148,14 +129,12 @@ macro_rules! impl_hyper_dual_mn {
                 eps2: [f64; $n],
                 eps1eps2: [[f64; $n]; $m],
             ) -> Self {
-                Self {
-                    _data: HyperDualVec64::new(
-                        re,
-                        StaticVec::new_vec(eps1),
-                        StaticVec::new_vec(eps2),
-                        StaticMat::new(eps1eps2),
-                    ),
-                }
+                HyperDualVec64::new(
+                    re,
+                    StaticVec::new_vec(eps1),
+                    StaticVec::new_vec(eps2),
+                    StaticMat::new(eps1eps2),
+                ).into()
             }
         }
 
@@ -164,13 +143,13 @@ macro_rules! impl_hyper_dual_mn {
             #[getter]
             /// First hyperdual part.
             fn get_first_derivative(&self) -> ([f64; $m], [f64; $n]) {
-                (*self._data.eps1.raw_array(), *self._data.eps2.raw_array())
+                (*self.0.eps1.raw_array(), *self.0.eps2.raw_array())
             }
 
             #[getter]
             /// Hessian.
             pub fn get_second_derivative(&self) -> Vec<Vec<f64>> {
-                self._data.eps1eps2.raw_data().iter().map(|a| a.to_vec()).collect()
+                self.0.eps1eps2.raw_data().iter().map(|a| a.to_vec()).collect()
             }
         }
 
@@ -190,7 +169,7 @@ macro_rules! impl_derive {
                             return Ok(PyCell::new(py, PyDual2_64::from(Dual2_64::from(x).derive()))?.to_object(py));
                         };
                         if let Ok(x) = x1.extract::<PyDual64>() {
-                            return Ok(PyCell::new(py, PyDual2Dual64::from(Dual2::from_re(x._data).derive()))?.to_object(py));
+                            return Ok(PyCell::new(py, PyDual2Dual64::from(Dual2::from_re(x.into()).derive()))?.to_object(py));
                         };
                         $(
                             if let Ok(x) = x1.extract::<[f64; $n]>() {
