@@ -1,0 +1,6 @@
+﻿num\_dual.derive2
+=================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: derive2

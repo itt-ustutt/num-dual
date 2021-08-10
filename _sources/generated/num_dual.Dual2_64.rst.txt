@@ -1,0 +1,62 @@
+﻿num\_dual.Dual2\_64
+===================
+
+.. currentmodule:: num_dual
+
+.. autoclass:: Dual2_64
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Dual2_64.__init__
+      ~Dual2_64.arccos
+      ~Dual2_64.arccosh
+      ~Dual2_64.arcsin
+      ~Dual2_64.arcsinh
+      ~Dual2_64.arctan
+      ~Dual2_64.arctanh
+      ~Dual2_64.cbrt
+      ~Dual2_64.cos
+      ~Dual2_64.cosh
+      ~Dual2_64.exp
+      ~Dual2_64.exp2
+      ~Dual2_64.expm1
+      ~Dual2_64.from_re
+      ~Dual2_64.log
+      ~Dual2_64.log10
+      ~Dual2_64.log1p
+      ~Dual2_64.log2
+      ~Dual2_64.log_base
+      ~Dual2_64.mul_add
+      ~Dual2_64.powd
+      ~Dual2_64.powf
+      ~Dual2_64.powi
+      ~Dual2_64.recip
+      ~Dual2_64.sin
+      ~Dual2_64.sin_cos
+      ~Dual2_64.sinh
+      ~Dual2_64.sph_j0
+      ~Dual2_64.sph_j1
+      ~Dual2_64.sph_j2
+      ~Dual2_64.sqrt
+      ~Dual2_64.tan
+      ~Dual2_64.tanh
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Dual2_64.first_derivative
+      ~Dual2_64.second_derivative
+      ~Dual2_64.value
+   
+   

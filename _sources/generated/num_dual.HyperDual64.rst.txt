@@ -1,0 +1,62 @@
+﻿num\_dual.HyperDual64
+=====================
+
+.. currentmodule:: num_dual
+
+.. autoclass:: HyperDual64
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HyperDual64.__init__
+      ~HyperDual64.arccos
+      ~HyperDual64.arccosh
+      ~HyperDual64.arcsin
+      ~HyperDual64.arcsinh
+      ~HyperDual64.arctan
+      ~HyperDual64.arctanh
+      ~HyperDual64.cbrt
+      ~HyperDual64.cos
+      ~HyperDual64.cosh
+      ~HyperDual64.exp
+      ~HyperDual64.exp2
+      ~HyperDual64.expm1
+      ~HyperDual64.from_re
+      ~HyperDual64.log
+      ~HyperDual64.log10
+      ~HyperDual64.log1p
+      ~HyperDual64.log2
+      ~HyperDual64.log_base
+      ~HyperDual64.mul_add
+      ~HyperDual64.powd
+      ~HyperDual64.powf
+      ~HyperDual64.powi
+      ~HyperDual64.recip
+      ~HyperDual64.sin
+      ~HyperDual64.sin_cos
+      ~HyperDual64.sinh
+      ~HyperDual64.sph_j0
+      ~HyperDual64.sph_j1
+      ~HyperDual64.sph_j2
+      ~HyperDual64.sqrt
+      ~HyperDual64.tan
+      ~HyperDual64.tanh
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HyperDual64.first_derivative
+      ~HyperDual64.second_derivative
+      ~HyperDual64.value
+   
+   

@@ -1,0 +1,61 @@
+﻿num\_dual.Dual64
+================
+
+.. currentmodule:: num_dual
+
+.. autoclass:: Dual64
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Dual64.__init__
+      ~Dual64.arccos
+      ~Dual64.arccosh
+      ~Dual64.arcsin
+      ~Dual64.arcsinh
+      ~Dual64.arctan
+      ~Dual64.arctanh
+      ~Dual64.cbrt
+      ~Dual64.cos
+      ~Dual64.cosh
+      ~Dual64.exp
+      ~Dual64.exp2
+      ~Dual64.expm1
+      ~Dual64.from_re
+      ~Dual64.log
+      ~Dual64.log10
+      ~Dual64.log1p
+      ~Dual64.log2
+      ~Dual64.log_base
+      ~Dual64.mul_add
+      ~Dual64.powd
+      ~Dual64.powf
+      ~Dual64.powi
+      ~Dual64.recip
+      ~Dual64.sin
+      ~Dual64.sin_cos
+      ~Dual64.sinh
+      ~Dual64.sph_j0
+      ~Dual64.sph_j1
+      ~Dual64.sph_j2
+      ~Dual64.sqrt
+      ~Dual64.tan
+      ~Dual64.tanh
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Dual64.first_derivative
+      ~Dual64.value
+   
+   

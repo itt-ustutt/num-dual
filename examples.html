@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Examples &mdash; num_dual 0.3.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="num_dual - generalized (hyper) dual numbers in python" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> num_dual
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#first-second-and-third-derivatives">First, second and third derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#partial-derivatives">Partial derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compute-partial-derivatives-of-multiple-arguments">Compute partial derivatives of multiple arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compatibility-with-numpy">Compatibility with <cite>numpy</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">num_dual</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Examples</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/examples.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="first-second-and-third-derivatives">
+<h2>First, second and third derivatives<a class="headerlink" href="#first-second-and-third-derivatives" title="Permalink to this headline">¶</a></h2>
+<p>Let’s define a simple, scalar valued function for which we want to compute the first, second and third derivative.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sd">&quot;&quot;&quot;f&#39;(x) = 3 * x**2, f&#39;&#39;(x) = 6 * x&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span>
+</pre></div>
+</div>
+<p>The function is defined just like a regular python function.
+Different from a regular python function though, we use (hyper)dual numbers as arguments.
+For example, to compute the first derivative at x = 2, we need to call the function with a dual number as input, setting the dual part (ε)
+to 1.0.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">Dual64</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Dual64</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">2 + [1]ε</span>
+</pre></div>
+</div>
+<p>Then, calling the function, the result is also a dual number, where the real part (or value)
+is the result of the function that we would get by simply calling it with a floating point number,
+whereas the dual part (or first derivative) contains the derivative.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">8 + 12ε</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">value</span>
+<span class="go">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">first_derivative</span>
+<span class="go">12</span>
+</pre></div>
+</div>
+<p>The value we used for the dual part (1.0) is not important, however,
+the resulting derivatives will be multiples of the chosen value and as such we set it to unity.</p>
+<p>The procedure as outlined above works fine, but you have to know what type of dual number you have to use.
+E.g. for the second derivative, the function argument has to be a hyerdual number. We therefore introduce
+helper functions that can be used to simply declare the order of the derivative you want to compute.</p>
+<p>The same result as above can be created via</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">derive1</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="c1"># we want the first derivative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">first_derivative</span>
+<span class="go">12</span>
+</pre></div>
+</div>
+<p>where <cite>x = derive1(2.0)</cite> constructs the correct dual number for us.</p>
+<p>Let’s compute the second and third derivatives!</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">derive3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">derive3</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f(x)   = </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;(x)  = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">first_derivative</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;&#39;(x) = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">second_derivative</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;&#39;&#39;(x) = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">third_derivative</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">f(x)    = 8 + 12v1 + 12v2 + 6v3</span>
+<span class="go">f&#39;(x)   = 12.0</span>
+<span class="go">f&#39;&#39;(x)  = 12.0</span>
+<span class="go">f&#39;&#39;&#39;(x) = 6.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="partial-derivatives">
+<h2>Partial derivatives<a class="headerlink" href="#partial-derivatives" title="Permalink to this headline">¶</a></h2>
+<p>Hyperdual numbers can be used to compute partial derivatives of multivariate functions (functions of several real valued variables) as well.
+A function that is often used as benchmark in optimization problems is the Rosenbrock function which is defined as:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[f(x,y) = (a - b)^2 + b(y - x^2)^2 \,,\]</div>
+</div></blockquote>
+<p>The function and its derivatives are implemented in <cite>scipy</cite>. Let’s compute the partial derivatives of the Rosenbrock function.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">derive2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">rosen</span><span class="p">,</span> <span class="n">rosen_der</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">derive2</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="go">(0.5 + 1ε1 + 0ε2 + 0ε1ε2, 1 + 0ε1 + 1ε2 + 0ε1ε2)</span>
+</pre></div>
+</div>
+<p><cite>derive2(0.5, 1.0)</cite> returns a tuple of hyperdual numbers where the correct non-real parts are set to unity.
+Calling the Rosenbrock function with hyperdual numbers returns a hyperdual number containing the first partial derivatives and
+the second partial derivative.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">rosen</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">56.5 + -151ε1 + 150ε2 + -200ε1ε2</span>
+</pre></div>
+</div>
+<p>The field <cite>second_derivative</cite> now returns a tuple where the first value is the first partial derivative w.r.t <cite>x</cite> and the second value
+is the first partial derivative w.r.t. <cite>y</cite>. We can now compare our values to the analytical solution:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">first_derivative</span><span class="p">)</span>
+<span class="go">array([-151.,  150.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">d2</span> <span class="o">==</span> <span class="n">rosen_der</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compute-partial-derivatives-of-multiple-arguments">
+<h2>Compute partial derivatives of multiple arguments<a class="headerlink" href="#compute-partial-derivatives-of-multiple-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Consider a function that takes three arguments as input, one of which is vector valued.
+Such a function is e.g. the helmholtz energy, denoted as <span class="math notranslate nohighlight">\(a\)</span>, a function important in statistical mechanics.
+It is a function of the volume, <span class="math notranslate nohighlight">\(V\)</span>, the temperature, <span class="math notranslate nohighlight">\(T\)</span>, and the number of particles of possibly
+multiple components, <span class="math notranslate nohighlight">\(N\)</span>. Let’s define this function (for an ideal gas) and compute some interesting properties.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="mf">300.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="mf">20.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">39.948e-3</span><span class="p">,</span> <span class="mf">4e-3</span><span class="p">])</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">helmholtz_energy</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">mw</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">H</span> <span class="o">=</span> <span class="mf">6.62607015e-34</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">NAV</span> <span class="o">=</span> <span class="mf">6.02214076e23</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">RGAS</span> <span class="o">=</span> <span class="mf">8.314</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">de_broglie</span> <span class="o">=</span> <span class="n">H</span> <span class="o">*</span> <span class="n">NAV</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">mw</span> <span class="o">*</span> <span class="n">RGAS</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">partial_density</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">NAV</span> <span class="o">/</span> <span class="n">V</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">RGAS</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">partial_density</span> <span class="o">*</span> <span class="n">de_broglie</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The specifics of the equation are not important, but note that besides <cite>t</cite> and <cite>v</cite> being scalar values,
+<cite>n</cite> is a vector valued argument. Also, you can easily use mathematical expressions from <cite>numpy</cite>.</p>
+<p>Now, we can compute different partial derivatives. For example, we can compute the first derivative with respect to <cite>t</cite> (temperature).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">helmholtz_energy</span><span class="p">(</span><span class="n">derive1</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">mw</span><span class="p">)</span><span class="o">.</span><span class="n">first_derivative</span> <span class="c1"># negative entropy</span>
+</pre></div>
+</div>
+<p>Or the partial derivative with respect to the values of <cite>n</cite>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span> <span class="o">=</span> <span class="n">helmholtz_energy</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">derive1</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">mw</span><span class="p">)</span><span class="o">.</span><span class="n">first_derivative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span>
+<span class="go">[-54192.23064420561, -46593.74696257142]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compatibility-with-numpy">
+<h2>Compatibility with <cite>numpy</cite><a class="headerlink" href="#compatibility-with-numpy" title="Permalink to this headline">¶</a></h2>
+<p>The examples shown above contain very simple mathematical equations.
+We provide evaluations for a lot of useful mathematical expressions that are defined in <cite>numpy</cite>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="go">4.497780053946161</span>
+</pre></div>
+</div>
+<p>Calling the same function with a hyper dual number and dual parts of 1
+yields the first and second derivatives. (ε1 and ε2 parts are identical)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">HyperDual64</span> <span class="k">as</span> <span class="n">HD64</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">HD64</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">4.497780053946162 + 4.053427893898621ε1 + 4.053427893898621ε2 + 9.463073681596605ε1ε2</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="num_dual - generalized (hyper) dual numbers in python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Philipp Rehner, Gernot Bauer.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
