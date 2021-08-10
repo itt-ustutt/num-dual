@@ -1,6 +1,6 @@
 [package]
 name = "num-dual"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
 edition = "2018"

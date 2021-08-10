@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-dual = "0.2"
+num-dual = "0.3"
 ```
 
 ## Example
@@ -79,7 +79,7 @@ fn main() {
 
 ## Documentation
 
-- You can find the documentation of the rust crate [here](https://docs.rs/num-dual/0.2.0/num_dual/).
+- You can find the documentation of the rust crate [here](https://docs.rs/num-dual/).
 - The documentation of the python package can be found [here](https://itt-ustutt.github.io/num-dual/).
 
 ### Python
