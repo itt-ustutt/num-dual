@@ -21,22 +21,17 @@ crate-type = ["cdylib", "lib"]
 num-traits = "0.2"
 ndarray = { version = "0.15", optional = true }
 ndarray-linalg = { version = "0.14", optional = true }
-
-[dependencies.pyo3]
-version = "0.14"
-optional = true
-features = ["extension-module", "abi3", "abi3-py36", "multiple-pymethods"]
+pyo3 = { version = "0.14", optional = true, features = ["extension-module", "abi3", "abi3-py36", "multiple-pymethods"] }
 
 [features]
 default = []
 python = ["pyo3"]
-linalg = ["ndarray", "ndarray-linalg"]
-openblas-system = ["ndarray-linalg/openblas-system"]
-openblas-static = ["ndarray-linalg/openblas-static"]
-netlib-system = ["ndarray-linalg/netlib-system"]
-netlib-static = ["ndarray-linalg/netlib-static"]
-intel-mkl-static = ["ndarray-linalg/intel-mkl-static"]
-intel-mkl-system = ["ndarray-linalg/intel-mkl-system"]
+openblas-system = ["ndarray", "ndarray-linalg/openblas-system"]
+openblas-static = ["ndarray", "ndarray-linalg/openblas-static"]
+netlib-system = ["ndarray", "ndarray-linalg/netlib-system"]
+netlib-static = ["ndarray", "ndarray-linalg/netlib-static"]
+intel-mkl-static = ["ndarray", "ndarray-linalg/intel-mkl-static"]
+intel-mkl-system = ["ndarray", "ndarray-linalg/intel-mkl-system"]
 
 [dev-dependencies]
 criterion = "0.3"
