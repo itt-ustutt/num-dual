@@ -373,4 +373,18 @@ mod tests {
             epsilon = 1e-14
         );
     }
+
+    #[test]
+    fn test_norm_f64() {
+        let v = arr1(&[3.0, 4.0]);
+        assert_eq!(norm(&v), 5.0);
+    }
+
+    #[test]
+    fn test_norm_dual64() {
+        let v = arr1(&[Dual64::new_scalar(3.0, 1.0), Dual64::new_scalar(4.0, 3.0)]);
+        println!("{}", norm(&v));
+        assert_eq!(norm(&v).re, 5.0);
+        assert_eq!(norm(&v).eps[0], 3.0);
+    }
 }
