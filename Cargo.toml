@@ -13,15 +13,11 @@ keywords = ["mathematics", "numerics", "differentiation"]
 categories = ["data-structures", "science", "mathematics"]
 exclude = ["/.github/*", "*.ipynb", "./docs/*"]
 
-[lib]
-name = "num_dual"
-crate-type = ["cdylib", "lib"]
-
 [dependencies]
 num-traits = "0.2"
 ndarray = { version = "0.15", optional = true }
 ndarray-linalg = { version = "0.14", optional = true }
-pyo3 = { version = "0.14", optional = true, features = ["extension-module", "abi3", "abi3-py36", "multiple-pymethods"] }
+pyo3 = { version = "0.15", optional = true }
 
 [features]
 default = []
