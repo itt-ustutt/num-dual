@@ -1,6 +1,6 @@
 #![allow(clippy::assign_op_pattern)]
-use crate::DualNum;
-use ndarray::{Array1, Array2};
+use crate::{Dual, Dual2, Dual3, DualNum, HyperDual};
+use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 use std::fmt;
 use std::iter::Product;
@@ -10,6 +10,11 @@ use std::marker::PhantomData;
 mod linalg_ndarray;
 #[cfg(feature = "ndarray-linalg")]
 pub use linalg_ndarray::*;
+
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual2<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
 
 #[derive(Debug)]
 pub struct LinAlgError();

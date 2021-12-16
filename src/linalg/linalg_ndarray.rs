@@ -4,10 +4,6 @@ use ndarray_linalg::convert::replicate;
 use ndarray_linalg::error::Result;
 use ndarray_linalg::*;
 
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
-
 type LU64 = LUFactorized<OwnedRepr<f64>>;
 
 pub trait FactorizeIntoDual {
