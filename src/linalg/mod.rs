@@ -36,7 +36,6 @@ pub struct LU<T, F> {
 
 impl<T: DualNum<F>, F: Float> LU<T, F> {
     pub fn new(mut a: Array2<T>) -> Result<Self, LinAlgError> {
-        let tol = F::from(1e-10).unwrap();
         let n = a.shape()[0];
         let mut p = Array1::zeros(n);
         let mut p_count = n;
@@ -57,7 +56,7 @@ impl<T: DualNum<F>, F: Float> LU<T, F> {
                 }
             }
 
-            if max_a < tol {
+            if max_a.is_zero() {
                 return Err(LinAlgError());
             }
 
