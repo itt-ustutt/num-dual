@@ -2,7 +2,7 @@
 name = "num-dual"
 version = "0.3.0"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
-           "Philipp Rehner <rehner@itt.uni-stuttgart.de>"]
+           "Philipp Rehner <prehner@ethz.ch>"]
 edition = "2018"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
