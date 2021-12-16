@@ -56,10 +56,8 @@ pub use hyperdual::{
 };
 pub use static_mat::{StaticMat, StaticVec};
 
-#[cfg(feature = "linalg")]
-mod linalg;
-#[cfg(feature = "linalg")]
-pub use linalg::*;
+#[cfg(feature = "ndarray")]
+pub mod linalg;
 
 #[cfg(feature = "python")]
 pub mod python;

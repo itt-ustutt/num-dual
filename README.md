@@ -14,14 +14,14 @@ Including bindings for python.
 
 ### Python
 
-You can install the python package either from pypi:
+The python package can be installed directly from PyPI:
 ```
 pip install num_dual
 ```
-or from source (you need a rust compiler for that):
-```
-pip install git+https://github.com/itt-ustutt/num-dual
-```
+[//]: # "or from source (you need a rust compiler for that):"
+[//]: # "```"
+[//]: # "pip install git+https://github.com/itt-ustutt/num-dual"
+[//]: # "```"
 
 ### Rust
 
@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-dual = "0.3"
+num-dual = "0.4"
 ```
 
 ## Example

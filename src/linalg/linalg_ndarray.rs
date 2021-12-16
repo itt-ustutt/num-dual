@@ -4,10 +4,6 @@ use ndarray_linalg::convert::replicate;
 use ndarray_linalg::error::Result;
 use ndarray_linalg::*;
 
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
-
 type LU64 = LUFactorized<OwnedRepr<f64>>;
 
 pub trait FactorizeIntoDual {
@@ -58,7 +54,7 @@ impl SolveDual<f64> for Array2<f64> {
     /// is the argument, and `x` is the successful result.
     /// ```
     /// # use approx::assert_abs_diff_eq;
-    /// # use num_dual::SolveDual;
+    /// # use num_dual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
     /// let a = arr2(&[[1.0, 3.0],
     ///                [5.0, 7.0]]);
@@ -89,7 +85,7 @@ where
     /// ```
     /// # use approx::assert_abs_diff_eq;
     /// # use num_dual::Dual64;
-    /// # use num_dual::SolveDual;
+    /// # use num_dual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
     /// let a = arr2(&[[Dual64::new_scalar(1.0, 2.0), Dual64::new_scalar(3.0, 4.0)],
     ///                [Dual64::new_scalar(5.0, 6.0), Dual64::new_scalar(7.0, 8.0)]]);
@@ -128,7 +124,7 @@ where
     /// ```
     /// # use approx::assert_abs_diff_eq;
     /// # use num_dual::{DualVec64, StaticVec};
-    /// # use num_dual::SolveDual;
+    /// # use num_dual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
     /// let a = arr2(&[[DualVec64::new(1.0, StaticVec::new_vec([2.0, 1.0])), DualVec64::new(3.0, StaticVec::new_vec([4.0, 1.0]))],
     ///                [DualVec64::new(5.0, StaticVec::new_vec([6.0, 1.0])), DualVec64::new(7.0, StaticVec::new_vec([8.0, 1.0]))]]);
@@ -176,7 +172,7 @@ where
     /// ```
     /// # use approx::assert_abs_diff_eq;
     /// # use num_dual::HyperDual64;
-    /// # use num_dual::SolveDual;
+    /// # use num_dual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
     /// let a = arr2(&[[HyperDual64::new_scalar(1.0, 2.0, 3.0, 4.0), HyperDual64::new_scalar(2.0, 3.0, 4.0, 5.0)],
     ///                [HyperDual64::new_scalar(3.0, 4.0, 5.0, 6.0), HyperDual64::new_scalar(4.0, 5.0, 6.0, 7.0)]]);
@@ -225,7 +221,7 @@ where
     /// ```
     /// # use approx::assert_abs_diff_eq;
     /// # use num_dual::Dual3_64;
-    /// # use num_dual::SolveDual;
+    /// # use num_dual::linalg::SolveDual;
     /// # use ndarray::{arr1, arr2};
     /// let a = arr2(&[[Dual3_64::new(1.0, 2.0, 3.0, 4.0), Dual3_64::new(2.0, 3.0, 4.0, 5.0)],
     ///                [Dual3_64::new(3.0, 4.0, 5.0, 6.0), Dual3_64::new(4.0, 5.0, 6.0, 7.0)]]);
@@ -276,7 +272,7 @@ impl EighDual<Dual64> for Array2<Dual64> {
     /// ```
     /// # use approx::assert_abs_diff_eq;
     /// # use num_dual::Dual64;
-    /// # use num_dual::EighDual;
+    /// # use num_dual::linalg::EighDual;
     /// # use ndarray::{arr1, arr2};
     /// # use ndarray_linalg::UPLO;
     /// let a = arr2(&[[Dual64::new_scalar(2.0, 1.0), Dual64::new_scalar(2.0, 2.0)],
@@ -318,7 +314,7 @@ impl EighDual<DualVec64<2>> for Array2<DualVec64<2>> {
     /// ```
     /// # use approx::assert_abs_diff_eq;
     /// # use num_dual::{DualVec64, StaticVec};
-    /// # use num_dual::EighDual;
+    /// # use num_dual::linalg::EighDual;
     /// # use ndarray::{arr1, arr2};
     /// # use ndarray_linalg::UPLO;
     /// let a = arr2(&[[DualVec64::new(2.0, StaticVec::new_vec([1.0, 1.0])), DualVec64::new(2.0, StaticVec::new_vec([2.0, 1.0]))],
