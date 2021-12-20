@@ -342,3 +342,138 @@ fn test_hyperdual_sph_j2() {
     assert!((res.eps1eps2[(0,0)] - 0.0589484167190109).abs() < 1e-12);
 }
 
+#[test]
+fn test_hyperdual_bessel_j0_0() {
+    let res = HyperDual64::from(0.0).derive1().derive2().bessel_j0();
+    assert!((res.re - 1.00000000000000).abs() < 1e-12);
+    assert!((res.eps1[0]).abs() < 1e-12);
+    assert!((res.eps2[0]).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.500000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j1_0() {
+    let res = HyperDual64::from(0.0).derive1().derive2().bessel_j1();
+    assert!((res.re).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.500000000000000).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.500000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)]).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j2_0() {
+    let res = HyperDual64::from(0.0).derive1().derive2().bessel_j2();
+    assert!((res.re).abs() < 1e-12);
+    assert!((res.eps1[0]).abs() < 1e-12);
+    assert!((res.eps2[0]).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.250000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j0_1() {
+    let res = HyperDual64::from(1.2).derive1().derive2().bessel_j0();
+    assert!((res.re - 0.671132744264363).abs() < 1e-12);
+    assert!((res.eps1[0] - -0.498289057567215).abs() < 1e-12);
+    assert!((res.eps2[0] - -0.498289057567215).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.255891862958350).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j1_1() {
+    let res = HyperDual64::from(1.2).derive1().derive2().bessel_j1();
+    assert!((res.re - 0.498289057567215).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.255891862958350).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.255891862958350).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.365498208944163).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j2_1() {
+    let res = HyperDual64::from(1.2).derive1().derive2().bessel_j2();
+    assert!((res.re - 0.159349018347663).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.232707360321110).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.232707360321110).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.0893643434615870).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j0_2() {
+    let res = HyperDual64::from(7.2).derive1().derive2().bessel_j0();
+    assert!((res.re - 0.295070691400958).abs() < 1e-12);
+    assert!((res.eps1[0] - -0.0543274202223671).abs() < 1e-12);
+    assert!((res.eps2[0] - -0.0543274202223671).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.287525216370074).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j1_2() {
+    let res = HyperDual64::from(7.2).derive1().derive2().bessel_j1();
+    assert!((res.re - 0.0543274202223671).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.287525216370074).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.287525216370074).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.0932134954083656).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j2_2() {
+    let res = HyperDual64::from(7.2).derive1().derive2().bessel_j2();
+    assert!((res.re - -0.279979741339189).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.132099570594364).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.132099570594364).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.240029203653306).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j0_3() {
+    let res = HyperDual64::from(-1.2).derive1().derive2().bessel_j0();
+    assert!((res.re - 0.671132744264363).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.498289057567215).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.498289057567215).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.255891862958350).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j1_3() {
+    let res = HyperDual64::from(-1.2).derive1().derive2().bessel_j1();
+    assert!((res.re - -0.498289057567215).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.255891862958350).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.255891862958350).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.365498208944163).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j2_3() {
+    let res = HyperDual64::from(-1.2).derive1().derive2().bessel_j2();
+    assert!((res.re - 0.159349018347663).abs() < 1e-12);
+    assert!((res.eps1[0] - -0.232707360321110).abs() < 1e-12);
+    assert!((res.eps2[0] - -0.232707360321110).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.0893643434615870).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j0_4() {
+    let res = HyperDual64::from(-7.2).derive1().derive2().bessel_j0();
+    assert!((res.re - 0.295070691400958).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.0543274202223671).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.0543274202223671).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - -0.287525216370074).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j1_4() {
+    let res = HyperDual64::from(-7.2).derive1().derive2().bessel_j1();
+    assert!((res.re - -0.0543274202223671).abs() < 1e-12);
+    assert!((res.eps1[0] - 0.287525216370074).abs() < 1e-12);
+    assert!((res.eps2[0] - 0.287525216370074).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.0932134954083656).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_bessel_j2_4() {
+    let res = HyperDual64::from(-7.2).derive1().derive2().bessel_j2();
+    assert!((res.re - -0.279979741339189).abs() < 1e-12);
+    assert!((res.eps1[0] - -0.132099570594364).abs() < 1e-12);
+    assert!((res.eps2[0] - -0.132099570594364).abs() < 1e-12);
+    assert!((res.eps1eps2[(0,0)] - 0.240029203653306).abs() < 1e-12);
+}
+

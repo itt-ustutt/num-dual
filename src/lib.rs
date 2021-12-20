@@ -43,11 +43,13 @@ mod macros;
 #[macro_use]
 mod derivatives;
 
+mod bessel;
 mod dual;
 mod dual2;
 mod dual3;
 mod hyperdual;
 mod static_mat;
+pub use bessel::BesselDual;
 pub use dual::{Dual, Dual32, Dual64, DualVec, DualVec32, DualVec64};
 pub use dual2::{Dual2, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64};
 pub use dual3::{Dual3, Dual3_32, Dual3_64};
@@ -167,13 +169,13 @@ pub trait DualNum<F>:
     /// Area hyperbolic tangent
     fn atanh(&self) -> Self;
 
-    /// 0th order spherical bessel function of the first kind
+    /// 0th order spherical Bessel function of the first kind
     fn sph_j0(&self) -> Self;
 
-    /// 1st order spherical bessel function of the first kind
+    /// 1st order spherical Bessel function of the first kind
     fn sph_j1(&self) -> Self;
 
-    /// 2nd order spherical bessel function of the first kind
+    /// 2nd order spherical Bessel function of the first kind
     fn sph_j2(&self) -> Self;
 
     /// Fused multiply-add
