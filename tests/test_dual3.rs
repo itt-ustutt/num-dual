@@ -342,3 +342,138 @@ fn test_dual3_sph_j2() {
     assert!((res.v3 - -0.111341070273405).abs() < 1e-12);
 }
 
+#[test]
+fn test_dual3_bessel_j0_0() {
+    let res = Dual3_64::from(0.0).derive().bessel_j0();
+    assert!((res.re - 1.00000000000000).abs() < 1e-12);
+    assert!((res.v1).abs() < 1e-12);
+    assert!((res.v2 - -0.500000000000000).abs() < 1e-12);
+    assert!((res.v3).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j1_0() {
+    let res = Dual3_64::from(0.0).derive().bessel_j1();
+    assert!((res.re).abs() < 1e-12);
+    assert!((res.v1 - 0.500000000000000).abs() < 1e-12);
+    assert!((res.v2).abs() < 1e-12);
+    assert!((res.v3 - -0.375000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j2_0() {
+    let res = Dual3_64::from(0.0).derive().bessel_j2();
+    assert!((res.re).abs() < 1e-12);
+    assert!((res.v1).abs() < 1e-12);
+    assert!((res.v2 - 0.250000000000000).abs() < 1e-12);
+    assert!((res.v3).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j0_1() {
+    let res = Dual3_64::from(1.2).derive().bessel_j0();
+    assert!((res.re - 0.671132744264363).abs() < 1e-12);
+    assert!((res.v1 - -0.498289057567215).abs() < 1e-12);
+    assert!((res.v2 - -0.255891862958350).abs() < 1e-12);
+    assert!((res.v3 - 0.365498208944163).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j1_1() {
+    let res = Dual3_64::from(1.2).derive().bessel_j1();
+    assert!((res.re - 0.498289057567215).abs() < 1e-12);
+    assert!((res.v1 - 0.255891862958350).abs() < 1e-12);
+    assert!((res.v2 - -0.365498208944163).abs() < 1e-12);
+    assert!((res.v3 - -0.172628103209968).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j2_1() {
+    let res = Dual3_64::from(1.2).derive().bessel_j2();
+    assert!((res.re - 0.159349018347663).abs() < 1e-12);
+    assert!((res.v1 - 0.232707360321110).abs() < 1e-12);
+    assert!((res.v2 - 0.0893643434615870).abs() < 1e-12);
+    assert!((res.v3 - -0.236892915552203).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j0_2() {
+    let res = Dual3_64::from(7.2).derive().bessel_j0();
+    assert!((res.re - 0.295070691400958).abs() < 1e-12);
+    assert!((res.v1 - -0.0543274202223671).abs() < 1e-12);
+    assert!((res.v2 - -0.287525216370074).abs() < 1e-12);
+    assert!((res.v3 - 0.0932134954083656).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j1_2() {
+    let res = Dual3_64::from(7.2).derive().bessel_j1();
+    assert!((res.re - 0.0543274202223671).abs() < 1e-12);
+    assert!((res.v1 - 0.287525216370074).abs() < 1e-12);
+    assert!((res.v2 - -0.0932134954083656).abs() < 1e-12);
+    assert!((res.v3 - -0.263777210011690).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j2_2() {
+    let res = Dual3_64::from(7.2).derive().bessel_j2();
+    assert!((res.re - -0.279979741339189).abs() < 1e-12);
+    assert!((res.v1 - 0.132099570594364).abs() < 1e-12);
+    assert!((res.v2 - 0.240029203653306).abs() < 1e-12);
+    assert!((res.v3 - -0.146694937335182).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j0_3() {
+    let res = Dual3_64::from(-1.2).derive().bessel_j0();
+    assert!((res.re - 0.671132744264363).abs() < 1e-12);
+    assert!((res.v1 - 0.498289057567215).abs() < 1e-12);
+    assert!((res.v2 - -0.255891862958350).abs() < 1e-12);
+    assert!((res.v3 - -0.365498208944163).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j1_3() {
+    let res = Dual3_64::from(-1.2).derive().bessel_j1();
+    assert!((res.re - -0.498289057567215).abs() < 1e-12);
+    assert!((res.v1 - 0.255891862958350).abs() < 1e-12);
+    assert!((res.v2 - 0.365498208944163).abs() < 1e-12);
+    assert!((res.v3 - -0.172628103209968).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j2_3() {
+    let res = Dual3_64::from(-1.2).derive().bessel_j2();
+    assert!((res.re - 0.159349018347663).abs() < 1e-12);
+    assert!((res.v1 - -0.232707360321110).abs() < 1e-12);
+    assert!((res.v2 - 0.0893643434615870).abs() < 1e-12);
+    assert!((res.v3 - 0.236892915552203).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j0_4() {
+    let res = Dual3_64::from(-7.2).derive().bessel_j0();
+    assert!((res.re - 0.295070691400958).abs() < 1e-12);
+    assert!((res.v1 - 0.0543274202223671).abs() < 1e-12);
+    assert!((res.v2 - -0.287525216370074).abs() < 1e-12);
+    assert!((res.v3 - -0.0932134954083656).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j1_4() {
+    let res = Dual3_64::from(-7.2).derive().bessel_j1();
+    assert!((res.re - -0.0543274202223671).abs() < 1e-12);
+    assert!((res.v1 - 0.287525216370074).abs() < 1e-12);
+    assert!((res.v2 - 0.0932134954083656).abs() < 1e-12);
+    assert!((res.v3 - -0.263777210011690).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual3_bessel_j2_4() {
+    let res = Dual3_64::from(-7.2).derive().bessel_j2();
+    assert!((res.re - -0.279979741339189).abs() < 1e-12);
+    assert!((res.v1 - -0.132099570594364).abs() < 1e-12);
+    assert!((res.v2 - 0.240029203653306).abs() < 1e-12);
+    assert!((res.v3 - 0.146694937335182).abs() < 1e-12);
+}
+

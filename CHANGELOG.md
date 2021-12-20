@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2021-12-20
+### Added
+- Added 0th, 1st and 2nd order Bessel functions of the first kind (`bessel_j0`, `bessel_j1`, `bessel_j2`) for double precision dual numbers. [#36](https://github.com/itt-ustutt/num-dual/pull/34)
+
 ## [0.4.0] - 2021-12-16
 ### Added
 - Implementations for LU decomposition and eigendecomposition of symmetric matrices that do not depend on external libraries (BLAS, LAPACK). [#34](https://github.com/itt-ustutt/num-dual/pull/34)
