@@ -91,3 +91,28 @@ cd docs
 make html
 ```
 Open `_build/html/index.html` in your browser.
+
+## Further reading
+
+If you want to learn more about the topic of dual numbers and automatic differentiation, we have listed some useful resources for you here:
+
+- Initial paper about hyper-dual numbers: [Fike, J. and Alonso, 2011](https://arc.aiaa.org/doi/abs/10.2514/6.2011-886)
+- Website about all topics regarding automatic differentiation: [autodiff.org](http://www.autodiff.org/)
+- Our paper about dual numbers in equation of state modeling: [Rehner, P. and Bauer, G., 2021](https://www.frontiersin.org/article/10.3389/fceng.2021.758090)
+
+## Cite us
+
+If you find `num-dual` useful for your own scientific studies, consider [citing our publication](https://www.frontiersin.org/article/10.3389/fceng.2021.758090) accompanying this library.
+
+```
+@ARTICLE{rehner2021,
+    AUTHOR={Rehner, Philipp and Bauer, Gernot},
+    TITLE={Application of Generalized (Hyper-) Dual Numbers in Equation of State Modeling},
+    JOURNAL={Frontiers in Chemical Engineering},
+    VOLUME={3},
+    YEAR={2021},
+    URL={https://www.frontiersin.org/article/10.3389/fceng.2021.758090},
+    DOI={10.3389/fceng.2021.758090},
+    ISSN={2673-2718}
+}
+```
