@@ -2,7 +2,6 @@ use super::dual::PyDual64;
 use super::dual2::{PyDual2Dual64, PyDual2_64};
 use crate::*;
 use pyo3::exceptions::PyTypeError;
-use pyo3::number::PyNumberProtocol;
 use pyo3::prelude::*;
 
 #[pyclass(name = "HyperDual64")]
