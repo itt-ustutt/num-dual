@@ -15,23 +15,15 @@ exclude = ["/.github/*", "*.ipynb", "./docs/*"]
 
 [dependencies]
 num-traits = "0.2"
-ndarray = { version = "0.15", optional = true }
-ndarray-linalg = { version = "0.14", optional = true }
 pyo3 = { version = "0.15", optional = true }
 
 [features]
 default = []
 python = ["pyo3"]
-openblas-system = ["ndarray", "ndarray-linalg/openblas-system"]
-openblas-static = ["ndarray", "ndarray-linalg/openblas-static"]
-netlib-system = ["ndarray", "ndarray-linalg/netlib-system"]
-netlib-static = ["ndarray", "ndarray-linalg/netlib-static"]
-intel-mkl-static = ["ndarray", "ndarray-linalg/intel-mkl-static"]
-intel-mkl-system = ["ndarray", "ndarray-linalg/intel-mkl-system"]
 
 [dev-dependencies]
 criterion = "0.3"
-approx = "0.4"
+approx = "0.5"
 
 [[bench]]
 name = "benchmark"
