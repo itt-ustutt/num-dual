@@ -8,9 +8,9 @@ mod dual2;
 mod dual3;
 mod hyperdual;
 
-use dual::__pyo3_get_function_derive1;
-use dual3::__pyo3_get_function_derive3;
-use hyperdual::__pyo3_get_function_derive2;
+use dual::derive1;
+use dual3::derive3;
+use hyperdual::derive2;
 
 pub use dual::PyDual64;
 pub use dual2::{PyDual2Dual64, PyDual2_64};

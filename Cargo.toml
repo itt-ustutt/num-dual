@@ -15,7 +15,7 @@ exclude = ["/.github/*", "*.ipynb", "./docs/*"]
 
 [dependencies]
 num-traits = "0.2"
-pyo3 = { version = "0.15", optional = true }
+pyo3 = { version = "0.16", optional = true }
 
 [features]
 default = []

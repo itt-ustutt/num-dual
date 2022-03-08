@@ -1,7 +1,6 @@
 use super::dual::PyDual64;
 use crate::*;
 use pyo3::exceptions::PyTypeError;
-use pyo3::number::PyNumberProtocol;
 use pyo3::prelude::*;
 
 #[pyclass(name = "Dual2_64")]

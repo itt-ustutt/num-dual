@@ -214,14 +214,14 @@ macro_rules! impl_dual_num {
             }
         }
 
-        #[pyproto]
-        impl PyNumberProtocol for $py_type_name {
-            fn __add__(lhs: PyRef<'p, Self>, rhs: &PyAny) -> PyResult<Self> {
+        #[pymethods]
+        impl $py_type_name {
+            fn __add__(&self, rhs: &PyAny) -> PyResult<Self> {
                 if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((lhs.0 + r).into());
+                    return Ok((self.0 + r).into());
                 };
                 if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((lhs.0 + r.0).into());
+                    return Ok((self.0 + r.0).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -233,12 +233,12 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __sub__(lhs: PyRef<'p, Self>, rhs: &PyAny) -> PyResult<Self> {
+            fn __sub__(&self, rhs: &PyAny) -> PyResult<Self> {
                 if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((lhs.0 - r).into());
+                    return Ok((self.0 - r).into());
                 };
                 if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((lhs.0 - r.0).into());
+                    return Ok((self.0 - r.0).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -250,12 +250,12 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __mul__(lhs: PyRef<'p, Self>, rhs: &PyAny) -> PyResult<Self> {
+            fn __mul__(&self, rhs: &PyAny) -> PyResult<Self> {
                 if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((lhs.0 * r).into());
+                    return Ok((self.0 * r).into());
                 };
                 if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((lhs.0 * r.0).into());
+                    return Ok((self.0 * r.0).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -267,12 +267,12 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __truediv__(lhs: PyRef<'p, Self>, rhs: &PyAny) -> PyResult<Self> {
+            fn __truediv__(&self, rhs: &PyAny) -> PyResult<Self> {
                 if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((lhs.0 / r).into());
+                    return Ok((self.0 / r).into());
                 };
                 if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((lhs.0 / r.0).into());
+                    return Ok((self.0 / r.0).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -284,15 +284,15 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __pow__(lhs: &PyAny, rhs: &PyAny, _mod: Option<u32>) -> PyResult<Self> {
-                if let (Ok(l), Ok(r)) = (lhs.extract::<Self>(), rhs.extract::<i32>()) {
-                    return Ok(l.0.powi(r).into());
+            fn __pow__(&self, rhs: &PyAny, _mod: Option<u32>) -> PyResult<Self> {
+                if let Ok(r) = rhs.extract::<i32>() {
+                    return Ok(self.0.powi(r).into());
                 };
-                if let (Ok(l), Ok(r)) = (lhs.extract::<Self>(), rhs.extract::<f64>()) {
-                    return Ok(l.0.powf(r).into());
+                if let Ok(r) = rhs.extract::<f64>() {
+                    return Ok(self.0.powf(r).into());
                 };
-                if let (Ok(l), Ok(r)) = (lhs.extract::<Self>(), rhs.extract::<Self>()) {
-                    return Ok(l.0.powd(r.0).into());
+                if let Ok(r) = rhs.extract::<Self>() {
+                    return Ok(self.0.powd(r.0).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -302,8 +302,8 @@ macro_rules! impl_dual_num {
             }
         }
 
-        #[pyproto]
-        impl pyo3::class::basic::PyObjectProtocol for $py_type_name {
+        #[pymethods]
+        impl $py_type_name {
             fn __repr__(&self) -> PyResult<String> {
                 Ok(self.0.to_string())
             }

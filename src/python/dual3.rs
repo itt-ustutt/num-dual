@@ -1,7 +1,6 @@
 use super::dual::PyDual64;
 use crate::*;
 use pyo3::exceptions::PyTypeError;
-use pyo3::number::PyNumberProtocol;
 use pyo3::prelude::*;
 
 #[pyclass(name = "Dual3_64")]
@@ -72,7 +71,7 @@ impl_dual_num!(PyDual3Dual64, Dual3<Dual64, f64>, PyDual64);
 
 #[pyfunction]
 #[pyo3(text_signature = "(x)")]
-fn derive3(x: &PyAny) -> PyResult<PyObject> {
+pub fn derive3(x: &PyAny) -> PyResult<PyObject> {
     Python::with_gil(|py| {
         if let Ok(x) = x.extract::<f64>() {
             return Ok(
