@@ -6,11 +6,6 @@ use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
-#[cfg(feature = "ndarray-linalg")]
-mod linalg_ndarray;
-#[cfg(feature = "ndarray-linalg")]
-pub use linalg_ndarray::*;
-
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual2<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
