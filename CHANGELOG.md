@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2022-03-09
+### Fixed
+- Removed unused features and added missing `linalg` feature. [#41](https://github.com/itt-ustutt/num-dual/pull/41)
+
 ## [0.5.0] - 2022-03-08
 ### Packaging
 - Updated `pyo3` dependency to 0.16. [#39](https://github.com/itt-ustutt/num-dual/pull/39)
