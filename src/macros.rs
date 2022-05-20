@@ -37,6 +37,16 @@ macro_rules! impl_zero_one {
     };
 }
 
+macro_rules! impl_derivative_zero {
+    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
+        impl<T: DualNum<F>, F: Float + Zero, $(const $const: usize,)*> $struct<T, F$(, $const)*> {
+            pub fn is_derivative_zero(&self) -> bool {
+                $(self.$im.is_zero()) &&*
+            }
+        }
+    };
+}
+
 macro_rules! impl_add_sub_rem {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl<'a, 'b, T: DualNum<F>, F: Float, $(const $const: usize,)*> Add<&'a $struct<T, F$(, $const)*>>
@@ -512,6 +522,7 @@ macro_rules! impl_dual {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl_from_f!($struct, [$($const),*], [$($im),*]);
         impl_zero_one!($struct, [$($const),*], [$($im),*]);
+        impl_derivative_zero!($struct, [$($const),*], [$($im),*]);
         impl_add_sub_rem!($struct, [$($const),*], [$($im),*]);
         forward_binop!($struct, [$($const),*], Add, +, add);
         forward_binop!($struct, [$($const),*], Sub, -, sub);

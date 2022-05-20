@@ -207,6 +207,11 @@ macro_rules! impl_dual_num {
             }
 
             #[inline]
+            pub fn is_derivative_zero(&self) -> bool {
+                self.0.is_derivative_zero()
+            }
+
+            #[inline]
             #[pyo3(text_signature = "($self, b: Self, c: Self)")]
             /// Fused multiply-add. Computes (self * a) + b with only one rounding error.
             fn mul_add(&self, a: Self, b: Self) -> Self {
