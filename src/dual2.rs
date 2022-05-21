@@ -1,4 +1,4 @@
-use crate::{DualNum, DualNumFloat, StaticMat, StaticVec};
+use crate::{DualNum, DualNumFloat, StaticMat, StaticVec, IsDerivativeZero};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};

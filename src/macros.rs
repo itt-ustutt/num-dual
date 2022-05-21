@@ -39,9 +39,9 @@ macro_rules! impl_zero_one {
 
 macro_rules! impl_derivative_zero {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F: Float + Zero, $(const $const: usize,)*> $struct<T, F$(, $const)*> {
-            pub fn is_derivative_zero(&self) -> bool {
-                $(self.$im.is_zero()) &&*
+        impl<T: DualNum<F> + IsDerivativeZero, F: Float, $(const $const: usize,)*> IsDerivativeZero for $struct<T, F$(, $const)*> {
+            fn is_derivative_zero(&self) -> bool {
+                self.re.is_derivative_zero() && $(self.$im.is_zero()) &&*
             }
         }
     };

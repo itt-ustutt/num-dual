@@ -1,4 +1,4 @@
-use crate::{DualNum, DualNumFloat, StaticMat, StaticVec};
+use crate::{DualNum, DualNumFloat, IsDerivativeZero, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -164,3 +164,19 @@ impl<T: fmt::Display, F, const N: usize> fmt::Display for DualVec<T, F, N> {
 
 impl_first_derivatives!(DualVec, [N], [eps]);
 impl_dual!(DualVec, [N], [eps]);
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn is_derivative_zero() {
+        let d = Dual::new(
+            DualVec64::new(1.0, StaticMat::new([[2.5; 1]; 1])),
+            StaticVec::new([[DualVec64::zero(); 1]; 1]),
+        );
+        assert!(!d.is_derivative_zero());
+        let d: DualVec64<1> = Dual::one();
+        assert!(d.is_derivative_zero())
+    }
+}
