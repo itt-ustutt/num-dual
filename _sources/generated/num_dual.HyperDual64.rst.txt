@@ -27,6 +27,7 @@
       ~HyperDual64.exp2
       ~HyperDual64.expm1
       ~HyperDual64.from_re
+      ~HyperDual64.is_derivative_zero
       ~HyperDual64.log
       ~HyperDual64.log10
       ~HyperDual64.log1p

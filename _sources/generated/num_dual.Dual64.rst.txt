@@ -27,6 +27,7 @@
       ~Dual64.exp2
       ~Dual64.expm1
       ~Dual64.from_re
+      ~Dual64.is_derivative_zero
       ~Dual64.log
       ~Dual64.log10
       ~Dual64.log1p
