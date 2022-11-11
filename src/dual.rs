@@ -8,7 +8,7 @@ use std::ops::{
 };
 
 /// A dual number for the calculations of gradients or Jacobians.
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct DualVec<T, F, const N: usize> {
     /// Real part of the dual number
     pub re: T,

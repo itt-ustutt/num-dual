@@ -1,15 +1,18 @@
 #![allow(clippy::assign_op_pattern)]
-use crate::{Dual, Dual2, Dual3, DualNum, HyperDual};
+use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual2<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for DualVec<T, F, N> {}
+impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static, const M: usize, const N: usize> ScalarOperand
+    for HyperDualVec<T, F, M, N>
+{
+}
 
 #[derive(Debug)]
 pub struct LinAlgError();

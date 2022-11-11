@@ -1,4 +1,4 @@
-use crate::{DualNum, DualNumFloat, StaticMat, StaticVec, IsDerivativeZero};
+use crate::{DualNum, DualNumFloat, IsDerivativeZero, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -8,7 +8,7 @@ use std::ops::{
 };
 
 /// A second order dual number for the calculation of Hessians.
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Dual2Vec<T, F, const N: usize> {
     /// Real part of the second order dual number
     pub re: T,

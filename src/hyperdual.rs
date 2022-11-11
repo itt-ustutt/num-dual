@@ -1,4 +1,4 @@
-use crate::{DualNum, DualNumFloat, StaticMat, StaticVec, IsDerivativeZero};
+use crate::{DualNum, DualNumFloat, IsDerivativeZero, StaticMat, StaticVec};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -8,7 +8,7 @@ use std::ops::{
 };
 
 /// A hyper dual number for the calculation of second partial derivatives.
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct HyperDualVec<T, F, const M: usize, const N: usize> {
     /// Real part of the hyper dual number
     pub re: T,

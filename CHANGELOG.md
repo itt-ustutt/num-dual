@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2022-11-11
+### Added
+- Implemented `ScalarOperand` for non-scalar dual numbers. [#45](https://github.com/itt-ustutt/num-dual/pull/45)
+
 ## [0.5.2] - 2022-05-23
 ### Added
 - Added method `is_derivative_zero` to check whether all non-real parts of a generalized dual number are zero. [#43](https://github.com/itt-ustutt/num-dual/pull/43)
