@@ -7,11 +7,12 @@ use pyo3::prelude::*;
 /// Dual number using 64-bit-floats as fields.
 ///
 /// A dual number consists of
-/// a + b ε
+/// f_0 + f_1 ε
+/// where f_0 is the function value and f_1 its first derivative.
 ///
 /// Examples
 ///
-/// >>> from dualnum import Dual64 as D64
+/// >>> from num_dual import Dual64 as D64
 /// >>> x = D64(1.0, 0.0)
 /// >>> y = D64.from_re(2.0)
 /// >>> x + y
@@ -19,14 +20,14 @@ use pyo3::prelude::*;
 ///
 /// First derivative of a function.
 ///
-/// >>> from dualnum import Dual64 as D64, derive1
+/// >>> from num_dual import Dual64 as D64, derive1
 /// >>> import numpy as np
 /// >>> x = derive1(4.0)
 /// >>> # this is equivalent to the above
 /// >>> x = D64(4.0, 1.0)
 /// >>> fx = x*x + np.sqrt(x)
 /// >>> fx.value
-/// 18
+/// 18.0
 /// >>> fx.first_derivative
 /// 8.25
 pub struct PyDual64(Dual64);
@@ -53,12 +54,6 @@ macro_rules! impl_dual_n {
         #[derive(Clone, Copy)]
         pub struct $py_type_name(DualVec64<$n>);
 
-        impl $py_type_name {
-            pub fn new(re: f64, eps: [f64; $n]) -> Self {
-                DualVec64::new(re, StaticVec::new_vec(eps)).into()
-            }
-        }
-
         #[pymethods]
         impl $py_type_name {
             #[getter]
@@ -81,6 +76,10 @@ macro_rules! impl_derive {
                 if let Ok(x) = x.extract::<f64>() {
                     return Ok(PyCell::new(py, PyDual64::from(Dual64::from_re(x).derive()))?.to_object(py));
                 };
+                if let Ok([x]) = x.extract::<[f64; 1]>() {
+                    let py_vec = vec![PyCell::new(py, PyDual64::from(Dual64::from_re(x).derive()))?];
+                    return Ok(py_vec.to_object(py));
+                };
                 $(
                     if let Ok(x) = x.extract::<[f64; $n]>() {
                         let arr = StaticVec::new_vec(x).map(DualVec64::from).derive();
@@ -88,6 +87,9 @@ macro_rules! impl_derive {
                         return Ok(py_vec?.to_object(py));
                     };
                 )+
+                if let Ok(_) = x.extract::<Vec<f64>>() {
+                    return Err(PyErr::new::<PyTypeError, _>(format!("First derivatives are only available for up to 10 variables!")))
+                }
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             })
         }
