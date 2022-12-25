@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 
 #[pyclass(name = "Dual3_64")]
 #[derive(Clone)]
-/// Hyper dual number using 64-bit-floats.
+/// Third order dual number using 64-bit-floats as fields.
 pub struct PyDual3_64(Dual3_64);
 
 #[pymethods]
@@ -38,7 +38,7 @@ impl_dual_num!(PyDual3_64, Dual3_64, f64);
 
 #[pyclass(name = "Dual3Dual64")]
 #[derive(Clone)]
-/// Hyper dual number using 64-bit-floats.
+/// Third order dual number using dual numbers as fields.
 pub struct PyDual3Dual64(Dual3<Dual64, f64>);
 
 #[pymethods]
