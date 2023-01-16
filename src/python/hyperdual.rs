@@ -1,6 +1,7 @@
 use super::dual::PyDual64;
 use super::dual2::{impl_dual2_n, PyDual2Dual64, PyDual2_64};
 use crate::*;
+use numpy::{PyArray, PyReadonlyArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 

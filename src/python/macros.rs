@@ -218,18 +218,50 @@ macro_rules! impl_dual_num {
             fn mul_add(&self, a: Self, b: Self) -> Self {
                 self.0.mul_add(a.0, b.0).into()
             }
-        }
 
-        #[pymethods]
-        impl $py_type_name {
-            fn __add__(&self, rhs: &PyAny) -> PyResult<Self> {
-                if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((self.0 + r).into());
-                };
-                if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((self.0 + r.0).into());
-                };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
+            fn __add__(&self, rhs: &PyAny) -> PyResult<PyObject> {
+                Python::with_gil(|py| {
+                    if let Ok(r) = rhs.extract::<f64>() {
+                        return Ok(PyCell::new(py, Self(self.0 + r))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<Self>() {
+                        return Ok(PyCell::new(py, Self(self.0 + r.0))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                        return Ok(PyArray::from_owned_object_array(
+                            py,
+                            r.as_array()
+                                .mapv(|ri| Py::new(py, Self(self.0 + ri)).unwrap()),
+                        )
+                        .into());
+                    }
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                        // check data type of first element
+                        if r.readonly()
+                            .as_array()
+                            .get(0)
+                            .unwrap()
+                            .as_ref(py)
+                            .is_instance_of::<Self>()
+                            .unwrap()
+                        {
+                            return Ok(PyArray::from_owned_object_array(
+                                py,
+                                r.as_array().mapv(|ri| {
+                                    Py::new(py, Self(self.0 + ri.extract::<Self>(py).unwrap().0))
+                                        .unwrap()
+                                }),
+                            )
+                            .into());
+                        }
+                    }
+
+                    Err(PyErr::new::<PyTypeError, _>(format!(
+                        "Addition of \nleft:  {}\nright: {:?}\nis not implemented!",
+                        stringify!($py_type_name),
+                        rhs.get_type()
+                    )))
+                })
             }
 
             fn __radd__(&self, other: &PyAny) -> PyResult<Self> {
@@ -239,14 +271,49 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __sub__(&self, rhs: &PyAny) -> PyResult<Self> {
-                if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((self.0 - r).into());
-                };
-                if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((self.0 - r.0).into());
-                };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
+            fn __sub__(&self, rhs: &PyAny) -> PyResult<PyObject> {
+                Python::with_gil(|py| {
+                    if let Ok(r) = rhs.extract::<f64>() {
+                        return Ok(PyCell::new(py, Self(self.0 - r))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<Self>() {
+                        return Ok(PyCell::new(py, Self(self.0 - r.0))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                        return Ok(PyArray::from_owned_object_array(
+                            py,
+                            r.as_array()
+                                .mapv(|ri| Py::new(py, Self(self.0 - ri)).unwrap()),
+                        )
+                        .into());
+                    }
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                        // check data type of first element
+                        if r.readonly()
+                            .as_array()
+                            .get(0)
+                            .unwrap()
+                            .as_ref(py)
+                            .is_instance_of::<Self>()
+                            .unwrap()
+                        {
+                            return Ok(PyArray::from_owned_object_array(
+                                py,
+                                r.as_array().mapv(|ri| {
+                                    Py::new(py, Self(self.0 - ri.extract::<Self>(py).unwrap().0))
+                                        .unwrap()
+                                }),
+                            )
+                            .into());
+                        }
+                    }
+
+                    Err(PyErr::new::<PyTypeError, _>(format!(
+                        "Subtraction of \nleft:  {}\nright: {:?}\nis not implemented!",
+                        stringify!($py_type_name),
+                        rhs.get_type()
+                    )))
+                })
             }
 
             fn __rsub__(&self, other: &PyAny) -> PyResult<Self> {
@@ -256,14 +323,49 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __mul__(&self, rhs: &PyAny) -> PyResult<Self> {
-                if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((self.0 * r).into());
-                };
-                if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((self.0 * r.0).into());
-                };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
+            fn __mul__(&self, rhs: &PyAny) -> PyResult<PyObject> {
+                Python::with_gil(|py| {
+                    if let Ok(r) = rhs.extract::<f64>() {
+                        return Ok(PyCell::new(py, Self(self.0 * r))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<Self>() {
+                        return Ok(PyCell::new(py, Self(self.0 * r.0))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                        return Ok(PyArray::from_owned_object_array(
+                            py,
+                            r.as_array()
+                                .mapv(|ri| Py::new(py, Self(self.0 * ri)).unwrap()),
+                        )
+                        .into());
+                    }
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                        // check data type of first element
+                        if r.readonly()
+                            .as_array()
+                            .get(0)
+                            .unwrap()
+                            .as_ref(py)
+                            .is_instance_of::<Self>()
+                            .unwrap()
+                        {
+                            return Ok(PyArray::from_owned_object_array(
+                                py,
+                                r.as_array().mapv(|ri| {
+                                    Py::new(py, Self(self.0 * ri.extract::<Self>(py).unwrap().0))
+                                        .unwrap()
+                                }),
+                            )
+                            .into());
+                        }
+                    }
+
+                    Err(PyErr::new::<PyTypeError, _>(format!(
+                        "Multiplication of \nleft:  {}\nright: {:?}\nis not implemented!",
+                        stringify!($py_type_name),
+                        rhs.get_type()
+                    )))
+                })
             }
 
             fn __rmul__(&self, other: &PyAny) -> PyResult<Self> {
@@ -273,14 +375,49 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
-            fn __truediv__(&self, rhs: &PyAny) -> PyResult<Self> {
-                if let Ok(r) = rhs.extract::<f64>() {
-                    return Ok((self.0 / r).into());
-                };
-                if let Ok(r) = rhs.extract::<Self>() {
-                    return Ok((self.0 / r.0).into());
-                };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
+            fn __truediv__(&self, rhs: &PyAny) -> PyResult<PyObject> {
+                Python::with_gil(|py| {
+                    if let Ok(r) = rhs.extract::<f64>() {
+                        return Ok(PyCell::new(py, Self(self.0 / r))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<Self>() {
+                        return Ok(PyCell::new(py, Self(self.0 / r.0))?.to_object(py));
+                    };
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                        return Ok(PyArray::from_owned_object_array(
+                            py,
+                            r.as_array()
+                                .mapv(|ri| Py::new(py, Self(self.0 / ri)).unwrap()),
+                        )
+                        .into());
+                    }
+                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                        // check data type of first element
+                        if r.readonly()
+                            .as_array()
+                            .get(0)
+                            .unwrap()
+                            .as_ref(py)
+                            .is_instance_of::<Self>()
+                            .unwrap()
+                        {
+                            return Ok(PyArray::from_owned_object_array(
+                                py,
+                                r.as_array().mapv(|ri| {
+                                    Py::new(py, Self(self.0 / ri.extract::<Self>(py).unwrap().0))
+                                        .unwrap()
+                                }),
+                            )
+                            .into());
+                        }
+                    }
+
+                    Err(PyErr::new::<PyTypeError, _>(format!(
+                        "Division of \nleft:  {}\nright: {:?}\nis not implemented!",
+                        stringify!($py_type_name),
+                        rhs.get_type()
+                    )))
+                })
             }
 
             fn __rtruediv__(&self, other: &PyAny) -> PyResult<Self> {
@@ -306,10 +443,7 @@ macro_rules! impl_dual_num {
             fn __neg__(&self) -> PyResult<Self> {
                 Ok((-self.0).into())
             }
-        }
 
-        #[pymethods]
-        impl $py_type_name {
             fn __repr__(&self) -> PyResult<String> {
                 Ok(self.0.to_string())
             }

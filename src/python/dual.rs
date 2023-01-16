@@ -1,9 +1,11 @@
 use crate::*;
+use numpy::{PyArray, PyReadonlyArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
+use pyo3::Python;
 
 #[pyclass(name = "Dual64")]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// Dual number using 64-bit-floats as fields.
 ///
 /// A dual number consists of
@@ -45,6 +47,14 @@ impl PyDual64 {
         self.0.eps[0]
     }
 }
+
+// unsafe impl Element for PyDual64 {
+//     const IS_COPY: bool = false;
+
+//     fn get_dtype(py: Python) -> &numpy::PyArrayDescr {
+//         numpy::PyArrayDescr::object(py)
+//     }
+// }
 
 impl_dual_num!(PyDual64, Dual64, f64);
 
