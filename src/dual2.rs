@@ -57,16 +57,24 @@ impl<T: Copy + Zero + AddAssign, F, const N: usize> Dual2Vec<T, F, N> {
 impl<T: One, F> Dual2<T, F> {
     /// Derive a scalar second order dual number
     /// ```
-    /// # use num_dual::{Dual2Vec64, DualNum, StaticVec};
-    /// let xy = StaticVec::new_vec([5.0, 3.0]).map(Dual2Vec64::<2>::from).derive();
-    /// let z = xy[0] * xy[1].powi(2);
-    /// assert_eq!(z.re, 45.0);            // xy²
-    /// assert_eq!(z.v1[0], 9.0);          // y²
-    /// assert_eq!(z.v1[1], 30.0);         // 2xy
-    /// assert_eq!(z.v2[(0,0)], 0.0);      // 0
-    /// assert_eq!(z.v2[(0,1)], 6.0);      // 2y
-    /// assert_eq!(z.v2[(1,0)], 6.0);      // 2y
-    /// assert_eq!(z.v2[(1,1)], 10.0);     // 2x
+    /// # use num_dual::{Dual2, DualNum};
+    /// let x = Dual2::from_re(5.0).derive().powi(2);
+    /// assert_eq!(x.re, 25.0);            // x²
+    /// assert_eq!(x.v1[0], 10.0);         // 2x
+    /// assert_eq!(x.v2[(0,0)], 2.0);      // 2
+    /// ```
+    ///
+    /// The argument can also be a dual number
+    /// ```
+    /// # use num_dual::{Dual64, Dual2, DualNum};
+    /// let x = Dual2::from_re(Dual64::from_re(5.0).derive())
+    ///     .derive()
+    ///     .powi(2);
+    /// assert_eq!(x.re.re(), 25.0);      // x²
+    /// assert_eq!(x.re.eps[0], 10.0);    // 2x
+    /// assert_eq!(x.v1[0].re, 10.0);     // 2x
+    /// assert_eq!(x.v1[0].eps[0], 2.0);  // 2
+    /// assert_eq!(x.v2[(0,0)].re, 2.0);  // 2
     /// ```
     #[inline]
     pub fn derive(mut self) -> Self {
