@@ -72,7 +72,6 @@ macro_rules! impl_dual_n {
 macro_rules! impl_derive {
     ([$(($py_type_name:ident, $n:literal)),+]) => {
         #[pyfunction]
-        #[pyo3(text_signature = "(x)")]
         pub fn derive1(x: &PyAny) -> PyResult<PyObject> {
             Python::with_gil(|py| {
                 if let Ok(x) = x.extract::<f64>() {

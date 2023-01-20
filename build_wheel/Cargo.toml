@@ -19,4 +19,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 num-dual = { path = "..", features = ["python"]}
-pyo3 = { version = "0.16", features = ["extension-module", "abi3", "abi3-py37", "multiple-pymethods"] }
+pyo3 = { version = "0.18", features = ["extension-module", "abi3", "abi3-py37", "multiple-pymethods"] }

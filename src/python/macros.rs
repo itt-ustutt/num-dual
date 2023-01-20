@@ -213,7 +213,7 @@ macro_rules! impl_dual_num {
             }
 
             #[inline]
-            #[pyo3(text_signature = "($self, b: Self, c: Self)")]
+            #[pyo3(text_signature = "($self, a, b)")]
             /// Fused multiply-add. Computes (self * a) + b with only one rounding error.
             fn mul_add(&self, a: Self, b: Self) -> Self {
                 self.0.mul_add(a.0, b.0).into()
