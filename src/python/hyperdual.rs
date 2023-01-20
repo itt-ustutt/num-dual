@@ -113,7 +113,7 @@ macro_rules! impl_hyper_dual_mn {
 macro_rules! impl_derive {
     ([$(($py_type_name:ident, $n:literal)),+; $(($py_type_name12:ident, $py_type_name21:ident, $m:literal)),+; $(($py_type_name3:ident, $m1:literal, $m2:literal)),+]) => {
         #[pyfunction]
-        #[pyo3(signature = (x1, x2=None), text_signature = "(x1, x2=None)")]
+        #[pyo3(text_signature = "(x1, x2=None)")]
         pub fn derive2(x1: &PyAny, x2: Option<&PyAny>) -> PyResult<PyObject> {
             Python::with_gil(|py| {
                 match x2 {
