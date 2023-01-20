@@ -48,14 +48,6 @@ impl PyDual64 {
     }
 }
 
-// unsafe impl Element for PyDual64 {
-//     const IS_COPY: bool = false;
-
-//     fn get_dtype(py: Python) -> &numpy::PyArrayDescr {
-//         numpy::PyArrayDescr::object(py)
-//     }
-// }
-
 impl_dual_num!(PyDual64, Dual64, f64);
 
 macro_rules! impl_dual_n {

@@ -253,6 +253,11 @@ macro_rules! impl_dual_num {
                                 }),
                             )
                             .into());
+                        } else {
+                            return Err(PyErr::new::<PyTypeError, _>(format!(
+                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                                stringify!($py_type_name)
+                            )));
                         }
                     }
 
@@ -305,6 +310,11 @@ macro_rules! impl_dual_num {
                                 }),
                             )
                             .into());
+                        } else {
+                            return Err(PyErr::new::<PyTypeError, _>(format!(
+                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                                stringify!($py_type_name)
+                            )));
                         }
                     }
 
@@ -357,6 +367,11 @@ macro_rules! impl_dual_num {
                                 }),
                             )
                             .into());
+                        } else {
+                            return Err(PyErr::new::<PyTypeError, _>(format!(
+                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                                stringify!($py_type_name)
+                            )));
                         }
                     }
 
@@ -409,6 +424,11 @@ macro_rules! impl_dual_num {
                                 }),
                             )
                             .into());
+                        } else {
+                            return Err(PyErr::new::<PyTypeError, _>(format!(
+                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                                stringify!($py_type_name)
+                            )));
                         }
                     }
 
