@@ -17,10 +17,11 @@ exclude = ["/.github/*", "*.ipynb", "./docs/*"]
 num-traits = "0.2"
 pyo3 = { version = "0.16", optional = true }
 ndarray = { version = "0.15", optional = true }
+numpy = { version = "0.16", optional = true }
 
 [features]
 default = []
-python = ["pyo3"]
+python = ["pyo3", "numpy", "ndarray"]
 linalg = ["ndarray"]
 
 [dev-dependencies]
