@@ -423,4 +423,3 @@ fn test_dual_vec_bessel_j2_4() {
     assert!((res.eps[0] - -0.132099570594364).abs() < 1e-12);
     assert!((res.eps[1] - -0.132099570594364).abs() < 1e-12);
 }
-

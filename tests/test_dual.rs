@@ -370,4 +370,3 @@ fn test_dual_bessel_j2_4() {
     assert!((res.re - -0.279979741339189).abs() < 1e-12);
     assert!((res.eps[0] - -0.132099570594364).abs() < 1e-12);
 }
-

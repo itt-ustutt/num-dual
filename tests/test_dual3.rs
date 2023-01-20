@@ -476,4 +476,3 @@ fn test_dual3_bessel_j2_4() {
     assert!((res.v2 - 0.240029203653306).abs() < 1e-12);
     assert!((res.v3 - 0.146694937335182).abs() < 1e-12);
 }
-
