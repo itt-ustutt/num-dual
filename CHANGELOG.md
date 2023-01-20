@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Publicly exposed all Python classes that are being generated. [#47](https://github.com/itt-ustutt/num-dual/pull/47)
 - Exported the `impl_dual_num` macro that implements the arithmetic operators for dual numbers in Python. [#47](https://github.com/itt-ustutt/num-dual/pull/47)
 
+### Packaging
+- Updated `pyo3` and `numpy` dependencies to 0.18. [#49](https://github.com/itt-ustutt/num-dual/pull/49)
+
 ## [0.5.3] - 2022-11-11
 ### Added
 - Implemented `ScalarOperand` for non-scalar dual numbers. [#46](https://github.com/itt-ustutt/num-dual/pull/46)
