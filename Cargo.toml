@@ -17,7 +17,7 @@ exclude = ["/.github/*", "*.ipynb", "./docs/*"]
 num-traits = "0.2"
 pyo3 = { version = "0.18", optional = true }
 ndarray = { version = "0.15", optional = true }
-numpy = { version = "0.16", optional = true }
+numpy = { version = "0.18", optional = true }
 
 [features]
 default = []
