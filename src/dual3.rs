@@ -81,7 +81,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual3<T, F>> for &'b Dual3<T, F> {
         let two = T::one() + T::one();
         let three = two + T::one();
         Dual3::new(
-            self.re * rhs.re,
+            self.re * rhs.re,   
             self.v1 * rhs.re + self.re * rhs.v1,
             self.v2 * rhs.re + two * self.v1 * rhs.v1 + self.re * rhs.v2,
             self.v3 * rhs.re

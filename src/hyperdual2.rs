@@ -115,9 +115,10 @@ impl<T: DualNum<F>, F: Float> HyperDual2<T, F> {
             f1 * self.eps1eps2 + f2 * self.eps1 * self.eps2,
             f1 * self.eps1eps3 + f2 * self.eps1 * self.eps3,
             f1 * self.eps2eps3 + f2 * self.eps2 * self.eps3,
-            f2 * (self.eps1 * self.eps2eps3
-                + self.eps2 * self.eps1eps3
-                + self.eps3 * self.eps1eps2)
+            f1 * self.eps1eps2eps3
+                + f2 * (self.eps1 * self.eps2eps3
+                    + self.eps2 * self.eps1eps3
+                    + self.eps3 * self.eps1eps2)
                 + f3 * self.eps1 * self.eps2 * self.eps3,
         )
     }
