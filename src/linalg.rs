@@ -1,5 +1,5 @@
 #![allow(clippy::assign_op_pattern)]
-use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperDual2_64};
+use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperDual2};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 use std::fmt;
@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for DualVec<T, F, N> {}
 impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual2_64<T, F> {}
+impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual2<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static, const M: usize, const N: usize> ScalarOperand
     for HyperDualVec<T, F, M, N>
 {
