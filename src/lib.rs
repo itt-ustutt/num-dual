@@ -57,7 +57,7 @@ pub use dual3::{Dual3, Dual3_32, Dual3_64};
 pub use hyperdual::{
     HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
-pub use hyperdual2::{HyperDual2_32, HyperDual2_64};
+pub use hyperdual2::{HyperDual2, HyperDual2_32, HyperDual2_64};
 pub use static_mat::{StaticMat, StaticVec};
 
 #[cfg(feature = "linalg")]
