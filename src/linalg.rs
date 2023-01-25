@@ -7,7 +7,7 @@ use std::iter::Product;
 use std::marker::PhantomData;
 
 impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for DualVec<T, F, N> {}
-impl<T: Clone + 'scatatic, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
+impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperDual2<T, F> {}
 impl<T: Clone + 'static, F: Clone + 'static, const M: usize, const N: usize> ScalarOperand
