@@ -83,6 +83,8 @@ pub trait DualNum<F>:
     + fmt::Display
     + Sync
     + Send
+    + PartialEq
+    + fmt::Debug
     + 'static
 {
     /// Highest derivative that can be calculated with this struct
@@ -199,11 +201,11 @@ pub trait IsDerivativeZero {
 
 /// The underlying data type of individual derivatives. Usually f32 or f64.
 pub trait DualNumFloat:
-    Float + FromPrimitive + Signed + fmt::Display + Sync + Send + 'static
+    Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
 {
 }
 impl<T> DualNumFloat for T where
-    T: Float + FromPrimitive + Signed + fmt::Display + Sync + Send + 'static
+    T: Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
 {
 }
 

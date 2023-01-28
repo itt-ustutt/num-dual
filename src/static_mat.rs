@@ -9,9 +9,11 @@ use std::slice::Iter;
 
 /// A statically allocated MxN matrix. The struct is used in the vector (hyper) dual numbers
 /// and provides utilities for the calculation of Jacobians.
+#[deprecated(since = "0.6.1", note = "use nalgebra::SMatrix instead")]
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct StaticMat<T, const M: usize, const N: usize>([[T; N]; M]);
 
+#[deprecated(since = "0.6.1", note = "use nalgebra::SVector instead")]
 pub type StaticVec<T, const N: usize> = StaticMat<T, 1, N>;
 
 impl<T, const M: usize, const N: usize> StaticMat<T, M, N> {

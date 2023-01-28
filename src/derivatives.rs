@@ -10,8 +10,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn scale(&mut self, f: F) {
-                self.re.scale(f);
-                $(self.$im.scale(f);)*
+                unimplemented!()
+                // self.re.scale(f);
+                // $(self.$im.scale(f);)*
             }
 
             #[inline]
