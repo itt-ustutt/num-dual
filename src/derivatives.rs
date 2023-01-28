@@ -9,10 +9,8 @@ macro_rules! impl_derivatives {
             }
 
             #[inline]
-            fn scale(&mut self, f: F) {
-                unimplemented!()
-                // self.re.scale(f);
-                // $(self.$im.scale(f);)*
+            fn is_derivative_zero(&self) -> bool {
+                self.re.is_derivative_zero() && $(self.$im.is_zero()) &&*
             }
 
             #[inline]

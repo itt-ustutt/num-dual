@@ -1,5 +1,5 @@
-use crate::{DualNum, DualNumFloat, IsDerivativeZero};
-use nalgebra::{SMatrix, SVector};
+use crate::{DualNum, DualNumFloat};
+use nalgebra::SVector;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -163,19 +163,18 @@ impl<T: DualNum<F>, F, const N: usize> fmt::Display for DualVec<T, F, N> {
 impl_first_derivatives!(DualVec, [N], [eps]);
 impl_dual!(DualVec, [N], [eps]);
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
+#[cfg(test)]
+mod test {
+    use super::*;
 
-//     #[test]
-//     fn is_derivative_zero() {
-//         let x = DualVec64::new(1.0, SMatrix::new(2.5));
-//         let d = Dual::new(
-//             DualVec64::new(1.0, SMatrix::new(2.5)),
-//             SVector::new([[DualVec64::zero(); 1]; 1]),
-//         );
-//         assert!(!d.is_derivative_zero());
-//         let d: DualVec64<1> = Dual::one();
-//         assert!(d.is_derivative_zero())
-//     }
-// }
+    #[test]
+    fn is_derivative_zero() {
+        let d = Dual::new(
+            DualVec64::new(1.0, SVector::from([2.5])),
+            SVector::from([DualVec64::zero()]),
+        );
+        assert!(!d.is_derivative_zero());
+        let d: DualVec64<1> = Dual::one();
+        assert!(d.is_derivative_zero())
+    }
+}

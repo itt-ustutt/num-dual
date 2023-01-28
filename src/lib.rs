@@ -90,11 +90,11 @@ pub trait DualNum<F>:
     /// Highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
-    /// Multiply the number with the scalar f inplace.
-    fn scale(&mut self, f: F);
-
     /// Real part (0th derivative) of the number
     fn re(&self) -> F;
+
+    /// Check if all derivative parts are zero
+    fn is_derivative_zero(&self) -> bool;
 
     /// Reciprocal (inverse) of a number `1/x`.
     fn recip(&self) -> Self;
@@ -195,10 +195,6 @@ pub trait DualNum<F>:
     }
 }
 
-pub trait IsDerivativeZero {
-    fn is_derivative_zero(&self) -> bool;
-}
-
 /// The underlying data type of individual derivatives. Usually f32 or f64.
 pub trait DualNumFloat:
     Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
@@ -218,8 +214,8 @@ macro_rules! impl_dual_num_float {
                 *self
             }
 
-            fn scale(&mut self, f: $float) {
-                *self *= f;
+            fn is_derivative_zero(&self) -> bool {
+                true
             }
 
             fn mul_add(&self, a: Self, b: Self) -> Self {
@@ -330,12 +326,6 @@ macro_rules! impl_dual_num_float {
                     let s2 = self * self;
                     ((3.0 - s2) * sc.0 - 3.0 * self * sc.1) / (self * s2)
                 }
-            }
-        }
-
-        impl IsDerivativeZero for $float {
-            fn is_derivative_zero(&self) -> bool {
-                true
             }
         }
     };
