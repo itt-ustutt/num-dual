@@ -1,5 +1,5 @@
 use crate::{DualNum, DualNumFloat};
-use nalgebra::{RowSVector, SMatrix};
+use nalgebra::{RowSVector, SMatrix, SVector};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -55,58 +55,67 @@ impl<T: DualNum<F>, F, const N: usize> Dual2Vec<T, F, N> {
     }
 }
 
-impl<T: DualNum<F>, F> Dual2<T, F> {
-    /// Derive a scalar second order dual number
-    /// ```
-    /// # use num_dual::{Dual2, DualNum};
-    /// let x = Dual2::from_re(5.0).derive().powi(2);
-    /// assert_eq!(x.re, 25.0);            // x²
-    /// assert_eq!(x.v1[0], 10.0);         // 2x
-    /// assert_eq!(x.v2[(0,0)], 2.0);      // 2
-    /// ```
-    ///
-    /// The argument can also be a dual number
-    /// ```
-    /// # use num_dual::{Dual64, Dual2, DualNum};
-    /// let x = Dual2::from_re(Dual64::from_re(5.0).derive())
-    ///     .derive()
-    ///     .powi(2);
-    /// assert_eq!(x.re.re(), 25.0);      // x²
-    /// assert_eq!(x.re.eps[0], 10.0);    // 2x
-    /// assert_eq!(x.v1[0].re, 10.0);     // 2x
-    /// assert_eq!(x.v1[0].eps[0], 2.0);  // 2
-    /// assert_eq!(x.v2[(0,0)].re, 2.0);  // 2
-    /// ```
-    #[inline]
-    pub fn derive(mut self) -> Self {
-        self.v1[0] = T::one();
-        self
-    }
+/// Calculate the second derivative of a univariate function.
+/// ```
+/// # use num_dual::{second_derivative, DualNum};
+/// let (f, df, d2f) = second_derivative(|x| x.powi(2), 5.0);
+/// assert_eq!(f, 25.0);       // x²
+/// assert_eq!(df, 10.0);      // 2x
+/// assert_eq!(d2f, 2.0);      // 2
+/// ```
+///
+/// The argument can also be a dual number.
+/// ```
+/// # use num_dual::{second_derivative, Dual2, Dual64, DualNum};
+/// let x = Dual64::new_scalar(5.0, 1.0);
+/// let (f, df, d2f) = second_derivative(|x| x.powi(2), x);
+/// assert_eq!(f.re(), 25.0);      // x²
+/// assert_eq!(f.eps[0], 10.0);    // 2x
+/// assert_eq!(df.re, 10.0);       // 2x
+/// assert_eq!(df.eps[0], 2.0);    // 2
+/// assert_eq!(d2f.re, 2.0);       // 2
+/// assert_eq!(d2f.eps[0], 0.0);   // 0
+/// ```
+pub fn second_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T, T)
+where
+    G: FnOnce(Dual2<T, F>) -> Dual2<T, F>,
+{
+    let mut x = Dual2::from_re(x);
+    x.v1[0] = T::one();
+    let Dual2 { re, v1, v2, f: _ } = g(x);
+    (re, v1[0], v2[0])
 }
 
-// impl<T: One, F, const N: usize> SVector<Dual2Vec<T, F, N>, N> {
-//     /// Derive a vector of second order dual numbers.
-//     /// ```
-//     /// # use approx::assert_relative_eq;
-//     /// # use num_dual::{Dual2Vec64, DualNum, SVector};
-//     /// let v = SVector::new_vec([4.0, 3.0]).map(Dual2Vec64::<2>::from_re).derive();
-//     /// let n = (v[0].powi(2) + v[1].powi(2)).sqrt();
-//     /// assert_eq!(n.re, 5.0);
-//     /// assert_relative_eq!(n.v1[0], 0.8);
-//     /// assert_relative_eq!(n.v1[1], 0.6);
-//     /// assert_relative_eq!(n.v2[(0,0)], 0.072);
-//     /// assert_relative_eq!(n.v2[(0,1)], -0.096);
-//     /// assert_relative_eq!(n.v2[(1,0)], -0.096);
-//     /// assert_relative_eq!(n.v2[(1,1)], 0.128);
-//     /// ```
-//     #[inline]
-//     pub fn derive(mut self) -> Self {
-//         for i in 0..N {
-//             self[i].v1[i] = T::one();
-//         }
-//         self
-//     }
-// }
+/// Calculate the Hessian of a scalar function.
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{hessian, DualNum, Dual2Vec64};
+/// # use nalgebra::SVector;
+/// let v = SVector::from([4.0, 3.0]);
+/// let fun = |v: SVector<Dual2Vec64<2>, 2>| (v[0].powi(2) + v[1].powi(2)).sqrt();
+/// let (f, g, h) = hessian(fun, v);
+/// assert_eq!(f, 5.0);
+/// assert_relative_eq!(g[0], 0.8);
+/// assert_relative_eq!(g[1], 0.6);
+/// assert_relative_eq!(h[(0,0)], 0.072);
+/// assert_relative_eq!(h[(0,1)], -0.096);
+/// assert_relative_eq!(h[(1,0)], -0.096);
+/// assert_relative_eq!(h[(1,1)], 0.128);
+/// ```
+pub fn hessian<G, T: DualNum<F>, F: DualNumFloat, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> (T, SVector<T, N>, SMatrix<T, N, N>)
+where
+    G: FnOnce(SVector<Dual2Vec<T, F, N>, N>) -> Dual2Vec<T, F, N>,
+{
+    let mut x = x.map(Dual2Vec::from_re);
+    for i in 0..N {
+        x[i].v1[i] = T::one();
+    }
+    let Dual2Vec { re, v1, v2, f: _ } = g(x);
+    (re, v1.transpose(), v2)
+}
 
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const N: usize> Dual2Vec<T, F, N> {

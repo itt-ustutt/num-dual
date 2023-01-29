@@ -4,30 +4,38 @@
 //! This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
 //! ```
 //! use num_dual::*;
+//! use nalgebra::SVector;
 //!
-//! fn f<D: DualNum<f64>>(x: D, y: D) -> D {
-//!     x.powi(3) * y.powi(2)
+//! fn foo<D: DualNum<f64>>(x: D) -> D {
+//!     x.powi(3)
+//! }
+//!
+//! fn bar<D: DualNum<f64>, const N: usize>(x: SVector<D, N>) -> D {
+//!     x.dot(&x).sqrt()
 //! }
 //!
 //! fn main() {
-//!     let (x, y) = (5.0, 4.0);
-//!
 //!     // Calculate a simple derivative
-//!     let x_dual = Dual64::from(x).derive();
-//!     let y_dual = Dual64::from(y);
-//!     println!("{}", f(x_dual, y_dual));                      // 2000 + [1200]ε
+//!     let (f, df) = first_derivative(foo, 5.0);
+//!     assert_eq!(f, 125.0);
+//!     assert_eq!(df, 75.0);
+//!
+//!     // Manually construct the dual number
+//!     let x = Dual64::new_scalar(5.0, 1.0);
+//!     println!("{}", foo(x));                            // 125 + [75]ε
 //!
 //!     // Calculate a gradient
-//!     //let xy_dual_vec = StaticVec::new_vec([x, y]).map(DualVec64::<2>::from).derive();
-//!     //println!("{}", f(xy_dual_vec[0], xy_dual_vec[1]).eps);  // [1200, 1000]
+//!     let (f, g) = gradient(bar, SVector::from([4.0, 3.0]));
+//!     assert_eq!(f, 5.0);
+//!     assert_eq!(g[0], 0.8);
 //!
 //!     // Calculate a Hessian
-//!     //let xy_dual2 = StaticVec::new_vec([x, y]).map(Dual2Vec64::<2>::from).derive();
-//!     //println!("{}", f(xy_dual2[0], xy_dual2[1]).v2);         // [[480, 600], [600, 250]]
+//!     let (f, g, h) = hessian(bar, SVector::from([4.0, 3.0]));
+//!     println!("{h}");         // [[0.072, -0.096], [-0.096, 0.128]]
 //!
-//!     // for x=cos(t) and y=sin(t) calculate the third derivative w.r.t. t
-//!     let t = Dual3_64::from(1.0).derive();
-//!     println!("{}", f(t.cos(), t.sin()).v3);                 // 7.358639755305733
+//!     // for x=cos(t) calculate the third derivative of foo w.r.t. t
+//!     let (f0, f1, f2, f3) = third_derivative(|t| foo(t.cos()), 1.0);
+//!     println!("{f3}");                                  // 1.5836632930100278
 //! }
 //! ```
 
@@ -49,16 +57,19 @@ mod dual2;
 mod dual3;
 mod hyperdual;
 mod hyperhyperdual;
-mod static_mat;
 pub use bessel::BesselDual;
-pub use dual::{Dual, Dual32, Dual64, DualVec, DualVec32, DualVec64};
-pub use dual2::{Dual2, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64};
-pub use dual3::{Dual3, Dual3_32, Dual3_64};
+pub use dual::{
+    first_derivative, gradient, jacobian, Dual, Dual32, Dual64, DualVec, DualVec32, DualVec64,
+};
+pub use dual2::{
+    hessian, second_derivative, Dual2, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64,
+};
+pub use dual3::{third_derivative, Dual3, Dual3_32, Dual3_64};
 pub use hyperdual::{
-    HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
+    partial_hessian, second_partial_derivative, HyperDual, HyperDual32, HyperDual64, HyperDualVec,
+    HyperDualVec32, HyperDualVec64,
 };
 pub use hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
-pub use static_mat::{StaticMat, StaticVec};
 
 #[cfg(feature = "linalg")]
 pub mod linalg;

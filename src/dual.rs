@@ -1,7 +1,7 @@
 use crate::{DualNum, DualNumFloat};
-use nalgebra::SVector;
+use nalgebra::{SMatrix, SVector};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
-use std::fmt;
+use std::fmt::{self, Debug};
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::{
@@ -52,65 +52,86 @@ impl<T: DualNum<F>, F, const N: usize> DualVec<T, F, N> {
     }
 }
 
-impl<T: DualNum<F>, F> Dual<T, F> {
-    /// Derive a scalar dual number, i.e. set the derivative part to 1.
-    /// ```
-    /// # use num_dual::{Dual64, DualNum};
-    /// let x = Dual64::from_re(5.0).derive().powi(2);
-    /// assert_eq!(x.re, 25.0);
-    /// assert_eq!(x.eps[0], 10.0);
-    /// ```
-    #[inline]
-    pub fn derive(mut self) -> Self {
-        self.eps[0] = T::one();
-        self
-    }
+/// Calculate the first derivative of a scalar function.
+/// ```
+/// # use num_dual::{first_derivative, DualNum};
+/// let (f, df) = first_derivative(|x| x.powi(2), 5.0);
+/// assert_eq!(f, 25.0);
+/// assert_eq!(df, 10.0);
+/// ```
+pub fn first_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T)
+where
+    G: FnOnce(Dual<T, F>) -> Dual<T, F>,
+{
+    let mut x = Dual::from_re(x);
+    x.eps[0] = T::one();
+    let Dual { re, eps, f: _ } = g(x);
+    (re, eps[0])
 }
 
-// impl<T: One, F, const N: usize> SVector<DualVec<T, F, N>, N> {
-//     /// Derive a vector of dual numbers.
-//     /// ```
-//     /// # use approx::assert_relative_eq;
-//     /// # use num_dual::{DualVec64, DualNum, SVector};
-//     /// let v = SVector::new_vec([4.0, 3.0]).map(DualVec64::<2>::from_re).derive();
-//     /// let n = (v[0].powi(2) + v[1].powi(2)).sqrt();
-//     /// assert_eq!(n.re, 5.0);
-//     /// assert_relative_eq!(n.eps[0], 0.8);
-//     /// assert_relative_eq!(n.eps[1], 0.6);
-//     /// ```
-//     #[inline]
-//     pub fn derive(mut self) -> Self {
-//         for i in 0..N {
-//             self[i].eps[i] = T::one();
-//         }
-//         self
-//     }
-// }
+/// Calculate the gradient of a scalar function
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{gradient, DualNum, DualVec64};
+/// # use nalgebra::SVector;
+/// let v = SVector::from([4.0, 3.0]);
+/// let fun = |v: SVector<DualVec64<2>, 2>| (v[0].powi(2) + v[1].powi(2)).sqrt();
+/// let (f, g) = gradient(fun, v);
+/// assert_eq!(f, 5.0);
+/// assert_relative_eq!(g[0], 0.8);
+/// assert_relative_eq!(g[1], 0.6);
+/// ```
+pub fn gradient<G, T: DualNum<F>, F: DualNumFloat, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> (T, SVector<T, N>)
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> DualVec<T, F, N>,
+{
+    let mut x = x.map(DualVec::from_re);
+    for i in 0..N {
+        x[i].eps[i] = T::one();
+    }
+    let DualVec { re, eps, f: _ } = g(x);
+    (re, eps)
+}
 
-// impl<T: One + Zero + Copy + AddAssign, F, const M: usize, const N: usize>
-//     SVector<DualVec<T, F, N>, M>
-// {
-//     /// Extract the Jacobian from a vector of Dual numbers.
-//     /// ```
-//     /// # use num_dual::{DualVec64, DualNum, SVector};
-//     /// let xy = SVector::new_vec([5.0, 3.0]).map(DualVec64::<2>::from).derive();
-//     /// let j = SVector::new_vec([xy[0] * xy[1].powi(3), xy[0].powi(2) * xy[1]]).jacobian();
-//     /// assert_eq!(j[(0,0)], 27.0);     // y³
-//     /// assert_eq!(j[(0,1)], 135.0);    // 3xy²
-//     /// assert_eq!(j[(1,0)], 30.0);     // 2xy
-//     /// assert_eq!(j[(1,1)], 25.0);     // x²
-//     /// ```
-//     #[inline]
-//     pub fn jacobian(&self) -> SMatrix<T, M, N> {
-//         let mut res = SMatrix::zero();
-//         for i in 0..M {
-//             for j in 0..N {
-//                 res[(i, j)] = self[i].eps[j];
-//             }
-//         }
-//         res
-//     }
-// }
+/// Calculate the Jacobian of a vector function.
+/// ```
+/// # use num_dual::{jacobian, DualVec64, DualNum};
+/// # use nalgebra::SVector;
+/// let xy = SVector::from([5.0, 3.0, 2.0]);
+/// let fun = |xy: SVector<DualVec64<3>, 3>| SVector::from([
+///                      xy[0] * xy[1].powi(3) * xy[2],
+///                      xy[0].powi(2) * xy[1] * xy[2].powi(2)
+///                     ]);
+/// let (f, jac) = jacobian(fun, xy);
+/// assert_eq!(f[0], 270.0);          // xy³z
+/// assert_eq!(f[1], 300.0);          // x²yz²
+/// assert_eq!(jac[(0,0)], 54.0);     // y³z
+/// assert_eq!(jac[(0,1)], 270.0);    // 3xy²z
+/// assert_eq!(jac[(0,2)], 135.0);    // xy³
+/// assert_eq!(jac[(1,0)], 120.0);    // 2xyz²
+/// assert_eq!(jac[(1,1)], 100.0);    // x²z²
+/// assert_eq!(jac[(1,2)], 300.0);     // 2x²yz
+/// ```
+pub fn jacobian<G, T: DualNum<F>, F: DualNumFloat, const M: usize, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> (SVector<T, M>, SMatrix<T, M, N>)
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> SVector<DualVec<T, F, N>, M>,
+{
+    let mut x = x.map(DualVec::from_re);
+    for i in 0..N {
+        x[i].eps[i] = T::one();
+    }
+    let res = g(x);
+    (
+        SVector::from_fn(|i, _| res[i].re),
+        SMatrix::from_fn(|i, j| res[i].eps[j]),
+    )
+}
 
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const N: usize> DualVec<T, F, N> {

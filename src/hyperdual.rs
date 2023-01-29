@@ -86,40 +86,81 @@ impl<T: DualNum<F>, F, const M: usize> HyperDualVec<T, F, M, 1> {
     }
 }
 
-// impl<T: One, F, const M: usize, const N: usize> SVector<HyperDualVec<T, F, M, N>, M> {
-//     /// Derive a vector of hyper dual numbers w.r.t. to the first set of variables.
-//     #[inline]
-//     pub fn derive1(mut self) -> Self {
-//         for i in 0..M {
-//             self[i].eps1[i] = T::one();
-//         }
-//         self
-//     }
-// }
+/// Calculate second partial derivatives with repsect to scalars.
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{second_partial_derivative, DualNum, HyperDual64};
+/// # use nalgebra::SVector;
+/// let fun = |x: HyperDual64, y: HyperDual64| (x.powi(2) + y.powi(2)).sqrt();
+/// let (f, dfdx, dfdy, d2fdxdy) = second_partial_derivative(fun, 4.0, 3.0);
+/// assert_eq!(f, 5.0);
+/// assert_relative_eq!(dfdx, 0.8);
+/// assert_relative_eq!(dfdy, 0.6);
+/// assert_relative_eq!(d2fdxdy, -0.096);
+/// ```
+pub fn second_partial_derivative<G, T: DualNum<F>, F>(g: G, x: T, y: T) -> (T, T, T, T)
+where
+    G: FnOnce(HyperDual<T, F>, HyperDual<T, F>) -> HyperDual<T, F>,
+{
+    let mut x = HyperDual::from_re(x);
+    let mut y = HyperDual::from_re(y);
+    x.eps1[0] = T::one();
+    y.eps2[0] = T::one();
+    let HyperDual {
+        re,
+        eps1,
+        eps2,
+        eps1eps2,
+        f: _,
+    } = g(x, y);
+    (re, eps1[0], eps2[0], eps1eps2[0])
+}
 
-// impl<T: One, F, const M: usize, const N: usize> SVector<HyperDualVec<T, F, M, N>, N> {
-//     /// Derive a vector of hyper dual numbers w.r.t. to the second set of variables.
-//     /// ```
-//     /// # use approx::assert_relative_eq;
-//     /// # use num_dual::{HyperDualVec64, DualNum, SVector};
-//     /// let x = HyperDualVec64::<1, 2>::from_re(2.0).derive1();
-//     /// let v = SVector::new_vec([2.0, 3.0]).map(HyperDualVec64::<1, 2>::from_re).derive2();
-//     /// let n = (x.powi(2)*v[0].powi(2) + v[1].powi(2)).sqrt();
-//     /// assert_eq!(n.re, 5.0);
-//     /// assert_relative_eq!(n.eps1[0], 1.6);
-//     /// assert_relative_eq!(n.eps2[0], 1.6);
-//     /// assert_relative_eq!(n.eps2[1], 0.6);
-//     /// assert_relative_eq!(n.eps1eps2[(0,0)], 1.088);
-//     /// assert_relative_eq!(n.eps1eps2[(0,1)], -0.192);
-//     /// ```
-//     #[inline]
-//     pub fn derive2(mut self) -> Self {
-//         for i in 0..N {
-//             self[i].eps2[i] = T::one();
-//         }
-//         self
-//     }
-// }
+/// Calculate second partial derivatives with repsect to vectors.
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{partial_hessian, DualNum, HyperDualVec64};
+/// # use nalgebra::SVector;
+/// let x = SVector::from([4.0, 3.0]);
+/// let y = SVector::from([5.0]);
+/// let fun = |x: SVector<HyperDualVec64<2, 1>, 2>, y: SVector<HyperDualVec64<2, 1>, 1>|
+///                 y[0] / (x[0].powi(2) + x[1].powi(2)).sqrt();
+/// let (f, dfdx, dfdy, d2fdxdy) = partial_hessian(fun, x, y);
+/// assert_eq!(f, 1.0);
+/// assert_relative_eq!(dfdx[0], -0.16);
+/// assert_relative_eq!(dfdx[1], -0.12);
+/// assert_relative_eq!(dfdy[0], 0.2);
+/// assert_relative_eq!(d2fdxdy[0], -0.032);
+/// assert_relative_eq!(d2fdxdy[1], -0.024);
+/// ```
+pub fn partial_hessian<G, T: DualNum<F>, F: DualNumFloat, const M: usize, const N: usize>(
+    g: G,
+    x: SVector<T, M>,
+    y: SVector<T, N>,
+) -> (T, SVector<T, M>, SVector<T, N>, SMatrix<T, M, N>)
+where
+    G: FnOnce(
+        SVector<HyperDualVec<T, F, M, N>, M>,
+        SVector<HyperDualVec<T, F, M, N>, N>,
+    ) -> HyperDualVec<T, F, M, N>,
+{
+    let mut x = x.map(HyperDualVec::from_re);
+    let mut y = y.map(HyperDualVec::from_re);
+    for i in 0..M {
+        x[i].eps1[i] = T::one();
+    }
+    for j in 0..N {
+        y[j].eps2[j] = T::one();
+    }
+    let HyperDualVec {
+        re,
+        eps1,
+        eps2,
+        eps1eps2,
+        f: _,
+    } = g(x, y);
+    (re, eps1, eps2.transpose(), eps1eps2)
+}
 
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
