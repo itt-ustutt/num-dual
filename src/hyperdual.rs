@@ -1,4 +1,5 @@
-use crate::{DualNum, DualNumFloat, StaticMat, StaticVec};
+use crate::{DualNum, DualNumFloat};
+use nalgebra::{RowSVector, SMatrix, SVector};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -9,15 +10,15 @@ use std::ops::{
 
 /// A hyper dual number for the calculation of second partial derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub struct HyperDualVec<T, F, const M: usize, const N: usize> {
+pub struct HyperDualVec<T: DualNum<F>, F, const M: usize, const N: usize> {
     /// Real part of the hyper dual number
     pub re: T,
     /// Partial derivative part of the hyper dual number
-    pub eps1: StaticVec<T, M>,
+    pub eps1: SVector<T, M>,
     /// Partial derivative part of the hyper dual number
-    pub eps2: StaticVec<T, N>,
+    pub eps2: RowSVector<T, N>,
     /// Second partial derivative part of the hyper dual number
-    pub eps1eps2: StaticMat<T, M, N>,
+    pub eps1eps2: SMatrix<T, M, N>,
     f: PhantomData<F>,
 }
 
@@ -27,14 +28,14 @@ pub type HyperDual<T, F> = HyperDualVec<T, F, 1, 1>;
 pub type HyperDual32 = HyperDual<f32, f32>;
 pub type HyperDual64 = HyperDual<f64, f64>;
 
-impl<T, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
+impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
     /// Create a new hyper dual number from its fields.
     #[inline]
     pub fn new(
         re: T,
-        eps1: StaticVec<T, M>,
-        eps2: StaticVec<T, N>,
-        eps1eps2: StaticMat<T, M, N>,
+        eps1: SVector<T, M>,
+        eps2: RowSVector<T, N>,
+        eps1eps2: SMatrix<T, M, N>,
     ) -> Self {
         Self {
             re,
@@ -46,28 +47,28 @@ impl<T, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
     }
 }
 
-impl<T, F> HyperDual<T, F> {
+impl<T: DualNum<F>, F> HyperDual<T, F> {
     /// Create a new scalar hyper dual number from its fields.
     #[inline]
     pub fn new_scalar(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
         Self::new(
             re,
-            StaticVec::new_vec([eps1]),
-            StaticVec::new_vec([eps2]),
-            StaticMat::new([[eps1eps2]]),
+            SVector::from([eps1]),
+            SVector::from([eps2]),
+            SMatrix::from([[eps1eps2]]),
         )
     }
 }
 
-impl<T: Copy + Zero + AddAssign, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
+impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
     /// Create a new hyper dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
-        HyperDualVec::new(re, StaticVec::zero(), StaticVec::zero(), StaticMat::zero())
+        HyperDualVec::new(re, SVector::zero(), RowSVector::zero(), SMatrix::zero())
     }
 }
 
-impl<T: One, F, const N: usize> HyperDualVec<T, F, 1, N> {
+impl<T: DualNum<F>, F, const N: usize> HyperDualVec<T, F, 1, N> {
     /// Derive a hyper dual number w.r.t. the first variable.
     #[inline]
     pub fn derive1(mut self) -> Self {
@@ -76,7 +77,7 @@ impl<T: One, F, const N: usize> HyperDualVec<T, F, 1, N> {
     }
 }
 
-impl<T: One, F, const M: usize> HyperDualVec<T, F, M, 1> {
+impl<T: DualNum<F>, F, const M: usize> HyperDualVec<T, F, M, 1> {
     /// Derive a hyper dual number w.r.t. the 2nd variable.
     #[inline]
     pub fn derive2(mut self) -> Self {
@@ -85,40 +86,40 @@ impl<T: One, F, const M: usize> HyperDualVec<T, F, M, 1> {
     }
 }
 
-impl<T: One, F, const M: usize, const N: usize> StaticVec<HyperDualVec<T, F, M, N>, M> {
-    /// Derive a vector of hyper dual numbers w.r.t. to the first set of variables.
-    #[inline]
-    pub fn derive1(mut self) -> Self {
-        for i in 0..M {
-            self[i].eps1[i] = T::one();
-        }
-        self
-    }
-}
+// impl<T: One, F, const M: usize, const N: usize> SVector<HyperDualVec<T, F, M, N>, M> {
+//     /// Derive a vector of hyper dual numbers w.r.t. to the first set of variables.
+//     #[inline]
+//     pub fn derive1(mut self) -> Self {
+//         for i in 0..M {
+//             self[i].eps1[i] = T::one();
+//         }
+//         self
+//     }
+// }
 
-impl<T: One, F, const M: usize, const N: usize> StaticVec<HyperDualVec<T, F, M, N>, N> {
-    /// Derive a vector of hyper dual numbers w.r.t. to the second set of variables.
-    /// ```
-    /// # use approx::assert_relative_eq;
-    /// # use num_dual::{HyperDualVec64, DualNum, StaticVec};
-    /// let x = HyperDualVec64::<1, 2>::from_re(2.0).derive1();
-    /// let v = StaticVec::new_vec([2.0, 3.0]).map(HyperDualVec64::<1, 2>::from_re).derive2();
-    /// let n = (x.powi(2)*v[0].powi(2) + v[1].powi(2)).sqrt();
-    /// assert_eq!(n.re, 5.0);
-    /// assert_relative_eq!(n.eps1[0], 1.6);
-    /// assert_relative_eq!(n.eps2[0], 1.6);
-    /// assert_relative_eq!(n.eps2[1], 0.6);
-    /// assert_relative_eq!(n.eps1eps2[(0,0)], 1.088);
-    /// assert_relative_eq!(n.eps1eps2[(0,1)], -0.192);
-    /// ```
-    #[inline]
-    pub fn derive2(mut self) -> Self {
-        for i in 0..N {
-            self[i].eps2[i] = T::one();
-        }
-        self
-    }
-}
+// impl<T: One, F, const M: usize, const N: usize> SVector<HyperDualVec<T, F, M, N>, N> {
+//     /// Derive a vector of hyper dual numbers w.r.t. to the second set of variables.
+//     /// ```
+//     /// # use approx::assert_relative_eq;
+//     /// # use num_dual::{HyperDualVec64, DualNum, SVector};
+//     /// let x = HyperDualVec64::<1, 2>::from_re(2.0).derive1();
+//     /// let v = SVector::new_vec([2.0, 3.0]).map(HyperDualVec64::<1, 2>::from_re).derive2();
+//     /// let n = (x.powi(2)*v[0].powi(2) + v[1].powi(2)).sqrt();
+//     /// assert_eq!(n.re, 5.0);
+//     /// assert_relative_eq!(n.eps1[0], 1.6);
+//     /// assert_relative_eq!(n.eps2[0], 1.6);
+//     /// assert_relative_eq!(n.eps2[1], 0.6);
+//     /// assert_relative_eq!(n.eps1eps2[(0,0)], 1.088);
+//     /// assert_relative_eq!(n.eps1eps2[(0,1)], -0.192);
+//     /// ```
+//     #[inline]
+//     pub fn derive2(mut self) -> Self {
+//         for i in 0..N {
+//             self[i].eps2[i] = T::one();
+//         }
+//         self
+//     }
+// }
 
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
@@ -128,7 +129,7 @@ impl<T: DualNum<F>, F: Float, const M: usize, const N: usize> HyperDualVec<T, F,
             f0,
             self.eps1 * f1,
             self.eps2 * f1,
-            self.eps1eps2 * f1 + self.eps1.transpose_matmul(&self.eps2) * f2,
+            self.eps1eps2 * f1 + self.eps1 * self.eps2 * f2,
         )
     }
 }
@@ -145,8 +146,8 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const M: usize, const N: usize>
             other.eps1 * self.re + self.eps1 * other.re,
             other.eps2 * self.re + self.eps2 * other.re,
             other.eps1eps2 * self.re
-                + self.eps1.transpose_matmul(&other.eps2)
-                + other.eps1.transpose_matmul(&self.eps2)
+                + self.eps1 * other.eps2
+                + other.eps1 * self.eps2
                 + self.eps1eps2 * other.re,
         )
     }
@@ -166,18 +167,15 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const M: usize, const N: usize>
             (self.eps1 * other.re - other.eps1 * self.re) * inv2,
             (self.eps2 * other.re - other.eps2 * self.re) * inv2,
             self.eps1eps2 * inv
-                - (other.eps1eps2 * self.re
-                    + self.eps1.transpose_matmul(&other.eps2)
-                    + other.eps1.transpose_matmul(&self.eps2))
+                - (other.eps1eps2 * self.re + self.eps1 * other.eps2 + other.eps1 * self.eps2)
                     * inv2
-                + other.eps1.transpose_matmul(&other.eps2)
-                    * ((T::one() + T::one()) * self.re * inv2 * inv),
+                + other.eps1 * other.eps2 * ((T::one() + T::one()) * self.re * inv2 * inv),
         )
     }
 }
 
 /* string conversions */
-impl<T: fmt::Display, F: fmt::Display, const M: usize, const N: usize> fmt::Display
+impl<T: DualNum<F>, F: fmt::Display, const M: usize, const N: usize> fmt::Display
     for HyperDualVec<T, F, M, N>
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

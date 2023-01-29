@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use num_traits::{Float, One, Zero};
 use std::fmt;
 use std::iter::Flatten;

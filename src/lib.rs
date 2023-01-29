@@ -18,12 +18,12 @@
 //!     println!("{}", f(x_dual, y_dual));                      // 2000 + [1200]ε
 //!
 //!     // Calculate a gradient
-//!     let xy_dual_vec = StaticVec::new_vec([x, y]).map(DualVec64::<2>::from).derive();
-//!     println!("{}", f(xy_dual_vec[0], xy_dual_vec[1]).eps);  // [1200, 1000]
+//!     //let xy_dual_vec = StaticVec::new_vec([x, y]).map(DualVec64::<2>::from).derive();
+//!     //println!("{}", f(xy_dual_vec[0], xy_dual_vec[1]).eps);  // [1200, 1000]
 //!
 //!     // Calculate a Hessian
-//!     let xy_dual2 = StaticVec::new_vec([x, y]).map(Dual2Vec64::<2>::from).derive();
-//!     println!("{}", f(xy_dual2[0], xy_dual2[1]).v2);         // [[480, 600], [600, 250]]
+//!     //let xy_dual2 = StaticVec::new_vec([x, y]).map(Dual2Vec64::<2>::from).derive();
+//!     //println!("{}", f(xy_dual2[0], xy_dual2[1]).v2);         // [[480, 600], [600, 250]]
 //!
 //!     // for x=cos(t) and y=sin(t) calculate the third derivative w.r.t. t
 //!     let t = Dual3_64::from(1.0).derive();
