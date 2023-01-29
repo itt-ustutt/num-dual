@@ -170,7 +170,6 @@ macro_rules! impl_scalar_op {
             type Output = Self;
             #[inline]
             fn mul(mut self, other: F) -> Self {
-                // self.scale(other);
                 self *= other;
                 self
             }
@@ -188,7 +187,6 @@ macro_rules! impl_scalar_op {
             type Output = Self;
             #[inline]
             fn div(mut self, other: F) -> Self {
-                // self.scale(other.recip());
                 self /= other;
                 self
             }
@@ -199,7 +197,6 @@ macro_rules! impl_scalar_op {
             fn div_assign(&mut self, other: F) {
                 self.re /= other;
                 $(self.$im /= T::from(other);)*
-                // self.scale(other.recip());
             }
         }
 

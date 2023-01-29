@@ -1,7 +1,7 @@
 //! Generalized, recursive, scalar and vector (hyper) dual numbers for the automatic and exact calculation of (partial) derivatives.
 //!
 //! ## Example
-//! This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
+//! This example defines a generic scalar and a generic vector function that can be called using any (hyper-) dual number and automatically calculates derivatives.
 //! ```
 //! use num_dual::*;
 //! use nalgebra::SVector;
@@ -22,7 +22,7 @@
 //!
 //!     // Manually construct the dual number
 //!     let x = Dual64::new_scalar(5.0, 1.0);
-//!     println!("{}", foo(x));                            // 125 + [75]ε
+//!     println!("{}", foo(x));                     // 125 + [75]ε
 //!
 //!     // Calculate a gradient
 //!     let (f, g) = gradient(bar, SVector::from([4.0, 3.0]));
@@ -31,11 +31,11 @@
 //!
 //!     // Calculate a Hessian
 //!     let (f, g, h) = hessian(bar, SVector::from([4.0, 3.0]));
-//!     println!("{h}");         // [[0.072, -0.096], [-0.096, 0.128]]
+//!     println!("{h}");                            // [[0.072, -0.096], [-0.096, 0.128]]
 //!
 //!     // for x=cos(t) calculate the third derivative of foo w.r.t. t
 //!     let (f0, f1, f2, f3) = third_derivative(|t| foo(t.cos()), 1.0);
-//!     println!("{f3}");                                  // 1.5836632930100278
+//!     println!("{f3}");                           // 1.5836632930100278
 //! }
 //! ```
 

@@ -1,7 +1,7 @@
 use crate::{DualNum, DualNumFloat};
 use nalgebra::{SMatrix, SVector};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
-use std::fmt::{self, Debug};
+use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::{
@@ -148,10 +148,6 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a DualVec<T, F, N>>
     type Output = DualVec<T, F, N>;
     #[inline]
     fn mul(self, other: &DualVec<T, F, N>) -> Self::Output {
-        let mut eps = [T::zero(); N];
-        for i in 0..N {
-            eps[i] = self.eps[i] * other.re + other.eps[i] * self.re;
-        }
         DualVec::new(
             self.re * other.re,
             self.eps * other.re + other.eps * self.re,
