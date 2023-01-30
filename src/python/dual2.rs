@@ -97,13 +97,13 @@ macro_rules! impl_dual2_n {
             #[getter]
             /// Gradient.
             pub fn get_first_derivative(&self) -> [f64; $n] {
-                *self.0.v1.raw_array()
+                self.0.v1.transpose().data.0[0]
             }
 
             #[getter]
             /// Hessian.
-            pub fn get_second_derivative(&self) -> Vec<Vec<f64>> {
-                self.0.v2.raw_data().iter().map(|a| a.to_vec()).collect()
+            pub fn get_second_derivative(&self) -> [[f64; $n]; $n] {
+                self.0.v2.data.0
             }
         }
 

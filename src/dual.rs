@@ -63,8 +63,7 @@ pub fn first_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T)
 where
     G: FnOnce(Dual<T, F>) -> Dual<T, F>,
 {
-    let mut x = Dual::from_re(x);
-    x.eps[0] = T::one();
+    let x = Dual::new_scalar(x, T::one());
     let Dual { re, eps, f: _ } = g(x);
     (re, eps[0])
 }

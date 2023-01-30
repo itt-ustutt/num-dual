@@ -74,14 +74,11 @@ impl_dual_num!(PyDual3Dual64, Dual3<Dual64, f64>, PyDual64);
 pub fn derive3(x: &PyAny) -> PyResult<PyObject> {
     Python::with_gil(|py| {
         if let Ok(x) = x.extract::<f64>() {
-            return Ok(
-                PyCell::new(py, PyDual3_64::from(Dual3_64::from_re(x).derive()))?.to_object(py),
-            );
+            return Ok(PyCell::new(py, PyDual3_64::from(Dual3_64::derivative(x)))?.to_object(py));
         };
         if let Ok(x) = x.extract::<PyDual64>() {
             return Ok(
-                PyCell::new(py, PyDual3Dual64::from(Dual3::from_re(x.into()).derive()))?
-                    .to_object(py),
+                PyCell::new(py, PyDual3Dual64::from(Dual3::derivative(x.into())))?.to_object(py),
             );
         };
         Err(PyErr::new::<PyTypeError, _>("not implemented!".to_string()))

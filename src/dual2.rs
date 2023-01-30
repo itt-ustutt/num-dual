@@ -45,6 +45,13 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
     pub fn new_scalar(re: T, v1: T, v2: T) -> Self {
         Self::new(re, RowSVector::from([v1]), SMatrix::from([[v2]]))
     }
+
+    /// Create a new second order dual number from the real part
+    /// with the derivative part set to 1.
+    #[inline]
+    pub fn derivative(re: T) -> Self {
+        Dual2Vec::new(re, RowSVector::from_element(T::one()), SMatrix::zero())
+    }
 }
 
 impl<T: DualNum<F>, F, const N: usize> Dual2Vec<T, F, N> {

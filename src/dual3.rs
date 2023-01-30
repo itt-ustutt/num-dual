@@ -36,11 +36,18 @@ impl<T, F> Dual3<T, F> {
     }
 }
 
-impl<T: Zero, F> Dual3<T, F> {
+impl<T: DualNum<F>, F> Dual3<T, F> {
     /// Create a new third order dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(re, T::zero(), T::zero(), T::zero())
+    }
+
+    /// Create a new third order dual number from the real part
+    /// with the first derivative part set to 1.
+    #[inline]
+    pub fn derivative(re: T) -> Self {
+        Self::new(re, T::one(), T::zero(), T::zero())
     }
 }
 
