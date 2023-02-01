@@ -20,7 +20,7 @@ ndarray = { version = "0.15", optional = true }
 numpy = { version = "0.18", optional = true }
 
 [features]
-default = ["linalg"]
+default = []
 python = ["pyo3", "numpy", "ndarray"]
 linalg = ["ndarray"]
 
