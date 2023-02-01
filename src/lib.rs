@@ -48,6 +48,7 @@ mod dual;
 mod dual2;
 mod dual3;
 mod hyperdual;
+mod hyperhyperdual;
 mod static_mat;
 pub use bessel::BesselDual;
 pub use dual::{Dual, Dual32, Dual64, DualVec, DualVec32, DualVec64};
@@ -56,6 +57,7 @@ pub use dual3::{Dual3, Dual3_32, Dual3_64};
 pub use hyperdual::{
     HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
+pub use hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
 pub use static_mat::{StaticMat, StaticVec};
 
 #[cfg(feature = "linalg")]
