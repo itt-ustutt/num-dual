@@ -17,19 +17,16 @@ impl PyDual3_64 {
     }
 
     #[getter]
-    /// First hyperdual part.
     fn get_first_derivative(&self) -> f64 {
         self.0.v1
     }
 
     #[getter]
-    /// Second hyperdual part.
     fn get_second_derivative(&self) -> f64 {
         self.0.v2
     }
 
     #[getter]
-    /// Third hyperdual part.
     fn get_third_derivative(&self) -> f64 {
         self.0.v3
     }
@@ -50,19 +47,16 @@ impl PyDual3Dual64 {
     }
 
     #[getter]
-    /// First hyperdual part.
     fn get_first_derivative(&self) -> PyDual64 {
         self.0.v1.into()
     }
 
     #[getter]
-    /// Second hyperdual part.
     fn get_second_derivative(&self) -> PyDual64 {
         self.0.v2.into()
     }
 
     #[getter]
-    /// Third hyperdual part.
     fn get_third_derivative(&self) -> PyDual64 {
         self.0.v3.into()
     }
@@ -71,16 +65,28 @@ impl PyDual3Dual64 {
 impl_dual_num!(PyDual3Dual64, Dual3<Dual64, f64>, PyDual64);
 
 #[pyfunction]
-pub fn derive3(x: &PyAny) -> PyResult<PyObject> {
-    Python::with_gil(|py| {
-        if let Ok(x) = x.extract::<f64>() {
-            return Ok(PyCell::new(py, PyDual3_64::from(Dual3_64::derivative(x)))?.to_object(py));
-        };
-        if let Ok(x) = x.extract::<PyDual64>() {
-            return Ok(
-                PyCell::new(py, PyDual3Dual64::from(Dual3::derivative(x.into())))?.to_object(py),
-            );
-        };
-        Err(PyErr::new::<PyTypeError, _>("not implemented!".to_string()))
-    })
+/// Calculate the third derivative of a scalar, univariate function.
+///
+/// Parameters
+/// ----------
+/// f : callable
+///     A scalar, univariate function.
+/// x : float
+///     The value at which the derivative is evaluated.
+///
+/// Returns
+/// -------
+/// function value, first derivative, second derivative, and third derivative
+pub fn third_derivative(f: &PyAny, x: f64) -> PyResult<(f64, f64, f64, f64)> {
+    let g = |x| {
+        let res = f.call1((PyDual3_64::from(x),))?;
+        if let Ok(res) = res.extract::<PyDual3_64>() {
+            Ok(res.0)
+        } else {
+            Err(PyErr::new::<PyTypeError, _>(
+                "argument 'f' must return a scalar.".to_string(),
+            ))
+        }
+    };
+    try_third_derivative(g, x)
 }

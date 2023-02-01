@@ -1,6 +1,8 @@
 use crate::{DualNum, DualNumFloat};
-use nalgebra::{SMatrix, SVector};
+use nalgebra::allocator::Allocator;
+use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -63,9 +65,16 @@ pub fn first_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T)
 where
     G: FnOnce(Dual<T, F>) -> Dual<T, F>,
 {
+    try_first_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [first_derivative] for fallible functions.
+pub fn try_first_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T), E>
+where
+    G: FnOnce(Dual<T, F>) -> Result<Dual<T, F>, E>,
+{
     let x = Dual::new_scalar(x, T::one());
-    let Dual { re, eps, f: _ } = g(x);
-    (re, eps[0])
+    g(x).map(|r| (r.re, r.eps[0]))
 }
 
 /// Calculate the gradient of a scalar function
@@ -87,12 +96,22 @@ pub fn gradient<G, T: DualNum<F>, F: DualNumFloat, const N: usize>(
 where
     G: FnOnce(SVector<DualVec<T, F, N>, N>) -> DualVec<T, F, N>,
 {
+    try_gradient(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [gradient] for fallible functions.
+pub fn try_gradient<G, T: DualNum<F>, F: DualNumFloat, E, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> Result<(T, SVector<T, N>), E>
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> Result<DualVec<T, F, N>, E>,
+{
     let mut x = x.map(DualVec::from_re);
     for i in 0..N {
         x[i].eps[i] = T::one();
     }
-    let DualVec { re, eps, f: _ } = g(x);
-    (re, eps)
+    g(x).map(|r| (r.re, r.eps))
 }
 
 /// Calculate the Jacobian of a vector function.
@@ -114,22 +133,41 @@ where
 /// assert_eq!(jac[(1,1)], 100.0);    // x²z²
 /// assert_eq!(jac[(1,2)], 300.0);     // 2x²yz
 /// ```
-pub fn jacobian<G, T: DualNum<F>, F: DualNumFloat, const M: usize, const N: usize>(
+pub fn jacobian<G, T: DualNum<F>, F: DualNumFloat, M: Dim, const N: usize>(
     g: G,
     x: SVector<T, N>,
-) -> (SVector<T, M>, SMatrix<T, M, N>)
+) -> (OVector<T, M>, OMatrix<T, M, Const<N>>)
 where
-    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> SVector<DualVec<T, F, N>, M>,
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> OVector<DualVec<T, F, N>, M>,
+    DefaultAllocator: Allocator<DualVec<T, F, N>, M>
+        + Allocator<T, M>
+        + Allocator<T, M, nalgebra::Const<N>>
+        + Allocator<RowSVector<T, N>, M>,
+{
+    try_jacobian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [jacobian] for fallible functions.
+#[allow(clippy::type_complexity)]
+pub fn try_jacobian<G, T: DualNum<F>, F: DualNumFloat, E, M: Dim, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> Result<(OVector<T, M>, OMatrix<T, M, Const<N>>), E>
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> Result<OVector<DualVec<T, F, N>, M>, E>,
+    DefaultAllocator: Allocator<DualVec<T, F, N>, M>
+        + Allocator<T, M>
+        + Allocator<T, M, Const<N>>
+        + Allocator<RowSVector<T, N>, M>,
 {
     let mut x = x.map(DualVec::from_re);
     for i in 0..N {
         x[i].eps[i] = T::one();
     }
-    let res = g(x);
-    (
-        SVector::from_fn(|i, _| res[i].re),
-        SMatrix::from_fn(|i, j| res[i].eps[j]),
-    )
+    g(x).map(|res| {
+        let eps = OMatrix::from_rows(res.map(|r| r.eps.transpose()).as_slice());
+        (res.map(|r| r.re), eps)
+    })
 }
 
 /* chain rule */

@@ -1,6 +1,7 @@
 use crate::{DualNum, DualNumFloat};
 use nalgebra::{RowSVector, SMatrix, SVector};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -87,10 +88,18 @@ pub fn second_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T, T)
 where
     G: FnOnce(Dual2<T, F>) -> Dual2<T, F>,
 {
+    try_second_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [second_derivative] for fallible functions.
+pub fn try_second_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T, T), E>
+where
+    G: FnOnce(Dual2<T, F>) -> Result<Dual2<T, F>, E>,
+{
     let mut x = Dual2::from_re(x);
     x.v1[0] = T::one();
-    let Dual2 { re, v1, v2, f: _ } = g(x);
-    (re, v1[0], v2[0])
+    let Dual2 { re, v1, v2, f: _ } = g(x)?;
+    Ok((re, v1[0], v2[0]))
 }
 
 /// Calculate the Hessian of a scalar function.
@@ -116,12 +125,23 @@ pub fn hessian<G, T: DualNum<F>, F: DualNumFloat, const N: usize>(
 where
     G: FnOnce(SVector<Dual2Vec<T, F, N>, N>) -> Dual2Vec<T, F, N>,
 {
+    try_hessian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [hessian] for fallible functions.
+pub fn try_hessian<G, T: DualNum<F>, F: DualNumFloat, E, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> Result<(T, SVector<T, N>, SMatrix<T, N, N>), E>
+where
+    G: FnOnce(SVector<Dual2Vec<T, F, N>, N>) -> Result<Dual2Vec<T, F, N>, E>,
+{
     let mut x = x.map(Dual2Vec::from_re);
     for i in 0..N {
         x[i].v1[i] = T::one();
     }
-    let Dual2Vec { re, v1, v2, f: _ } = g(x);
-    (re, v1.transpose(), v2)
+    let Dual2Vec { re, v1, v2, f: _ } = g(x)?;
+    Ok((re, v1.transpose(), v2))
 }
 
 /* chain rule */

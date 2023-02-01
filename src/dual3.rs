@@ -1,5 +1,6 @@
 use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -64,16 +65,17 @@ pub fn third_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T, T, T)
 where
     G: FnOnce(Dual3<T, F>) -> Dual3<T, F>,
 {
+    try_third_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [third_derivative] for fallible functions.
+pub fn try_third_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T, T, T), E>
+where
+    G: FnOnce(Dual3<T, F>) -> Result<Dual3<T, F>, E>,
+{
     let mut x = Dual3::from_re(x);
     x.v1 = T::one();
-    let Dual3 {
-        re,
-        v1,
-        v2,
-        v3,
-        f: _,
-    } = g(x);
-    (re, v1, v2, v3)
+    g(x).map(|r| (r.re, r.v1, r.v2, r.v3))
 }
 
 impl<T: DualNum<F>, F: Float> Dual3<T, F> {

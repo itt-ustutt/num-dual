@@ -1,6 +1,7 @@
 use crate::{DualNum, DualNumFloat};
 use nalgebra::{RowSVector, SMatrix, SVector};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -102,18 +103,23 @@ pub fn second_partial_derivative<G, T: DualNum<F>, F>(g: G, x: T, y: T) -> (T, T
 where
     G: FnOnce(HyperDual<T, F>, HyperDual<T, F>) -> HyperDual<T, F>,
 {
+    try_second_partial_derivative(|x, y| Ok::<_, Infallible>(g(x, y)), x, y).unwrap()
+}
+
+/// Variant of [second_partial_derivative] for fallible functions.
+pub fn try_second_partial_derivative<G, T: DualNum<F>, F, E>(
+    g: G,
+    x: T,
+    y: T,
+) -> Result<(T, T, T, T), E>
+where
+    G: FnOnce(HyperDual<T, F>, HyperDual<T, F>) -> Result<HyperDual<T, F>, E>,
+{
     let mut x = HyperDual::from_re(x);
     let mut y = HyperDual::from_re(y);
     x.eps1[0] = T::one();
     y.eps2[0] = T::one();
-    let HyperDual {
-        re,
-        eps1,
-        eps2,
-        eps1eps2,
-        f: _,
-    } = g(x, y);
-    (re, eps1[0], eps2[0], eps1eps2[0])
+    g(x, y).map(|r| (r.re, r.eps1[0], r.eps2[0], r.eps1eps2[0]))
 }
 
 /// Calculate second partial derivatives with repsect to vectors.
@@ -144,6 +150,22 @@ where
         SVector<HyperDualVec<T, F, M, N>, N>,
     ) -> HyperDualVec<T, F, M, N>,
 {
+    try_partial_hessian(|x, y| Ok::<_, Infallible>(g(x, y)), x, y).unwrap()
+}
+
+/// Variant of [partial_hessian] for fallible functions.
+#[allow(clippy::type_complexity)]
+pub fn try_partial_hessian<G, T: DualNum<F>, F: DualNumFloat, E, const M: usize, const N: usize>(
+    g: G,
+    x: SVector<T, M>,
+    y: SVector<T, N>,
+) -> Result<(T, SVector<T, M>, SVector<T, N>, SMatrix<T, M, N>), E>
+where
+    G: FnOnce(
+        SVector<HyperDualVec<T, F, M, N>, M>,
+        SVector<HyperDualVec<T, F, M, N>, N>,
+    ) -> Result<HyperDualVec<T, F, M, N>, E>,
+{
     let mut x = x.map(HyperDualVec::from_re);
     let mut y = y.map(HyperDualVec::from_re);
     for i in 0..M {
@@ -152,14 +174,7 @@ where
     for j in 0..N {
         y[j].eps2[j] = T::one();
     }
-    let HyperDualVec {
-        re,
-        eps1,
-        eps2,
-        eps1eps2,
-        f: _,
-    } = g(x, y);
-    (re, eps1, eps2.transpose(), eps1eps2)
+    g(x, y).map(|r| (r.re, r.eps1, r.eps2.transpose(), r.eps1eps2))
 }
 
 /* chain rule */
