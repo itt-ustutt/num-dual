@@ -7,11 +7,13 @@ mod dual;
 mod dual2;
 mod dual3;
 mod hyperdual;
+mod hyperhyperdual;
 
 use dual::{first_derivative, gradient, jacobian};
 use dual2::{hessian, second_derivative};
 use dual3::third_derivative;
 use hyperdual::{partial_hessian, second_partial_derivative};
+use hyperhyperdual::third_partial_derivative;
 
 pub use dual::{
     PyDual64, PyDual64_10, PyDual64_2, PyDual64_3, PyDual64_4, PyDual64_5, PyDual64_6, PyDual64_7,
@@ -48,5 +50,6 @@ pub fn num_dual(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(third_derivative, m)?)?;
     m.add_function(wrap_pyfunction!(second_partial_derivative, m)?)?;
     m.add_function(wrap_pyfunction!(partial_hessian, m)?)?;
+    m.add_function(wrap_pyfunction!(third_partial_derivative, m)?)?;
     Ok(())
 }

@@ -71,7 +71,10 @@ pub use hyperdual::{
     partial_hessian, second_partial_derivative, try_partial_hessian, try_second_partial_derivative,
     HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
-pub use hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
+pub use hyperhyperdual::{
+    third_partial_derivative, try_third_partial_derivative, HyperHyperDual, HyperHyperDual32,
+    HyperHyperDual64,
+};
 
 #[cfg(feature = "linalg")]
 pub mod linalg;

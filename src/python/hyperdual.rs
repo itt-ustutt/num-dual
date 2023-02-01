@@ -117,7 +117,7 @@ macro_rules! impl_hyper_dual_mn {
 /// Returns
 /// -------
 /// function value, first partial derivative w.r.t. x,
-/// second parital derivative w.r.t. y, and second partial derivative
+/// first parital derivative w.r.t. y, and second partial derivative
 pub fn second_partial_derivative(f: &PyAny, x: f64, y: f64) -> PyResult<(f64, f64, f64, f64)> {
     let g = |x, y| {
         let res = f.call1((PyHyperDual64::from(x), PyHyperDual64::from(y)))?;

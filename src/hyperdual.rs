@@ -69,25 +69,7 @@ impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> 
     }
 }
 
-impl<T: DualNum<F>, F, const N: usize> HyperDualVec<T, F, 1, N> {
-    /// Derive a hyper dual number w.r.t. the first variable.
-    #[inline]
-    pub fn derive1(mut self) -> Self {
-        self.eps1[0] = T::one();
-        self
-    }
-}
-
-impl<T: DualNum<F>, F, const M: usize> HyperDualVec<T, F, M, 1> {
-    /// Derive a hyper dual number w.r.t. the 2nd variable.
-    #[inline]
-    pub fn derive2(mut self) -> Self {
-        self.eps2[0] = T::one();
-        self
-    }
-}
-
-/// Calculate second partial derivatives with repsect to scalars.
+/// Calculate second partial derivatives with respect to scalars.
 /// ```
 /// # use approx::assert_relative_eq;
 /// # use num_dual::{second_partial_derivative, DualNum, HyperDual64};
@@ -122,7 +104,7 @@ where
     g(x, y).map(|r| (r.re, r.eps1[0], r.eps2[0], r.eps1eps2[0]))
 }
 
-/// Calculate second partial derivatives with repsect to vectors.
+/// Calculate second partial derivatives with respect to vectors.
 /// ```
 /// # use approx::assert_relative_eq;
 /// # use num_dual::{partial_hessian, DualNum, HyperDualVec64};

@@ -6,11 +6,11 @@ use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
-impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for DualVec<T, F, N> {}
-impl<T: Clone + 'static, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static> ScalarOperand for HyperHyperDual<T, F> {}
-impl<T: Clone + 'static, F: Clone + 'static, const M: usize, const N: usize> ScalarOperand
+impl<T: DualNum<F>, F: Clone + 'static, const N: usize> ScalarOperand for DualVec<T, F, N> {}
+impl<T: DualNum<F>, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
+impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
+impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperHyperDual<T, F> {}
+impl<T: DualNum<F>, F: Clone + 'static, const M: usize, const N: usize> ScalarOperand
     for HyperDualVec<T, F, M, N>
 {
 }
@@ -117,7 +117,7 @@ impl<T: DualNum<F>, F: Float> LU<T, F> {
         T: Product,
     {
         let n = self.p.len();
-        let det = (0..n).into_iter().map(|i| self.a[(i, i)]).product();
+        let det = (0..n).map(|i| self.a[(i, i)]).product();
 
         if (self.p_count - n) % 2 == 0 {
             det
@@ -322,7 +322,7 @@ mod tests {
         let a = arr2(&[[2.0, 2.0], [2.0, 5.0]]);
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
         let av = a.dot(&v);
-        println!("{} {}", l, v);
+        println!("{l} {v}");
         assert_abs_diff_eq!(av[(0, 0)], (l[0] * v[(0, 0)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 0)], (l[0] * v[(1, 0)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)], (l[1] * v[(0, 1)]), epsilon = 1e-14);
@@ -334,7 +334,7 @@ mod tests {
         let a = arr2(&[[2.0, 2.0, 7.0], [2.0, 5.0, 9.0], [7.0, 9.0, 2.0]]);
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
         let av = a.dot(&v);
-        println!("{} {}", l, v);
+        println!("{l} {v}");
         for i in 0..3 {
             for j in 0..3 {
                 assert_abs_diff_eq!(av[(i, j)], (l[j] * v[(i, j)]), epsilon = 1e-14);
@@ -350,7 +350,7 @@ mod tests {
         ]);
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
         let av = a.dot(&v);
-        println!("{} {}", l, v);
+        println!("{l} {v}");
         assert_abs_diff_eq!(av[(0, 0)].re, (l[0] * v[(0, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 0)].re, (l[0] * v[(1, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)].re, (l[1] * v[(0, 1)]).re, epsilon = 1e-14);
