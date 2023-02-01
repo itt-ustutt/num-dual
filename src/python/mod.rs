@@ -7,7 +7,6 @@ mod dual;
 mod dual2;
 mod dual3;
 mod hyperdual;
-// mod hyperdual2;
 
 use dual::derive1;
 use dual3::derive3;

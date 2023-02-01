@@ -7,7 +7,7 @@ use std::ops::*;
 
 /// A scalar third order dual number for the calculation of third derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub struct HyperDual2<T, F = T> {
+pub struct HyperHyperDual<T, F = T> {
     /// Real part of the third order hyper dual number
     pub re: T,
     /// First derivative part of the third order hyper dual number
@@ -27,12 +27,13 @@ pub struct HyperDual2<T, F = T> {
     f: PhantomData<F>,
 }
 
-pub type HyperDual2_32 = HyperDual2<f32>;
-pub type HyperDual2_64 = HyperDual2<f64>;
+pub type HyperHyperDual32 = HyperHyperDual<f32>;
+pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
-impl<T, F> HyperDual2<T, F> {
+impl<T, F> HyperHyperDual<T, F> {
     /// Create a new third order hyper dual number from its fields.
     #[inline]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         re: T,
         eps1: T,
@@ -57,7 +58,7 @@ impl<T, F> HyperDual2<T, F> {
     }
 }
 
-impl<T: Zero, F> HyperDual2<T, F> {
+impl<T: Zero, F> HyperHyperDual<T, F> {
     /// Create a new third order hyper dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
@@ -74,7 +75,7 @@ impl<T: Zero, F> HyperDual2<T, F> {
     }
 }
 
-impl<T: Clone + Zero + One, F> HyperDual2<T, F> {
+impl<T: Clone + Zero + One, F> HyperHyperDual<T, F> {
     /// Derive a third order dual number, i.e. set the first derivative part to 1.
     /// ```
     /// # use num_dual::{Dual3, DualNum};
@@ -103,7 +104,7 @@ impl<T: Clone + Zero + One, F> HyperDual2<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> HyperDual2<T, F> {
+impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
         // let three = T::one() + T::one() + T::one();
@@ -124,11 +125,11 @@ impl<T: DualNum<F>, F: Float> HyperDual2<T, F> {
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperDual2<T, F>> for &'b HyperDual2<T, F> {
-    type Output = HyperDual2<T, F>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperHyperDual<T, F>> for &'b HyperHyperDual<T, F> {
+    type Output = HyperHyperDual<T, F>;
     #[inline]
-    fn mul(self, rhs: &HyperDual2<T, F>) -> HyperDual2<T, F> {
-        HyperDual2::new(
+    fn mul(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
+        HyperHyperDual::new(
             self.re * rhs.re,
             self.eps1 * rhs.re + self.re * rhs.eps1,
             self.eps2 * rhs.re + self.re * rhs.eps2,
@@ -157,10 +158,10 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperDual2<T, F>> for &'b HyperDua
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperDual2<T, F>> for &'b HyperDual2<T, F> {
-    type Output = HyperDual2<T, F>;
+impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperHyperDual<T, F>> for &'b HyperHyperDual<T, F> {
+    type Output = HyperHyperDual<T, F>;
     #[inline]
-    fn div(self, rhs: &HyperDual2<T, F>) -> HyperDual2<T, F> {
+    fn div(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
         let rec = T::one() / rhs.re;
         let f0 = rec;
         let f1 = -f0 * rec;
@@ -171,7 +172,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperDual2<T, F>> for &'b HyperDua
 }
 
 /* string conversions */
-impl<T: fmt::Display, F> fmt::Display for HyperDual2<T, F> {
+impl<T: fmt::Display, F> fmt::Display for HyperHyperDual<T, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -189,12 +190,12 @@ impl<T: fmt::Display, F> fmt::Display for HyperDual2<T, F> {
 }
 
 impl_third_derivatives!(
-    HyperDual2,
+    HyperHyperDual,
     [],
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
 impl_dual!(
-    HyperDual2,
+    HyperHyperDual,
     [],
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );

@@ -1,5 +1,5 @@
 #![allow(clippy::assign_op_pattern)]
-use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperDual2};
+use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDual2, HyperDualVec};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 use std::fmt;
