@@ -5,24 +5,24 @@ use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::*;
 
-/// A scalar third order dual number for the calculation of third derivatives.
+/// A scalar hyper hyper dual number for the calculation of third partial derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct HyperHyperDual<T, F = T> {
-    /// Real part of the third order hyper dual number
+    /// Real part of the hyper hyper dual number
     pub re: T,
-    /// First derivative part of the third order hyper dual number
+    /// First partial derivative part of the hyper hyper dual number
     pub eps1: T,
-    /// First derivative part of the third order hyper dual number
+    /// First partial derivative part of the hyper hyper dual number
     pub eps2: T,
-    /// First derivative part of the third order hyper dual number
+    /// First partial derivative part of the hyper hyper dual number
     pub eps3: T,
-    /// Second derivative part of the third order hyper dual number
+    /// Second partial derivative part of the hyper hyper dual number
     pub eps1eps2: T,
-    /// Second derivative part of the third order hyper dual number
+    /// Second partial derivative part of the hyper hyper dual number
     pub eps1eps3: T,
-    /// Second derivative part of the third order hyper dual number
+    /// Second partial derivative part of the hyper hyper dual number
     pub eps2eps3: T,
-    /// Third derivative part of the third order hyper dual number
+    /// Third partial derivative part of the hyper hyper dual number
     pub eps1eps2eps3: T,
     f: PhantomData<F>,
 }
@@ -31,7 +31,7 @@ pub type HyperHyperDual32 = HyperHyperDual<f32>;
 pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
 impl<T, F> HyperHyperDual<T, F> {
-    /// Create a new third order hyper dual number from its fields.
+    /// Create a new hyper hyper dual number from its fields.
     #[inline]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -59,7 +59,7 @@ impl<T, F> HyperHyperDual<T, F> {
 }
 
 impl<T: Zero, F> HyperHyperDual<T, F> {
-    /// Create a new third order hyper dual number from the real part.
+    /// Create a new hyper hyper dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(
@@ -107,7 +107,6 @@ impl<T: Clone + Zero + One, F> HyperHyperDual<T, F> {
 impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
-        // let three = T::one() + T::one() + T::one();
         Self::new(
             f0,
             f1 * self.eps1,
