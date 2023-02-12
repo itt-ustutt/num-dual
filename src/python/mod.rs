@@ -32,6 +32,7 @@ pub use hyperdual::{
     PyHyperDual64_5_1, PyHyperDual64_5_2, PyHyperDual64_5_3, PyHyperDual64_5_4, PyHyperDual64_5_5,
     PyHyperDualDual64,
 };
+pub use hyperhyperdual::PyHyperHyperDual64;
 
 pub fn num_dual(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -42,6 +43,7 @@ pub fn num_dual(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyHyperDualDual64>()?;
     m.add_class::<PyDual2Dual64>()?;
     m.add_class::<PyDual3Dual64>()?;
+    m.add_class::<PyHyperHyperDual64>()?;
     m.add_function(wrap_pyfunction!(first_derivative, m)?)?;
     m.add_function(wrap_pyfunction!(gradient, m)?)?;
     m.add_function(wrap_pyfunction!(jacobian, m)?)?;
