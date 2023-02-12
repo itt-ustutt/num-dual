@@ -144,6 +144,67 @@ where
     })
 }
 
+/// Calculate the third partial derivative of a scalar function
+/// with arbitrary many variables.
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{third_partial_derivative_vec, DualNum, HyperHyperDual64};
+/// # use nalgebra::SVector;
+/// let fun = |x: &[HyperHyperDual64]| x[0].powi(3)*x[1].powi(2);
+/// let (f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz) = third_partial_derivative_vec(fun, &[1.0, 2.0], 0, 0, 1);
+/// # println!("{:?}", third_partial_derivative_vec(fun, &[1.0, 2.0, 3.0], 0, 0, 1));
+/// assert_eq!(f, 4.0);
+/// assert_relative_eq!(dfdx, 12.0);
+/// assert_relative_eq!(dfdy, 12.0);
+/// assert_relative_eq!(dfdz, 4.0);
+/// assert_relative_eq!(d2fdxdy, 24.0);
+/// assert_relative_eq!(d2fdxdz, 12.0);
+/// assert_relative_eq!(d2fdydz, 12.0);
+/// assert_relative_eq!(d3fdxdydz, 24.0);
+/// ```
+pub fn third_partial_derivative_vec<G, T: DualNum<F>, F>(
+    g: G,
+    x: &[T],
+    i: usize,
+    j: usize,
+    k: usize,
+) -> (T, T, T, T, T, T, T, T)
+where
+    G: FnOnce(&[HyperHyperDual<T, F>]) -> HyperHyperDual<T, F>,
+{
+    try_third_partial_derivative_vec(|x| Ok::<_, Infallible>(g(x)), x, i, j, k).unwrap()
+}
+
+/// Variant of [third_partial_derivative_vec] for fallible functions.
+#[allow(clippy::type_complexity)]
+pub fn try_third_partial_derivative_vec<G, T: DualNum<F>, F, E>(
+    g: G,
+    x: &[T],
+    i: usize,
+    j: usize,
+    k: usize,
+) -> Result<(T, T, T, T, T, T, T, T), E>
+where
+    G: FnOnce(&[HyperHyperDual<T, F>]) -> Result<HyperHyperDual<T, F>, E>,
+{
+    let mut x: Vec<_> = x.iter().map(|&x| HyperHyperDual::from_re(x)).collect();
+    x[i].eps1 = T::one();
+    x[j].eps2 = T::one();
+    x[k].eps3 = T::one();
+    g(&x).map(|r| {
+        (
+            r.re,
+            r.eps1,
+            r.eps2,
+            r.eps3,
+            r.eps1eps2,
+            r.eps1eps3,
+            r.eps2eps3,
+            r.eps1eps2eps3,
+        )
+    })
+}
+
 impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {

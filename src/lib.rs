@@ -72,8 +72,8 @@ pub use hyperdual::{
     HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
 pub use hyperhyperdual::{
-    third_partial_derivative, try_third_partial_derivative, HyperHyperDual, HyperHyperDual32,
-    HyperHyperDual64,
+    third_partial_derivative, third_partial_derivative_vec, try_third_partial_derivative,
+    try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
 };
 
 #[cfg(feature = "linalg")]

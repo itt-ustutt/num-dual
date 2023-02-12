@@ -103,3 +103,52 @@ pub fn third_partial_derivative(
     };
     try_third_partial_derivative(g, x, y, z)
 }
+
+#[pyfunction]
+/// Calculate the third partial derivative of a scalar function
+/// with arbitrary many variables.
+///
+/// Parameters
+/// ----------
+/// f : callable
+///     A scalar, bivariate function.
+/// x : [float]
+///     The list of variables.
+/// i : integer
+///     The index of the first partial derivative.
+/// j : integer
+///     The index of the second partial derivative.
+/// k : integer
+///     The index of the third partial derivative.
+///
+/// Returns
+/// -------
+/// function value
+/// first partial derivative w.r.t. variable i
+/// first parital derivative w.r.t. variable j
+/// first parital derivative w.r.t. variable k
+/// second partial derivative w.r.t. variables i and j
+/// second partial derivative w.r.t. variables i and k
+/// second partial derivative w.r.t. variables j and k
+/// third partial derivative
+#[allow(clippy::type_complexity)]
+pub fn third_partial_derivative_vec(
+    f: &PyAny,
+    x: Vec<f64>,
+    i: usize,
+    j: usize,
+    k: usize,
+) -> PyResult<(f64, f64, f64, f64, f64, f64, f64, f64)> {
+    let g = |x: &[_]| {
+        let x: Vec<_> = x.iter().map(|&x| PyHyperHyperDual64::from(x)).collect();
+        let res = f.call1((x,))?;
+        if let Ok(res) = res.extract::<PyHyperHyperDual64>() {
+            Ok(res.0)
+        } else {
+            Err(PyErr::new::<PyTypeError, _>(
+                "argument 'f' must return a scalar.".to_string(),
+            ))
+        }
+    };
+    try_third_partial_derivative_vec(g, &x, i, j, k)
+}
