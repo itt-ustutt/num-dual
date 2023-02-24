@@ -31,7 +31,7 @@ pub struct HyperHyperDual<T, F = T> {
 pub type HyperHyperDual32 = HyperHyperDual<f32>;
 pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
-impl<T, F> HyperHyperDual<T, F> {
+impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
     /// Create a new hyper hyper dual number from its fields.
     #[inline]
     #[allow(clippy::too_many_arguments)]
@@ -57,9 +57,28 @@ impl<T, F> HyperHyperDual<T, F> {
             f: PhantomData,
         }
     }
-}
 
-impl<T: Zero, F> HyperHyperDual<T, F> {
+    /// Set the partial derivative part w.r.t. the 1st variable to 1.
+    #[inline]
+    pub fn derivative1(mut self) -> Self {
+        self.eps1 = T::one();
+        self
+    }
+
+    /// Set the partial derivative part w.r.t. the 2nd variable to 1.
+    #[inline]
+    pub fn derivative2(mut self) -> Self {
+        self.eps2 = T::one();
+        self
+    }
+
+    /// Set the partial derivative part w.r.t. the 3rd variable to 1.
+    #[inline]
+    pub fn derivative3(mut self) -> Self {
+        self.eps3 = T::one();
+        self
+    }
+
     /// Create a new hyper hyper dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {

@@ -44,11 +44,19 @@ impl<T: DualNum<F>, F> Dual3<T, F> {
         Self::new(re, T::zero(), T::zero(), T::zero())
     }
 
-    /// Create a new third order dual number from the real part
-    /// with the first derivative part set to 1.
+    /// Set the first derivative part to 1.
+    /// ```
+    /// # use num_dual::{Dual3, DualNum};
+    /// let x = Dual3::from_re(5.0).derivative().powi(3);
+    /// assert_eq!(x.re, 125.0);
+    /// assert_eq!(x.v1, 75.0);
+    /// assert_eq!(x.v2, 30.0);
+    /// assert_eq!(x.v3, 6.0);
+    /// ```
     #[inline]
-    pub fn derivative(re: T) -> Self {
-        Self::new(re, T::one(), T::zero(), T::zero())
+    pub fn derivative(mut self) -> Self {
+        self.v1 = T::one();
+        self
     }
 }
 

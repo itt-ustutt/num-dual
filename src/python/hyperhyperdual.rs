@@ -36,19 +36,16 @@ impl PyHyperHyperDual64 {
     }
 
     #[getter]
-    /// First hyperdual part.
     fn get_first_derivative(&self) -> (f64, f64, f64) {
         (self.0.eps1, self.0.eps2, self.0.eps3)
     }
 
     #[getter]
-    /// Second hyperdual part.
     fn get_second_derivative(&self) -> (f64, f64, f64) {
         (self.0.eps1eps2, self.0.eps1eps3, self.0.eps2eps3)
     }
 
     #[getter]
-    /// Third hyperdual part.
     fn get_third_derivative(&self) -> f64 {
         self.0.eps1eps2eps3
     }

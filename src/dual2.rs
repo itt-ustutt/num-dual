@@ -47,11 +47,31 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
         Self::new(re, RowSVector::from([v1]), SMatrix::from([[v2]]))
     }
 
-    /// Create a new second order dual number from the real part
-    /// with the derivative part set to 1.
+    /// Set the derivative part to 1.
+    /// ```
+    /// # use num_dual::{Dual2, DualNum};
+    /// let x = Dual2::from_re(5.0).derivative().powi(2);
+    /// assert_eq!(x.re, 25.0);            // x²
+    /// assert_eq!(x.v1[0], 10.0);         // 2x
+    /// assert_eq!(x.v2[(0,0)], 2.0);      // 2
+    /// ```
+    ///
+    /// Can also be used for higher order derivatives.
+    /// ```
+    /// # use num_dual::{Dual64, Dual2, DualNum};
+    /// let x = Dual2::from_re(Dual64::from_re(5.0).derivative())
+    ///     .derivative()
+    ///     .powi(2);
+    /// assert_eq!(x.re.re, 25.0);        // x²
+    /// assert_eq!(x.re.eps[0], 10.0);    // 2x
+    /// assert_eq!(x.v1[0].re, 10.0);     // 2x
+    /// assert_eq!(x.v1[0].eps[0], 2.0);  // 2
+    /// assert_eq!(x.v2[(0,0)].re, 2.0);  // 2
+    /// ```
     #[inline]
-    pub fn derivative(re: T) -> Self {
-        Dual2Vec::new(re, RowSVector::from_element(T::one()), SMatrix::zero())
+    pub fn derivative(mut self) -> Self {
+        self.v1[0] = T::one();
+        self
     }
 }
 

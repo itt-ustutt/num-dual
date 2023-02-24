@@ -54,6 +54,21 @@ impl<T: DualNum<F>, F, const N: usize> DualVec<T, F, N> {
     }
 }
 
+impl<T: DualNum<F>, F> Dual<T, F> {
+    /// Set the derivative part to 1.
+    /// ```
+    /// # use num_dual::{Dual64, DualNum};
+    /// let x = Dual64::from_re(5.0).derivative().powi(2);
+    /// assert_eq!(x.re, 25.0);
+    /// assert_eq!(x.eps[0], 10.0);
+    /// ```
+    #[inline]
+    pub fn derivative(mut self) -> Self {
+        self.eps[0] = T::one();
+        self
+    }
+}
+
 /// Calculate the first derivative of a scalar function.
 /// ```
 /// # use num_dual::{first_derivative, DualNum};

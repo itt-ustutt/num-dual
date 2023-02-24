@@ -59,6 +59,20 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
             SMatrix::from([[eps1eps2]]),
         )
     }
+
+    /// Set the partial derivative part w.r.t. the 1st variable to 1.
+    #[inline]
+    pub fn derivative1(mut self) -> Self {
+        self.eps1[0] = T::one();
+        self
+    }
+
+    /// Set the partial derivative part w.r.t. the 2nd variable to 1.
+    #[inline]
+    pub fn derivative2(mut self) -> Self {
+        self.eps2[0] = T::one();
+        self
+    }
 }
 
 impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualVec<T, F, M, N> {
