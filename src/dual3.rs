@@ -1,5 +1,6 @@
-use crate::{DualNum, DualNumFloat, IsDerivativeZero};
+use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -36,29 +37,53 @@ impl<T, F> Dual3<T, F> {
     }
 }
 
-impl<T: Zero, F> Dual3<T, F> {
+impl<T: DualNum<F>, F> Dual3<T, F> {
     /// Create a new third order dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(re, T::zero(), T::zero(), T::zero())
     }
-}
 
-impl<T: Clone + Zero + One, F> Dual3<T, F> {
-    /// Derive a third order dual number, i.e. set the first derivative part to 1.
+    /// Set the first derivative part to 1.
     /// ```
     /// # use num_dual::{Dual3, DualNum};
-    /// let x = Dual3::from_re(5.0).derive().powi(3);
+    /// let x = Dual3::from_re(5.0).derivative().powi(3);
     /// assert_eq!(x.re, 125.0);
     /// assert_eq!(x.v1, 75.0);
     /// assert_eq!(x.v2, 30.0);
     /// assert_eq!(x.v3, 6.0);
     /// ```
     #[inline]
-    pub fn derive(mut self) -> Self {
+    pub fn derivative(mut self) -> Self {
         self.v1 = T::one();
         self
     }
+}
+
+/// Calculate the third derivative of a univariate function.
+/// ```
+/// # use num_dual::{third_derivative, DualNum};
+/// let (f, df, d2f, d3f) = third_derivative(|x| x.powi(3), 5.0);
+/// assert_eq!(f, 125.0);      // x³
+/// assert_eq!(df, 75.0);      // 3x²
+/// assert_eq!(d2f, 30.0);     // 6x
+/// assert_eq!(d3f, 6.0);      // 6
+/// ```
+pub fn third_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T, T, T)
+where
+    G: FnOnce(Dual3<T, F>) -> Dual3<T, F>,
+{
+    try_third_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [third_derivative] for fallible functions.
+pub fn try_third_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T, T, T), E>
+where
+    G: FnOnce(Dual3<T, F>) -> Result<Dual3<T, F>, E>,
+{
+    let mut x = Dual3::from_re(x);
+    x.v1 = T::one();
+    g(x).map(|r| (r.re, r.v1, r.v2, r.v3))
 }
 
 impl<T: DualNum<F>, F: Float> Dual3<T, F> {

@@ -1,5 +1,8 @@
-use crate::{DualNum, DualNumFloat, IsDerivativeZero, StaticMat, StaticVec};
+use crate::{DualNum, DualNumFloat};
+use nalgebra::allocator::Allocator;
+use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -9,11 +12,11 @@ use std::ops::{
 
 /// A dual number for the calculations of gradients or Jacobians.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub struct DualVec<T, F, const N: usize> {
+pub struct DualVec<T: DualNum<F>, F, const N: usize> {
     /// Real part of the dual number
     pub re: T,
     /// Derivative part of the dual number
-    pub eps: StaticVec<T, N>,
+    pub eps: SVector<T, N>,
     f: PhantomData<F>,
 }
 
@@ -23,10 +26,10 @@ pub type Dual<T, F> = DualVec<T, F, 1>;
 pub type Dual32 = Dual<f32, f32>;
 pub type Dual64 = Dual<f64, f64>;
 
-impl<T, F, const N: usize> DualVec<T, F, N> {
+impl<T: DualNum<F>, F, const N: usize> DualVec<T, F, N> {
     /// Create a new dual number from its fields.
     #[inline]
-    pub fn new(re: T, eps: StaticVec<T, N>) -> Self {
+    pub fn new(re: T, eps: SVector<T, N>) -> Self {
         Self {
             re,
             eps,
@@ -35,91 +38,158 @@ impl<T, F, const N: usize> DualVec<T, F, N> {
     }
 }
 
-impl<T, F> Dual<T, F> {
+impl<T: DualNum<F>, F> Dual<T, F> {
     /// Create a new scalar dual number from its fields.
     #[inline]
     pub fn new_scalar(re: T, eps: T) -> Self {
-        Self::new(re, StaticVec::new_vec([eps]))
+        Self::new(re, SVector::from_element(eps))
     }
 }
 
-impl<T: Copy + Zero + AddAssign, F, const N: usize> DualVec<T, F, N> {
+impl<T: DualNum<F>, F, const N: usize> DualVec<T, F, N> {
     /// Create a new dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
-        Self::new(re, StaticVec::zero())
+        Self::new(re, SVector::zero())
     }
 }
 
-impl<T: One, F> Dual<T, F> {
-    /// Derive a scalar dual number, i.e. set the derivative part to 1.
+impl<T: DualNum<F>, F> Dual<T, F> {
+    /// Set the derivative part to 1.
     /// ```
     /// # use num_dual::{Dual64, DualNum};
-    /// let x = Dual64::from_re(5.0).derive().powi(2);
+    /// let x = Dual64::from_re(5.0).derivative().powi(2);
     /// assert_eq!(x.re, 25.0);
     /// assert_eq!(x.eps[0], 10.0);
     /// ```
     #[inline]
-    pub fn derive(mut self) -> Self {
+    pub fn derivative(mut self) -> Self {
         self.eps[0] = T::one();
         self
     }
 }
 
-impl<T: One, F, const N: usize> StaticVec<DualVec<T, F, N>, N> {
-    /// Derive a vector of dual numbers.
-    /// ```
-    /// # use approx::assert_relative_eq;
-    /// # use num_dual::{DualVec64, DualNum, StaticVec};
-    /// let v = StaticVec::new_vec([4.0, 3.0]).map(DualVec64::<2>::from_re).derive();
-    /// let n = (v[0].powi(2) + v[1].powi(2)).sqrt();
-    /// assert_eq!(n.re, 5.0);
-    /// assert_relative_eq!(n.eps[0], 0.8);
-    /// assert_relative_eq!(n.eps[1], 0.6);
-    /// ```
-    #[inline]
-    pub fn derive(mut self) -> Self {
-        for i in 0..N {
-            self[i].eps[i] = T::one();
-        }
-        self
-    }
+/// Calculate the first derivative of a scalar function.
+/// ```
+/// # use num_dual::{first_derivative, DualNum};
+/// let (f, df) = first_derivative(|x| x.powi(2), 5.0);
+/// assert_eq!(f, 25.0);
+/// assert_eq!(df, 10.0);
+/// ```
+pub fn first_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T)
+where
+    G: FnOnce(Dual<T, F>) -> Dual<T, F>,
+{
+    try_first_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
 }
 
-impl<T: One + Zero + Copy + AddAssign, F, const M: usize, const N: usize>
-    StaticVec<DualVec<T, F, N>, M>
+/// Variant of [first_derivative] for fallible functions.
+pub fn try_first_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T), E>
+where
+    G: FnOnce(Dual<T, F>) -> Result<Dual<T, F>, E>,
 {
-    /// Extract the Jacobian from a vector of Dual numbers.
-    /// ```
-    /// # use num_dual::{DualVec64, DualNum, StaticVec};
-    /// let xy = StaticVec::new_vec([5.0, 3.0]).map(DualVec64::<2>::from).derive();
-    /// let j = StaticVec::new_vec([xy[0] * xy[1].powi(3), xy[0].powi(2) * xy[1]]).jacobian();
-    /// assert_eq!(j[(0,0)], 27.0);     // y³
-    /// assert_eq!(j[(0,1)], 135.0);    // 3xy²
-    /// assert_eq!(j[(1,0)], 30.0);     // 2xy
-    /// assert_eq!(j[(1,1)], 25.0);     // x²
-    /// ```
-    #[inline]
-    pub fn jacobian(&self) -> StaticMat<T, M, N> {
-        let mut res = StaticMat::zero();
-        for i in 0..M {
-            for j in 0..N {
-                res[(i, j)] = self[i].eps[j];
-            }
-        }
-        res
+    let x = Dual::new_scalar(x, T::one());
+    g(x).map(|r| (r.re, r.eps[0]))
+}
+
+/// Calculate the gradient of a scalar function
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{gradient, DualNum, DualVec64};
+/// # use nalgebra::SVector;
+/// let v = SVector::from([4.0, 3.0]);
+/// let fun = |v: SVector<DualVec64<2>, 2>| (v[0].powi(2) + v[1].powi(2)).sqrt();
+/// let (f, g) = gradient(fun, v);
+/// assert_eq!(f, 5.0);
+/// assert_relative_eq!(g[0], 0.8);
+/// assert_relative_eq!(g[1], 0.6);
+/// ```
+pub fn gradient<G, T: DualNum<F>, F: DualNumFloat, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> (T, SVector<T, N>)
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> DualVec<T, F, N>,
+{
+    try_gradient(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [gradient] for fallible functions.
+pub fn try_gradient<G, T: DualNum<F>, F: DualNumFloat, E, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> Result<(T, SVector<T, N>), E>
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> Result<DualVec<T, F, N>, E>,
+{
+    let mut x = x.map(DualVec::from_re);
+    for i in 0..N {
+        x[i].eps[i] = T::one();
     }
+    g(x).map(|r| (r.re, r.eps))
+}
+
+/// Calculate the Jacobian of a vector function.
+/// ```
+/// # use num_dual::{jacobian, DualVec64, DualNum};
+/// # use nalgebra::SVector;
+/// let xy = SVector::from([5.0, 3.0, 2.0]);
+/// let fun = |xy: SVector<DualVec64<3>, 3>| SVector::from([
+///                      xy[0] * xy[1].powi(3) * xy[2],
+///                      xy[0].powi(2) * xy[1] * xy[2].powi(2)
+///                     ]);
+/// let (f, jac) = jacobian(fun, xy);
+/// assert_eq!(f[0], 270.0);          // xy³z
+/// assert_eq!(f[1], 300.0);          // x²yz²
+/// assert_eq!(jac[(0,0)], 54.0);     // y³z
+/// assert_eq!(jac[(0,1)], 270.0);    // 3xy²z
+/// assert_eq!(jac[(0,2)], 135.0);    // xy³
+/// assert_eq!(jac[(1,0)], 120.0);    // 2xyz²
+/// assert_eq!(jac[(1,1)], 100.0);    // x²z²
+/// assert_eq!(jac[(1,2)], 300.0);     // 2x²yz
+/// ```
+pub fn jacobian<G, T: DualNum<F>, F: DualNumFloat, M: Dim, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> (OVector<T, M>, OMatrix<T, M, Const<N>>)
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> OVector<DualVec<T, F, N>, M>,
+    DefaultAllocator: Allocator<DualVec<T, F, N>, M>
+        + Allocator<T, M>
+        + Allocator<T, M, nalgebra::Const<N>>
+        + Allocator<RowSVector<T, N>, M>,
+{
+    try_jacobian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
+}
+
+/// Variant of [jacobian] for fallible functions.
+#[allow(clippy::type_complexity)]
+pub fn try_jacobian<G, T: DualNum<F>, F: DualNumFloat, E, M: Dim, const N: usize>(
+    g: G,
+    x: SVector<T, N>,
+) -> Result<(OVector<T, M>, OMatrix<T, M, Const<N>>), E>
+where
+    G: FnOnce(SVector<DualVec<T, F, N>, N>) -> Result<OVector<DualVec<T, F, N>, M>, E>,
+    DefaultAllocator: Allocator<DualVec<T, F, N>, M>
+        + Allocator<T, M>
+        + Allocator<T, M, Const<N>>
+        + Allocator<RowSVector<T, N>, M>,
+{
+    let mut x = x.map(DualVec::from_re);
+    for i in 0..N {
+        x[i].eps[i] = T::one();
+    }
+    g(x).map(|res| {
+        let eps = OMatrix::from_rows(res.map(|r| r.eps.transpose()).as_slice());
+        (res.map(|r| r.re), eps)
+    })
 }
 
 /* chain rule */
 impl<T: DualNum<F>, F: Float, const N: usize> DualVec<T, F, N> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T) -> Self {
-        let mut eps = [T::zero(); N];
-        for i in 0..N {
-            eps[i] = self.eps[i] * f1;
-        }
-        Self::new(f0, StaticVec::new_vec(eps))
+        Self::new(f0, self.eps * f1)
     }
 }
 
@@ -130,11 +200,10 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Mul<&'a DualVec<T, F, N>>
     type Output = DualVec<T, F, N>;
     #[inline]
     fn mul(self, other: &DualVec<T, F, N>) -> Self::Output {
-        let mut eps = [T::zero(); N];
-        for i in 0..N {
-            eps[i] = self.eps[i] * other.re + other.eps[i] * self.re;
-        }
-        DualVec::new(self.re * other.re, StaticVec::new_vec(eps))
+        DualVec::new(
+            self.re * other.re,
+            self.eps * other.re + other.eps * self.re,
+        )
     }
 }
 
@@ -146,17 +215,15 @@ impl<'a, 'b, T: DualNum<F>, F: Float, const N: usize> Div<&'a DualVec<T, F, N>>
     #[inline]
     fn div(self, other: &DualVec<T, F, N>) -> DualVec<T, F, N> {
         let inv = other.re.recip();
-        let inv2 = inv * inv;
-        let mut eps = [T::zero(); N];
-        for i in 0..N {
-            eps[i] = (self.eps[i] * other.re - other.eps[i] * self.re) * inv2;
-        }
-        DualVec::new(self.re * inv, StaticVec::new_vec(eps))
+        DualVec::new(
+            self.re * inv,
+            (self.eps * other.re - other.eps * self.re) * inv * inv,
+        )
     }
 }
 
 /* string conversions */
-impl<T: fmt::Display, F, const N: usize> fmt::Display for DualVec<T, F, N> {
+impl<T: DualNum<F>, F, const N: usize> fmt::Display for DualVec<T, F, N> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}ε", self.re, self.eps)
     }
@@ -172,8 +239,8 @@ mod test {
     #[test]
     fn is_derivative_zero() {
         let d = Dual::new(
-            DualVec64::new(1.0, StaticMat::new([[2.5; 1]; 1])),
-            StaticVec::new([[DualVec64::zero(); 1]; 1]),
+            DualVec64::new(1.0, SVector::from([2.5])),
+            SVector::from([DualVec64::zero()]),
         );
         assert!(!d.is_derivative_zero());
         let d: DualVec64<1> = Dual::one();

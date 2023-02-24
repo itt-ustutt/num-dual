@@ -1,6 +1,6 @@
 macro_rules! impl_from_f {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: Copy + Zero + AddAssign + From<F>, F, $(const $const: usize,)*> From<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F, $(const $const: usize,)*> From<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn from(float: F) -> Self {
                 Self::from_re(T::from(float))
@@ -37,16 +37,6 @@ macro_rules! impl_zero_one {
     };
 }
 
-macro_rules! impl_derivative_zero {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F> + IsDerivativeZero, F: Float, $(const $const: usize,)*> IsDerivativeZero for $struct<T, F$(, $const)*> {
-            fn is_derivative_zero(&self) -> bool {
-                self.re.is_derivative_zero() && $(self.$im.is_zero()) &&*
-            }
-        }
-    };
-}
-
 macro_rules! impl_add_sub_rem {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl<'a, 'b, T: DualNum<F>, F: Float, $(const $const: usize,)*> Add<&'a $struct<T, F$(, $const)*>>
@@ -69,7 +59,7 @@ macro_rules! impl_add_sub_rem {
             }
         }
 
-        impl<'a, 'b, T, F, $(const $const: usize,)*> Rem<&'a $struct<T, F$(, $const)*>> for &'b $struct<T, F$(, $const)*>
+        impl<'a, 'b, T: DualNum<F>, F, $(const $const: usize,)*> Rem<&'a $struct<T, F$(, $const)*>> for &'b $struct<T, F$(, $const)*>
         {
             type Output = $struct<T, F$(, $const)*>;
             #[inline]
@@ -113,7 +103,7 @@ macro_rules! forward_binop {
 
 macro_rules! impl_neg {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: Copy + Neg<Output = T>, F: Float, $(const $const: usize,)*> Neg for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Neg for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn neg(self) -> Self {
@@ -121,7 +111,7 @@ macro_rules! impl_neg {
             }
         }
 
-        impl<T: Copy + Neg<Output = T>, F: Float, $(const $const: usize,)*> Neg for &$struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Neg for &$struct<T, F$(, $const)*> {
             type Output = $struct<T, F$(, $const)*>;
             #[inline]
             fn neg(self) -> Self::Output {
@@ -149,7 +139,7 @@ macro_rules! impl_assign_ops {
             }
         }
 
-        impl<T: Copy + AddAssign, F: Float, $(const $const: usize,)*> AddAssign for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> AddAssign for $struct<T, F$(, $const)*> {
             #[inline]
             fn add_assign(&mut self, other: Self) {
                 self.re += other.re;
@@ -157,7 +147,7 @@ macro_rules! impl_assign_ops {
             }
         }
 
-        impl<T: Copy + SubAssign, F: Float, $(const $const: usize,)*> SubAssign for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> SubAssign for $struct<T, F$(, $const)*> {
             #[inline]
             fn sub_assign(&mut self, other: Self) {
                 self.re -= other.re;
@@ -165,7 +155,7 @@ macro_rules! impl_assign_ops {
             }
         }
 
-        impl<T, F: Float, $(const $const: usize,)*> RemAssign for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> RemAssign for $struct<T, F$(, $const)*> {
             #[inline]
             fn rem_assign(&mut self, _other: Self) {
                 unimplemented!()
@@ -175,12 +165,12 @@ macro_rules! impl_assign_ops {
 }
 
 macro_rules! impl_scalar_op {
-    ($struct:ident, [$($const:tt),*]) => {
+    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Mul<F> for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn mul(mut self, other: F) -> Self {
-                self.scale(other);
+                self *= other;
                 self
             }
         }
@@ -188,7 +178,8 @@ macro_rules! impl_scalar_op {
         impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> MulAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn mul_assign(&mut self, other: F) {
-                self.scale(other);
+                self.re *= other;
+                $(self.$im *= T::from(other);)*
             }
         }
 
@@ -196,7 +187,7 @@ macro_rules! impl_scalar_op {
             type Output = Self;
             #[inline]
             fn div(mut self, other: F) -> Self {
-                self.scale(other.recip());
+                self /= other;
                 self
             }
         }
@@ -204,11 +195,12 @@ macro_rules! impl_scalar_op {
         impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> DivAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn div_assign(&mut self, other: F) {
-                self.scale(other.recip());
+                self.re /= other;
+                $(self.$im /= T::from(other);)*
             }
         }
 
-        impl<T: AddAssign<F>, F: Float, $(const $const: usize,)*> Add<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Add<F> for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn add(mut self, other: F) -> Self {
@@ -217,14 +209,14 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: AddAssign<F>, F: Float, $(const $const: usize,)*> AddAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> AddAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn add_assign(&mut self, other: F)  {
                 self.re += other;
             }
         }
 
-        impl<T: SubAssign<F>, F: Float, $(const $const: usize,)*> Sub<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Sub<F> for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn sub(mut self, other: F) -> Self {
@@ -233,14 +225,14 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: SubAssign<F>, F: Float, $(const $const: usize,)*> SubAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> SubAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn sub_assign(&mut self, other: F)  {
                 self.re -= other;
             }
         }
 
-        impl<T, F: Float, $(const $const: usize,)*> Rem<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Rem<F> for $struct<T, F$(, $const)*> {
             type Output = Self;
             #[inline]
             fn rem(self, _other: F) -> Self {
@@ -248,7 +240,7 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T, F: Float, $(const $const: usize,)*> RemAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> RemAssign<F> for $struct<T, F$(, $const)*> {
             #[inline]
             fn rem_assign(&mut self, _other: F) {
                 unimplemented!()
@@ -522,7 +514,6 @@ macro_rules! impl_dual {
     ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
         impl_from_f!($struct, [$($const),*], [$($im),*]);
         impl_zero_one!($struct, [$($const),*], [$($im),*]);
-        impl_derivative_zero!($struct, [$($const),*], [$($im),*]);
         impl_add_sub_rem!($struct, [$($const),*], [$($im),*]);
         forward_binop!($struct, [$($const),*], Add, +, add);
         forward_binop!($struct, [$($const),*], Sub, -, sub);
@@ -531,7 +522,7 @@ macro_rules! impl_dual {
         forward_binop!($struct, [$($const),*], Rem, %, rem);
         impl_neg!($struct, [$($const),*], [$($im),*]);
         impl_assign_ops!($struct, [$($const),*], [$($im),*]);
-        impl_scalar_op!($struct, [$($const),*]);
+        impl_scalar_op!($struct, [$($const),*], [$($im),*]);
         impl_inv!($struct, [$($const),*]);
         impl_iterator!($struct, [$($const),*]);
         impl_from_primitive!($struct, [$($const),*]);

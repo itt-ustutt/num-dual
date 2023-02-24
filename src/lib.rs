@@ -1,33 +1,41 @@
 //! Generalized, recursive, scalar and vector (hyper) dual numbers for the automatic and exact calculation of (partial) derivatives.
 //!
 //! ## Example
-//! This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
+//! This example defines a generic scalar and a generic vector function that can be called using any (hyper-) dual number and automatically calculates derivatives.
 //! ```
 //! use num_dual::*;
+//! use nalgebra::SVector;
 //!
-//! fn f<D: DualNum<f64>>(x: D, y: D) -> D {
-//!     x.powi(3) * y.powi(2)
+//! fn foo<D: DualNum<f64>>(x: D) -> D {
+//!     x.powi(3)
+//! }
+//!
+//! fn bar<D: DualNum<f64>, const N: usize>(x: SVector<D, N>) -> D {
+//!     x.dot(&x).sqrt()
 //! }
 //!
 //! fn main() {
-//!     let (x, y) = (5.0, 4.0);
-//!
 //!     // Calculate a simple derivative
-//!     let x_dual = Dual64::from(x).derive();
-//!     let y_dual = Dual64::from(y);
-//!     println!("{}", f(x_dual, y_dual));                      // 2000 + [1200]ε
+//!     let (f, df) = first_derivative(foo, 5.0);
+//!     assert_eq!(f, 125.0);
+//!     assert_eq!(df, 75.0);
+//!
+//!     // Manually construct the dual number
+//!     let x = Dual64::new_scalar(5.0, 1.0);
+//!     println!("{}", foo(x));                     // 125 + [75]ε
 //!
 //!     // Calculate a gradient
-//!     let xy_dual_vec = StaticVec::new_vec([x, y]).map(DualVec64::<2>::from).derive();
-//!     println!("{}", f(xy_dual_vec[0], xy_dual_vec[1]).eps);  // [1200, 1000]
+//!     let (f, g) = gradient(bar, SVector::from([4.0, 3.0]));
+//!     assert_eq!(f, 5.0);
+//!     assert_eq!(g[0], 0.8);
 //!
 //!     // Calculate a Hessian
-//!     let xy_dual2 = StaticVec::new_vec([x, y]).map(Dual2Vec64::<2>::from).derive();
-//!     println!("{}", f(xy_dual2[0], xy_dual2[1]).v2);         // [[480, 600], [600, 250]]
+//!     let (f, g, h) = hessian(bar, SVector::from([4.0, 3.0]));
+//!     println!("{h}");                            // [[0.072, -0.096], [-0.096, 0.128]]
 //!
-//!     // for x=cos(t) and y=sin(t) calculate the third derivative w.r.t. t
-//!     let t = Dual3_64::from(1.0).derive();
-//!     println!("{}", f(t.cos(), t.sin()).v3);                 // 7.358639755305733
+//!     // for x=cos(t) calculate the third derivative of foo w.r.t. t
+//!     let (f0, f1, f2, f3) = third_derivative(|t| foo(t.cos()), 1.0);
+//!     println!("{f3}");                           // 1.5836632930100278
 //! }
 //! ```
 
@@ -49,16 +57,24 @@ mod dual2;
 mod dual3;
 mod hyperdual;
 mod hyperhyperdual;
-mod static_mat;
 pub use bessel::BesselDual;
-pub use dual::{Dual, Dual32, Dual64, DualVec, DualVec32, DualVec64};
-pub use dual2::{Dual2, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64};
-pub use dual3::{Dual3, Dual3_32, Dual3_64};
+pub use dual::{
+    first_derivative, gradient, jacobian, try_first_derivative, try_gradient, try_jacobian, Dual,
+    Dual32, Dual64, DualVec, DualVec32, DualVec64,
+};
+pub use dual2::{
+    hessian, second_derivative, try_hessian, try_second_derivative, Dual2, Dual2Vec, Dual2Vec32,
+    Dual2Vec64, Dual2_32, Dual2_64,
+};
+pub use dual3::{third_derivative, try_third_derivative, Dual3, Dual3_32, Dual3_64};
 pub use hyperdual::{
+    partial_hessian, second_partial_derivative, try_partial_hessian, try_second_partial_derivative,
     HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
-pub use hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
-pub use static_mat::{StaticMat, StaticVec};
+pub use hyperhyperdual::{
+    third_partial_derivative, third_partial_derivative_vec, try_third_partial_derivative,
+    try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
+};
 
 #[cfg(feature = "linalg")]
 pub mod linalg;
@@ -83,16 +99,18 @@ pub trait DualNum<F>:
     + fmt::Display
     + Sync
     + Send
+    + PartialEq
+    + fmt::Debug
     + 'static
 {
     /// Highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
-    /// Multiply the number with the scalar f inplace.
-    fn scale(&mut self, f: F);
-
     /// Real part (0th derivative) of the number
     fn re(&self) -> F;
+
+    /// Check if all derivative parts are zero
+    fn is_derivative_zero(&self) -> bool;
 
     /// Reciprocal (inverse) of a number `1/x`.
     fn recip(&self) -> Self;
@@ -193,17 +211,13 @@ pub trait DualNum<F>:
     }
 }
 
-pub trait IsDerivativeZero {
-    fn is_derivative_zero(&self) -> bool;
-}
-
 /// The underlying data type of individual derivatives. Usually f32 or f64.
 pub trait DualNumFloat:
-    Float + FromPrimitive + Signed + fmt::Display + Sync + Send + 'static
+    Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
 {
 }
 impl<T> DualNumFloat for T where
-    T: Float + FromPrimitive + Signed + fmt::Display + Sync + Send + 'static
+    T: Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
 {
 }
 
@@ -216,8 +230,8 @@ macro_rules! impl_dual_num_float {
                 *self
             }
 
-            fn scale(&mut self, f: $float) {
-                *self *= f;
+            fn is_derivative_zero(&self) -> bool {
+                true
             }
 
             fn mul_add(&self, a: Self, b: Self) -> Self {
@@ -328,12 +342,6 @@ macro_rules! impl_dual_num_float {
                     let s2 = self * self;
                     ((3.0 - s2) * sc.0 - 3.0 * self * sc.1) / (self * s2)
                 }
-            }
-        }
-
-        impl IsDerivativeZero for $float {
-            fn is_derivative_zero(&self) -> bool {
-                true
             }
         }
     };

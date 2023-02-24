@@ -1,5 +1,6 @@
-use crate::{DualNum, DualNumFloat, IsDerivativeZero};
+use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -30,7 +31,7 @@ pub struct HyperHyperDual<T, F = T> {
 pub type HyperHyperDual32 = HyperHyperDual<f32>;
 pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
-impl<T, F> HyperHyperDual<T, F> {
+impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
     /// Create a new hyper hyper dual number from its fields.
     #[inline]
     #[allow(clippy::too_many_arguments)]
@@ -56,9 +57,28 @@ impl<T, F> HyperHyperDual<T, F> {
             f: PhantomData,
         }
     }
-}
 
-impl<T: Zero, F> HyperHyperDual<T, F> {
+    /// Set the partial derivative part w.r.t. the 1st variable to 1.
+    #[inline]
+    pub fn derivative1(mut self) -> Self {
+        self.eps1 = T::one();
+        self
+    }
+
+    /// Set the partial derivative part w.r.t. the 2nd variable to 1.
+    #[inline]
+    pub fn derivative2(mut self) -> Self {
+        self.eps2 = T::one();
+        self
+    }
+
+    /// Set the partial derivative part w.r.t. the 3rd variable to 1.
+    #[inline]
+    pub fn derivative3(mut self) -> Self {
+        self.eps3 = T::one();
+        self
+    }
+
     /// Create a new hyper hyper dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
@@ -75,33 +95,133 @@ impl<T: Zero, F> HyperHyperDual<T, F> {
     }
 }
 
-impl<T: Clone + Zero + One, F> HyperHyperDual<T, F> {
-    /// Derive a third order dual number, i.e. set the first derivative part to 1.
-    /// ```
-    /// # use num_dual::{Dual3, DualNum};
-    /// let x = Dual3::from_re(5.0).derive().powi(3);
-    /// assert_eq!(x.re, 125.0);
-    /// assert_eq!(x.v1, 75.0);
-    /// assert_eq!(x.v2, 30.0);
-    /// assert_eq!(x.v3, 6.0);
-    /// ```
-    #[inline]
-    pub fn derive1(mut self) -> Self {
-        self.eps1 = T::one();
-        self
-    }
+/// Calculate third partial derivatives with respect to scalars.
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{third_partial_derivative, DualNum, HyperHyperDual64};
+/// # use nalgebra::SVector;
+/// let fun = |x: HyperHyperDual64, y: HyperHyperDual64, z: HyperHyperDual64| (x.powi(2) + y.powi(2) + z.powi(2)).powi(3);
+/// let (f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz) = third_partial_derivative(fun, 1.0, 2.0, 3.0);
+/// println!("{:?}", third_partial_derivative(fun, 1.0, 2.0, 3.0));
+/// assert_eq!(f, 2744.0);
+/// assert_relative_eq!(dfdx, 1176.0);
+/// assert_relative_eq!(dfdy, 2352.0);
+/// assert_relative_eq!(dfdz, 3528.0);
+/// assert_relative_eq!(d2fdxdy, 672.0);
+/// assert_relative_eq!(d2fdxdz, 1008.0);
+/// assert_relative_eq!(d2fdydz, 2016.0);
+/// assert_relative_eq!(d3fdxdydz, 288.0);
+/// ```
+pub fn third_partial_derivative<G, T: DualNum<F>, F>(
+    g: G,
+    x: T,
+    y: T,
+    z: T,
+) -> (T, T, T, T, T, T, T, T)
+where
+    G: FnOnce(
+        HyperHyperDual<T, F>,
+        HyperHyperDual<T, F>,
+        HyperHyperDual<T, F>,
+    ) -> HyperHyperDual<T, F>,
+{
+    try_third_partial_derivative(|x, y, z| Ok::<_, Infallible>(g(x, y, z)), x, y, z).unwrap()
+}
 
-    #[inline]
-    pub fn derive2(mut self) -> Self {
-        self.eps2 = T::one();
-        self
-    }
+/// Variant of [third_partial_derivative] for fallible functions.
+#[allow(clippy::type_complexity)]
+pub fn try_third_partial_derivative<G, T: DualNum<F>, F, E>(
+    g: G,
+    x: T,
+    y: T,
+    z: T,
+) -> Result<(T, T, T, T, T, T, T, T), E>
+where
+    G: FnOnce(
+        HyperHyperDual<T, F>,
+        HyperHyperDual<T, F>,
+        HyperHyperDual<T, F>,
+    ) -> Result<HyperHyperDual<T, F>, E>,
+{
+    let mut x = HyperHyperDual::from_re(x);
+    let mut y = HyperHyperDual::from_re(y);
+    let mut z = HyperHyperDual::from_re(z);
+    x.eps1 = T::one();
+    y.eps2 = T::one();
+    z.eps3 = T::one();
+    g(x, y, z).map(|r| {
+        (
+            r.re,
+            r.eps1,
+            r.eps2,
+            r.eps3,
+            r.eps1eps2,
+            r.eps1eps3,
+            r.eps2eps3,
+            r.eps1eps2eps3,
+        )
+    })
+}
 
-    #[inline]
-    pub fn derive3(mut self) -> Self {
-        self.eps3 = T::one();
-        self
-    }
+/// Calculate the third partial derivative of a scalar function
+/// with arbitrary many variables.
+/// ```
+/// # use approx::assert_relative_eq;
+/// # use num_dual::{third_partial_derivative_vec, DualNum, HyperHyperDual64};
+/// # use nalgebra::SVector;
+/// let fun = |x: &[HyperHyperDual64]| x[0].powi(3)*x[1].powi(2);
+/// let (f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz) = third_partial_derivative_vec(fun, &[1.0, 2.0], 0, 0, 1);
+/// # println!("{:?}", third_partial_derivative_vec(fun, &[1.0, 2.0, 3.0], 0, 0, 1));
+/// assert_eq!(f, 4.0);
+/// assert_relative_eq!(dfdx, 12.0);
+/// assert_relative_eq!(dfdy, 12.0);
+/// assert_relative_eq!(dfdz, 4.0);
+/// assert_relative_eq!(d2fdxdy, 24.0);
+/// assert_relative_eq!(d2fdxdz, 12.0);
+/// assert_relative_eq!(d2fdydz, 12.0);
+/// assert_relative_eq!(d3fdxdydz, 24.0);
+/// ```
+pub fn third_partial_derivative_vec<G, T: DualNum<F>, F>(
+    g: G,
+    x: &[T],
+    i: usize,
+    j: usize,
+    k: usize,
+) -> (T, T, T, T, T, T, T, T)
+where
+    G: FnOnce(&[HyperHyperDual<T, F>]) -> HyperHyperDual<T, F>,
+{
+    try_third_partial_derivative_vec(|x| Ok::<_, Infallible>(g(x)), x, i, j, k).unwrap()
+}
+
+/// Variant of [third_partial_derivative_vec] for fallible functions.
+#[allow(clippy::type_complexity)]
+pub fn try_third_partial_derivative_vec<G, T: DualNum<F>, F, E>(
+    g: G,
+    x: &[T],
+    i: usize,
+    j: usize,
+    k: usize,
+) -> Result<(T, T, T, T, T, T, T, T), E>
+where
+    G: FnOnce(&[HyperHyperDual<T, F>]) -> Result<HyperHyperDual<T, F>, E>,
+{
+    let mut x: Vec<_> = x.iter().map(|&x| HyperHyperDual::from_re(x)).collect();
+    x[i].eps1 = T::one();
+    x[j].eps2 = T::one();
+    x[k].eps3 = T::one();
+    g(&x).map(|r| {
+        (
+            r.re,
+            r.eps1,
+            r.eps2,
+            r.eps3,
+            r.eps1eps2,
+            r.eps1eps3,
+            r.eps2eps3,
+            r.eps1eps2eps3,
+        )
+    })
 }
 
 impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {

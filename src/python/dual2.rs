@@ -1,5 +1,6 @@
 use super::dual::PyDual64;
 use crate::*;
+use nalgebra::SVector;
 use numpy::{PyArray, PyReadonlyArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
@@ -23,17 +24,14 @@ use pyo3::prelude::*;
 ///
 /// First and second derivative of a function.
 ///
-/// >>> from num_dual import Dual2_64 as D264, derive1
+/// >>> from num_dual import second_derivative
 /// >>> import numpy as np
-/// >>> x = derive2(4.0)
-/// >>> # this is equivalent to the above
-/// >>> x = D264(4.0, 1.0, 0.0)
-/// >>> fx = x*x + np.sqrt(x)
-/// >>> fx.value
+/// >>> f, df, d2f = second_derivative(lambda x: x * x + np.sqrt(x), 4.0)
+/// >>> f
 /// 18.0
-/// >>> fx.first_derivative
+/// >>> df
 /// 8.25
-/// >>> fx.second_derivative
+/// >>> d2f
 /// 1.96875
 pub struct PyDual2_64(Dual2_64);
 
@@ -45,13 +43,11 @@ impl PyDual2_64 {
     }
 
     #[getter]
-    /// First hyperdual part.
     fn get_first_derivative(&self) -> f64 {
         self.0.v1[0]
     }
 
     #[getter]
-    /// Second hyperdual part.
     fn get_second_derivative(&self) -> f64 {
         self.0.v2[0]
     }
@@ -72,13 +68,11 @@ impl PyDual2Dual64 {
     }
 
     #[getter]
-    /// First hyperdual part.
     fn get_first_derivative(&self) -> PyDual64 {
         self.0.v1[0].into()
     }
 
     #[getter]
-    /// Second hyperdual part.
     fn get_second_derivative(&self) -> PyDual64 {
         self.0.v2[(0, 0)].into()
     }
@@ -95,15 +89,13 @@ macro_rules! impl_dual2_n {
         #[pymethods]
         impl $py_type_name {
             #[getter]
-            /// Gradient.
             pub fn get_first_derivative(&self) -> [f64; $n] {
-                *self.0.v1.raw_array()
+                self.0.v1.transpose().data.0[0]
             }
 
             #[getter]
-            /// Hessian.
-            pub fn get_second_derivative(&self) -> Vec<Vec<f64>> {
-                self.0.v2.raw_data().iter().map(|a| a.to_vec()).collect()
+            pub fn get_second_derivative(&self) -> [[f64; $n]; $n] {
+                self.0.v2.data.0
             }
         }
 
@@ -111,4 +103,93 @@ macro_rules! impl_dual2_n {
     };
 }
 
-pub(crate) use impl_dual2_n;
+#[pyfunction]
+/// Calculate the second derivative of a scalar, univariate function.
+///
+/// Parameters
+/// ----------
+/// f : callable
+///     A scalar, univariate function.
+/// x : float
+///     The value at which the derivative is evaluated.
+///
+/// Returns
+/// -------
+/// function value, first derivative, and second derivative
+pub fn second_derivative(f: &PyAny, x: f64) -> PyResult<(f64, f64, f64)> {
+    let g = |x| {
+        let res = f.call1((PyDual2_64::from(x),))?;
+        if let Ok(res) = res.extract::<PyDual2_64>() {
+            Ok(res.0)
+        } else {
+            Err(PyErr::new::<PyTypeError, _>(
+                "argument 'f' must return a scalar.".to_string(),
+            ))
+        }
+    };
+    try_second_derivative(g, x)
+}
+
+macro_rules! impl_hessian {
+    ([$(($py_type_name:ident, $n:literal)),+]) => {
+        #[pyfunction]
+        /// Calculate the Hessian of a scalar, multivariate function.
+        ///
+        /// Parameters
+        /// ----------
+        /// f : callable
+        ///     A scalar, multivariate function.
+        /// x : [float]
+        ///     The vector for which the Hessian is evaluated.
+        ///
+        /// Returns
+        /// -------
+        /// function value, gradient and Hessian
+        pub fn hessian(f: &PyAny, x: &PyAny) -> PyResult<(f64, Vec<f64>, Vec<Vec<f64>>)> {
+            $(
+                if let Ok(x) = x.extract::<[f64; $n]>() {
+                    let g = |x: SVector<Dual2Vec64<$n>, $n>| {
+                        let x: Vec<_> = x.into_iter().map(|&x| $py_type_name::from(x)).collect();
+                        let res = f.call1((x,))?;
+                        if let Ok(res) = res.extract::<$py_type_name>() {
+                            Ok(res.0)
+                        } else {
+                            Err(PyErr::new::<PyTypeError, _>(
+                                "argument 'f' must return a scalar."
+                                    .to_string(),
+                            ))
+                        }
+                    };
+                    try_hessian(g, SVector::from(x)).map(|(f, g, h)| {
+                        let h = h.row_iter().map(|r| r.iter().copied().collect()).collect();
+                        (f, g.data.0[0].to_vec(), h)
+                    })
+                } else
+            )+
+            if x.extract::<Vec<f64>>().is_ok() {
+                Err(PyErr::new::<PyTypeError, _>(
+                    "Hessians are only available for up to 10 variables!".to_string(),
+                ))
+            } else {
+                Err(PyErr::new::<PyTypeError, _>(
+                        "argument 'x': must be a list. For univariate functions use 'second_derivative' instead.".to_string(),
+                    ))
+            }
+        }
+
+        $(impl_dual2_n!($py_type_name, $n);)+
+    };
+}
+
+impl_hessian!([
+    (PyDual2_64_1, 1),
+    (PyDual2_64_2, 2),
+    (PyDual2_64_3, 3),
+    (PyDual2_64_4, 4),
+    (PyDual2_64_5, 5),
+    (PyDual2_64_6, 6),
+    (PyDual2_64_7, 7),
+    (PyDual2_64_8, 8),
+    (PyDual2_64_9, 9),
+    (PyDual2_64_10, 10)
+]);

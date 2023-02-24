@@ -1,9 +1,10 @@
+use nalgebra::*;
 use num_dual::*;
 use num_traits::Zero;
 
 #[test]
 fn test_dual2_vec_recip() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).recip();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).recip();
     assert!((res.re - 0.833333333333333).abs() < 1e-12);
     assert!((res.v1[0] - -0.694444444444445).abs() < 1e-12);
     assert!((res.v1[1] - -0.694444444444445).abs() < 1e-12);
@@ -15,7 +16,7 @@ fn test_dual2_vec_recip() {
 
 #[test]
 fn test_dual2_vec_exp() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).exp();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).exp();
     assert!((res.re - 3.32011692273655).abs() < 1e-12);
     assert!((res.v1[0] - 3.32011692273655).abs() < 1e-12);
     assert!((res.v1[1] - 3.32011692273655).abs() < 1e-12);
@@ -27,7 +28,7 @@ fn test_dual2_vec_exp() {
 
 #[test]
 fn test_dual2_vec_exp_m1() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).exp_m1();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).exp_m1();
     assert!((res.re - 2.32011692273655).abs() < 1e-12);
     assert!((res.v1[0] - 3.32011692273655).abs() < 1e-12);
     assert!((res.v1[1] - 3.32011692273655).abs() < 1e-12);
@@ -39,7 +40,7 @@ fn test_dual2_vec_exp_m1() {
 
 #[test]
 fn test_dual2_vec_exp2() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).exp2();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).exp2();
     assert!((res.re - 2.29739670999407).abs() < 1e-12);
     assert!((res.v1[0] - 1.59243405216008).abs() < 1e-12);
     assert!((res.v1[1] - 1.59243405216008).abs() < 1e-12);
@@ -51,7 +52,7 @@ fn test_dual2_vec_exp2() {
 
 #[test]
 fn test_dual2_vec_ln() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).ln();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).ln();
     assert!((res.re - 0.182321556793955).abs() < 1e-12);
     assert!((res.v1[0] - 0.833333333333333).abs() < 1e-12);
     assert!((res.v1[1] - 0.833333333333333).abs() < 1e-12);
@@ -63,7 +64,7 @@ fn test_dual2_vec_ln() {
 
 #[test]
 fn test_dual2_vec_log() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).log(4.2);
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).log(4.2);
     assert!((res.re - 0.127045866345188).abs() < 1e-12);
     assert!((res.v1[0] - 0.580685888982970).abs() < 1e-12);
     assert!((res.v1[1] - 0.580685888982970).abs() < 1e-12);
@@ -75,7 +76,7 @@ fn test_dual2_vec_log() {
 
 #[test]
 fn test_dual2_vec_ln_1p() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).ln_1p();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).ln_1p();
     assert!((res.re - 0.788457360364270).abs() < 1e-12);
     assert!((res.v1[0] - 0.454545454545455).abs() < 1e-12);
     assert!((res.v1[1] - 0.454545454545455).abs() < 1e-12);
@@ -87,7 +88,7 @@ fn test_dual2_vec_ln_1p() {
 
 #[test]
 fn test_dual2_vec_log2() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).log2();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).log2();
     assert!((res.re - 0.263034405833794).abs() < 1e-12);
     assert!((res.v1[0] - 1.20224586740747).abs() < 1e-12);
     assert!((res.v1[1] - 1.20224586740747).abs() < 1e-12);
@@ -99,7 +100,7 @@ fn test_dual2_vec_log2() {
 
 #[test]
 fn test_dual2_vec_log10() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).log10();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).log10();
     assert!((res.re - 0.0791812460476248).abs() < 1e-12);
     assert!((res.v1[0] - 0.361912068252710).abs() < 1e-12);
     assert!((res.v1[1] - 0.361912068252710).abs() < 1e-12);
@@ -111,7 +112,7 @@ fn test_dual2_vec_log10() {
 
 #[test]
 fn test_dual2_vec_sqrt() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).sqrt();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).sqrt();
     assert!((res.re - 1.09544511501033).abs() < 1e-12);
     assert!((res.v1[0] - 0.456435464587638).abs() < 1e-12);
     assert!((res.v1[1] - 0.456435464587638).abs() < 1e-12);
@@ -123,7 +124,7 @@ fn test_dual2_vec_sqrt() {
 
 #[test]
 fn test_dual2_vec_cbrt() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).cbrt();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).cbrt();
     assert!((res.re - 1.06265856918261).abs() < 1e-12);
     assert!((res.v1[0] - 0.295182935884059).abs() < 1e-12);
     assert!((res.v1[1] - 0.295182935884059).abs() < 1e-12);
@@ -135,8 +136,7 @@ fn test_dual2_vec_cbrt() {
 
 #[test]
 fn test_dual2_vec_powf() {
-    let res =
-        Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powf(4.2);
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powf(4.2);
     assert!((res.re - 2.15060788316847).abs() < 1e-12);
     assert!((res.v1[0] - 7.52712759108966).abs() < 1e-12);
     assert!((res.v1[1] - 7.52712759108966).abs() < 1e-12);
@@ -148,8 +148,7 @@ fn test_dual2_vec_powf() {
 
 #[test]
 fn test_dual2_vec_powf_0() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powf(0.0);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powf(0.0);
     assert!((res.re - 1.00000000000000).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -161,8 +160,7 @@ fn test_dual2_vec_powf_0() {
 
 #[test]
 fn test_dual2_vec_powf_1() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powf(1.0);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powf(1.0);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0] - 1.00000000000000).abs() < 1e-12);
     assert!((res.v1[1] - 1.00000000000000).abs() < 1e-12);
@@ -174,8 +172,7 @@ fn test_dual2_vec_powf_1() {
 
 #[test]
 fn test_dual2_vec_powf_2() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powf(2.0);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powf(2.0);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -187,8 +184,7 @@ fn test_dual2_vec_powf_2() {
 
 #[test]
 fn test_dual2_vec_powf_3() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powf(3.0);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powf(3.0);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -200,8 +196,7 @@ fn test_dual2_vec_powf_3() {
 
 #[test]
 fn test_dual2_vec_powf_4() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powf(4.0);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powf(4.0);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -213,7 +208,7 @@ fn test_dual2_vec_powf_4() {
 
 #[test]
 fn test_dual2_vec_powi() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powi(6);
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powi(6);
     assert!((res.re - 2.98598400000000).abs() < 1e-12);
     assert!((res.v1[0] - 14.9299200000000).abs() < 1e-12);
     assert!((res.v1[1] - 14.9299200000000).abs() < 1e-12);
@@ -225,7 +220,7 @@ fn test_dual2_vec_powi() {
 
 #[test]
 fn test_dual2_vec_powi_0() {
-    let res = Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powi(0);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powi(0);
     assert!((res.re - 1.00000000000000).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -237,7 +232,7 @@ fn test_dual2_vec_powi_0() {
 
 #[test]
 fn test_dual2_vec_powi_1() {
-    let res = Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powi(1);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powi(1);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0] - 1.00000000000000).abs() < 1e-12);
     assert!((res.v1[1] - 1.00000000000000).abs() < 1e-12);
@@ -249,7 +244,7 @@ fn test_dual2_vec_powi_1() {
 
 #[test]
 fn test_dual2_vec_powi_2() {
-    let res = Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powi(2);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powi(2);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -261,7 +256,7 @@ fn test_dual2_vec_powi_2() {
 
 #[test]
 fn test_dual2_vec_powi_3() {
-    let res = Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powi(3);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powi(3);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -273,7 +268,7 @@ fn test_dual2_vec_powi_3() {
 
 #[test]
 fn test_dual2_vec_powi_4() {
-    let res = Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).powi(4);
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).powi(4);
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -285,7 +280,7 @@ fn test_dual2_vec_powi_4() {
 
 #[test]
 fn test_dual2_vec_sin() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).sin();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).sin();
     assert!((res.re - 0.932039085967226).abs() < 1e-12);
     assert!((res.v1[0] - 0.362357754476674).abs() < 1e-12);
     assert!((res.v1[1] - 0.362357754476674).abs() < 1e-12);
@@ -297,7 +292,7 @@ fn test_dual2_vec_sin() {
 
 #[test]
 fn test_dual2_vec_cos() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).cos();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).cos();
     assert!((res.re - 0.362357754476674).abs() < 1e-12);
     assert!((res.v1[0] - -0.932039085967226).abs() < 1e-12);
     assert!((res.v1[1] - -0.932039085967226).abs() < 1e-12);
@@ -309,7 +304,7 @@ fn test_dual2_vec_cos() {
 
 #[test]
 fn test_dual2_vec_tan() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).tan();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).tan();
     assert!((res.re - 2.57215162212632).abs() < 1e-12);
     assert!((res.v1[0] - 7.61596396720705).abs() < 1e-12);
     assert!((res.v1[1] - 7.61596396720705).abs() < 1e-12);
@@ -321,7 +316,7 @@ fn test_dual2_vec_tan() {
 
 #[test]
 fn test_dual2_vec_asin() {
-    let res = Dual2Vec64::<2>::new(0.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).asin();
+    let res = Dual2Vec64::<2>::new(0.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).asin();
     assert!((res.re - 0.201357920790331).abs() < 1e-12);
     assert!((res.v1[0] - 1.02062072615966).abs() < 1e-12);
     assert!((res.v1[1] - 1.02062072615966).abs() < 1e-12);
@@ -333,7 +328,7 @@ fn test_dual2_vec_asin() {
 
 #[test]
 fn test_dual2_vec_acos() {
-    let res = Dual2Vec64::<2>::new(0.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).acos();
+    let res = Dual2Vec64::<2>::new(0.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).acos();
     assert!((res.re - 1.36943840600457).abs() < 1e-12);
     assert!((res.v1[0] - -1.02062072615966).abs() < 1e-12);
     assert!((res.v1[1] - -1.02062072615966).abs() < 1e-12);
@@ -345,7 +340,7 @@ fn test_dual2_vec_acos() {
 
 #[test]
 fn test_dual2_vec_atan() {
-    let res = Dual2Vec64::<2>::new(0.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).atan();
+    let res = Dual2Vec64::<2>::new(0.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).atan();
     assert!((res.re - 0.197395559849881).abs() < 1e-12);
     assert!((res.v1[0] - 0.961538461538462).abs() < 1e-12);
     assert!((res.v1[1] - 0.961538461538462).abs() < 1e-12);
@@ -357,7 +352,7 @@ fn test_dual2_vec_atan() {
 
 #[test]
 fn test_dual2_vec_sinh() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).sinh();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).sinh();
     assert!((res.re - 1.50946135541217).abs() < 1e-12);
     assert!((res.v1[0] - 1.81065556732437).abs() < 1e-12);
     assert!((res.v1[1] - 1.81065556732437).abs() < 1e-12);
@@ -369,7 +364,7 @@ fn test_dual2_vec_sinh() {
 
 #[test]
 fn test_dual2_vec_cosh() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).cosh();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).cosh();
     assert!((res.re - 1.81065556732437).abs() < 1e-12);
     assert!((res.v1[0] - 1.50946135541217).abs() < 1e-12);
     assert!((res.v1[1] - 1.50946135541217).abs() < 1e-12);
@@ -381,7 +376,7 @@ fn test_dual2_vec_cosh() {
 
 #[test]
 fn test_dual2_vec_tanh() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).tanh();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).tanh();
     assert!((res.re - 0.833654607012155).abs() < 1e-12);
     assert!((res.v1[0] - 0.305019996207409).abs() < 1e-12);
     assert!((res.v1[1] - 0.305019996207409).abs() < 1e-12);
@@ -393,7 +388,7 @@ fn test_dual2_vec_tanh() {
 
 #[test]
 fn test_dual2_vec_asinh() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).asinh();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).asinh();
     assert!((res.re - 1.01597313417969).abs() < 1e-12);
     assert!((res.v1[0] - 0.640184399664480).abs() < 1e-12);
     assert!((res.v1[1] - 0.640184399664480).abs() < 1e-12);
@@ -405,7 +400,7 @@ fn test_dual2_vec_asinh() {
 
 #[test]
 fn test_dual2_vec_acosh() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).acosh();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).acosh();
     assert!((res.re - 0.622362503714779).abs() < 1e-12);
     assert!((res.v1[0] - 1.50755672288882).abs() < 1e-12);
     assert!((res.v1[1] - 1.50755672288882).abs() < 1e-12);
@@ -417,7 +412,7 @@ fn test_dual2_vec_acosh() {
 
 #[test]
 fn test_dual2_vec_atanh() {
-    let res = Dual2Vec64::<2>::new(0.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).atanh();
+    let res = Dual2Vec64::<2>::new(0.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).atanh();
     assert!((res.re - 0.202732554054082).abs() < 1e-12);
     assert!((res.v1[0] - 1.04166666666667).abs() < 1e-12);
     assert!((res.v1[1] - 1.04166666666667).abs() < 1e-12);
@@ -429,7 +424,7 @@ fn test_dual2_vec_atanh() {
 
 #[test]
 fn test_dual2_vec_sph_j0() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).sph_j0();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).sph_j0();
     assert!((res.re - 0.776699238306022).abs() < 1e-12);
     assert!((res.v1[0] - -0.345284569857790).abs() < 1e-12);
     assert!((res.v1[1] - -0.345284569857790).abs() < 1e-12);
@@ -441,7 +436,7 @@ fn test_dual2_vec_sph_j0() {
 
 #[test]
 fn test_dual2_vec_sph_j1() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).sph_j1();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).sph_j1();
     assert!((res.re - 0.345284569857790).abs() < 1e-12);
     assert!((res.v1[0] - 0.201224955209705).abs() < 1e-12);
     assert!((res.v1[1] - 0.201224955209705).abs() < 1e-12);
@@ -453,7 +448,7 @@ fn test_dual2_vec_sph_j1() {
 
 #[test]
 fn test_dual2_vec_sph_j2() {
-    let res = Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).sph_j2();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).sph_j2();
     assert!((res.re - 0.0865121863384538).abs() < 1e-12);
     assert!((res.v1[0] - 0.129004104011656).abs() < 1e-12);
     assert!((res.v1[1] - 0.129004104011656).abs() < 1e-12);
@@ -465,8 +460,7 @@ fn test_dual2_vec_sph_j2() {
 
 #[test]
 fn test_dual2_vec_bessel_j0_0() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j0();
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j0();
     assert!((res.re - 1.00000000000000).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -478,8 +472,7 @@ fn test_dual2_vec_bessel_j0_0() {
 
 #[test]
 fn test_dual2_vec_bessel_j1_0() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j1();
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j1();
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0] - 0.500000000000000).abs() < 1e-12);
     assert!((res.v1[1] - 0.500000000000000).abs() < 1e-12);
@@ -491,8 +484,7 @@ fn test_dual2_vec_bessel_j1_0() {
 
 #[test]
 fn test_dual2_vec_bessel_j2_0() {
-    let res =
-        Dual2Vec64::<2>::new(0.0, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j2();
+    let res = Dual2Vec64::<2>::new(0.0, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j2();
     assert!((res.re).abs() < 1e-12);
     assert!((res.v1[0]).abs() < 1e-12);
     assert!((res.v1[1]).abs() < 1e-12);
@@ -504,8 +496,7 @@ fn test_dual2_vec_bessel_j2_0() {
 
 #[test]
 fn test_dual2_vec_bessel_j0_1() {
-    let res =
-        Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j0();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j0();
     assert!((res.re - 0.671132744264363).abs() < 1e-12);
     assert!((res.v1[0] - -0.498289057567215).abs() < 1e-12);
     assert!((res.v1[1] - -0.498289057567215).abs() < 1e-12);
@@ -517,8 +508,7 @@ fn test_dual2_vec_bessel_j0_1() {
 
 #[test]
 fn test_dual2_vec_bessel_j1_1() {
-    let res =
-        Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j1();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j1();
     assert!((res.re - 0.498289057567215).abs() < 1e-12);
     assert!((res.v1[0] - 0.255891862958350).abs() < 1e-12);
     assert!((res.v1[1] - 0.255891862958350).abs() < 1e-12);
@@ -530,8 +520,7 @@ fn test_dual2_vec_bessel_j1_1() {
 
 #[test]
 fn test_dual2_vec_bessel_j2_1() {
-    let res =
-        Dual2Vec64::<2>::new(1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j2();
+    let res = Dual2Vec64::<2>::new(1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j2();
     assert!((res.re - 0.159349018347663).abs() < 1e-12);
     assert!((res.v1[0] - 0.232707360321110).abs() < 1e-12);
     assert!((res.v1[1] - 0.232707360321110).abs() < 1e-12);
@@ -543,8 +532,7 @@ fn test_dual2_vec_bessel_j2_1() {
 
 #[test]
 fn test_dual2_vec_bessel_j0_2() {
-    let res =
-        Dual2Vec64::<2>::new(7.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j0();
+    let res = Dual2Vec64::<2>::new(7.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j0();
     assert!((res.re - 0.295070691400958).abs() < 1e-12);
     assert!((res.v1[0] - -0.0543274202223671).abs() < 1e-12);
     assert!((res.v1[1] - -0.0543274202223671).abs() < 1e-12);
@@ -556,8 +544,7 @@ fn test_dual2_vec_bessel_j0_2() {
 
 #[test]
 fn test_dual2_vec_bessel_j1_2() {
-    let res =
-        Dual2Vec64::<2>::new(7.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j1();
+    let res = Dual2Vec64::<2>::new(7.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j1();
     assert!((res.re - 0.0543274202223671).abs() < 1e-12);
     assert!((res.v1[0] - 0.287525216370074).abs() < 1e-12);
     assert!((res.v1[1] - 0.287525216370074).abs() < 1e-12);
@@ -569,8 +556,7 @@ fn test_dual2_vec_bessel_j1_2() {
 
 #[test]
 fn test_dual2_vec_bessel_j2_2() {
-    let res =
-        Dual2Vec64::<2>::new(7.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j2();
+    let res = Dual2Vec64::<2>::new(7.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j2();
     assert!((res.re - -0.279979741339189).abs() < 1e-12);
     assert!((res.v1[0] - 0.132099570594364).abs() < 1e-12);
     assert!((res.v1[1] - 0.132099570594364).abs() < 1e-12);
@@ -582,8 +568,7 @@ fn test_dual2_vec_bessel_j2_2() {
 
 #[test]
 fn test_dual2_vec_bessel_j0_3() {
-    let res =
-        Dual2Vec64::<2>::new(-1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j0();
+    let res = Dual2Vec64::<2>::new(-1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j0();
     assert!((res.re - 0.671132744264363).abs() < 1e-12);
     assert!((res.v1[0] - 0.498289057567215).abs() < 1e-12);
     assert!((res.v1[1] - 0.498289057567215).abs() < 1e-12);
@@ -595,8 +580,7 @@ fn test_dual2_vec_bessel_j0_3() {
 
 #[test]
 fn test_dual2_vec_bessel_j1_3() {
-    let res =
-        Dual2Vec64::<2>::new(-1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j1();
+    let res = Dual2Vec64::<2>::new(-1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j1();
     assert!((res.re - -0.498289057567215).abs() < 1e-12);
     assert!((res.v1[0] - 0.255891862958350).abs() < 1e-12);
     assert!((res.v1[1] - 0.255891862958350).abs() < 1e-12);
@@ -608,8 +592,7 @@ fn test_dual2_vec_bessel_j1_3() {
 
 #[test]
 fn test_dual2_vec_bessel_j2_3() {
-    let res =
-        Dual2Vec64::<2>::new(-1.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j2();
+    let res = Dual2Vec64::<2>::new(-1.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j2();
     assert!((res.re - 0.159349018347663).abs() < 1e-12);
     assert!((res.v1[0] - -0.232707360321110).abs() < 1e-12);
     assert!((res.v1[1] - -0.232707360321110).abs() < 1e-12);
@@ -621,8 +604,7 @@ fn test_dual2_vec_bessel_j2_3() {
 
 #[test]
 fn test_dual2_vec_bessel_j0_4() {
-    let res =
-        Dual2Vec64::<2>::new(-7.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j0();
+    let res = Dual2Vec64::<2>::new(-7.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j0();
     assert!((res.re - 0.295070691400958).abs() < 1e-12);
     assert!((res.v1[0] - 0.0543274202223671).abs() < 1e-12);
     assert!((res.v1[1] - 0.0543274202223671).abs() < 1e-12);
@@ -634,8 +616,7 @@ fn test_dual2_vec_bessel_j0_4() {
 
 #[test]
 fn test_dual2_vec_bessel_j1_4() {
-    let res =
-        Dual2Vec64::<2>::new(-7.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j1();
+    let res = Dual2Vec64::<2>::new(-7.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j1();
     assert!((res.re - -0.0543274202223671).abs() < 1e-12);
     assert!((res.v1[0] - 0.287525216370074).abs() < 1e-12);
     assert!((res.v1[1] - 0.287525216370074).abs() < 1e-12);
@@ -647,8 +628,7 @@ fn test_dual2_vec_bessel_j1_4() {
 
 #[test]
 fn test_dual2_vec_bessel_j2_4() {
-    let res =
-        Dual2Vec64::<2>::new(-7.2, StaticVec::new_vec([1.0, 1.0]), StaticMat::zero()).bessel_j2();
+    let res = Dual2Vec64::<2>::new(-7.2, RowSVector::from([1.0, 1.0]), SMatrix::zero()).bessel_j2();
     assert!((res.re - -0.279979741339189).abs() < 1e-12);
     assert!((res.v1[0] - -0.132099570594364).abs() < 1e-12);
     assert!((res.v1[1] - -0.132099570594364).abs() < 1e-12);
