@@ -4,7 +4,7 @@ use num_traits::{Float, Zero};
 use std::f64::consts::{FRAC_2_PI, FRAC_PI_4};
 
 /// Implementation of bessel functions for double precision (hyper) dual numbers.
-pub trait BesselDual: DualNum<f64> {
+pub trait BesselDual: DualNum<f64> + Copy {
     /// 0th order bessel function of the first kind
     fn bessel_j0(mut self) -> Self {
         if self.is_negative() {
@@ -59,7 +59,7 @@ pub trait BesselDual: DualNum<f64> {
     }
 }
 
-impl<T: DualNum<f64>> BesselDual for T {}
+impl<T: DualNum<f64> + Copy> BesselDual for T {}
 
 const DR1: f64 = 5.78318596294678452118E0;
 const DR2: f64 = 3.04712623436620863991E1;
@@ -179,12 +179,12 @@ const QQ1: [f64; 7] = [
     3.36093607810698293419E2,
 ];
 
-fn polevl<T: DualNum<F>, F: Float>(x: T, coef: &[F]) -> T {
+fn polevl<T: DualNum<F> + Copy, F: Float>(x: T, coef: &[F]) -> T {
     coef.iter()
         .skip(1)
         .fold(T::from(coef[0]), |acc, &c| acc * x + c)
 }
 
-fn p1evl<T: DualNum<F>, F: Float>(x: T, coef: &[F]) -> T {
+fn p1evl<T: DualNum<F> + Copy, F: Float>(x: T, coef: &[F]) -> T {
     coef.iter().fold(T::one(), |acc, &c| acc * x + c)
 }
