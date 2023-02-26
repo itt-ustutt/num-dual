@@ -1,6 +1,10 @@
-macro_rules! impl_from_f {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F, $(const $const: usize,)*> From<F> for $struct<T, F$(, $const)*> {
+macro_rules! impl_from_f2 {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> From<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn from(float: F) -> Self {
                 Self::from_re(T::from(float))
@@ -9,9 +13,13 @@ macro_rules! impl_from_f {
     };
 }
 
-macro_rules! impl_zero_one {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Zero for $struct<T, F$(, $const)*> {
+macro_rules! impl_zero_one2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Zero for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn zero() -> Self {
                 Self::from_re(T::zero())
@@ -19,11 +27,15 @@ macro_rules! impl_zero_one {
 
             #[inline]
             fn is_zero(&self) -> bool {
-                self.re.is_zero() && $(self.$im.is_zero()) &&*
+                self.re.is_zero()
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> One for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> One for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn one() -> Self {
                 Self::from_re(T::one())
@@ -31,79 +43,101 @@ macro_rules! impl_zero_one {
 
             #[inline]
             fn is_one(&self) -> bool {
-                self.re.is_one() && $(self.$im.is_zero()) &&*
+                self.re.is_one()
             }
         }
     };
 }
 
-macro_rules! impl_add_sub_rem {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<'a, 'b, T: DualNum<F>, F: Float, $(const $const: usize,)*> Add<&'a $struct<T, F$(, $const)*>>
-            for &'b $struct<T, F$(, $const)*>
+macro_rules! impl_add_sub_rem2 {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl<'a, 'b, T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Add<&'a $struct<T, F$($(, $dim)*)?>>
+            for &'b $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
-            type Output = $struct<T, F$(, $const)*>;
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
-            fn add(self, other: &$struct<T, F$(, $const)*>) -> $struct<T, F$(, $const)*> {
-                Self::Output::new(self.re + other.re, $(self.$im + other.$im,)*)
+            fn add(self, other: &$struct<T, F$($(, $dim)*)?>) -> $struct<T, F$($(, $dim)*)?> {
+                Self::Output::new(self.re.clone() + &other.re, $(self.$im.clone() + &other.$im,)*)
             }
         }
 
-        impl<'a, 'b, T: DualNum<F>, F: Float, $(const $const: usize,)*> Sub<&'a $struct<T, F$(, $const)*>>
-            for &'b $struct<T, F$(, $const)*>
+        impl<'a, 'b, T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Sub<&'a $struct<T, F$($(, $dim)*)?>>
+            for &'b $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
-            type Output = $struct<T, F$(, $const)*>;
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
-            fn sub(self, other: &$struct<T, F$(, $const)*>) -> $struct<T, F$(, $const)*> {
-                Self::Output::new(self.re - other.re, $(self.$im - other.$im,)*)
+            fn sub(self, other: &$struct<T, F$($(, $dim)*)?>) -> $struct<T, F$($(, $dim)*)?> {
+                Self::Output::new(self.re.clone() - &other.re, $(self.$im.clone() - &other.$im,)*)
             }
         }
 
-        impl<'a, 'b, T: DualNum<F>, F, $(const $const: usize,)*> Rem<&'a $struct<T, F$(, $const)*>> for &'b $struct<T, F$(, $const)*>
+        impl<'a, 'b, T: DualNum<F>, F$($(, $dim: Dim)*)?> Rem<&'a $struct<T, F$($(, $dim)*)?>> for &'b $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
-            type Output = $struct<T, F$(, $const)*>;
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
-            fn rem(self, _other: &$struct<T, F$(, $const)*>) -> $struct<T, F$(, $const)*> {
+            fn rem(self, _other: &$struct<T, F$($(, $dim)*)?>) -> $struct<T, F$($(, $dim)*)?> {
                 unimplemented!()
             }
         }
     };
 }
 
-macro_rules! forward_binop {
-    ($struct:ident, [$($const:tt),*], $trt:ident, $operator:tt, $mth:ident) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> $trt<$struct<T, F$(, $const)*>> for &$struct<T, F$(, $const)*>
+macro_rules! forward_binop2 {
+    ($struct:ident, $trt:ident, $operator:tt, $mth:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> $trt<$struct<T, F$($(, $dim)*)?>> for &$struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
-            type Output = $struct<T, F$(, $const)*>;
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
-            fn $mth(self, rhs: $struct<T, F$(, $const)*>) -> Self::Output {
+            fn $mth(self, rhs: $struct<T, F$($(, $dim)*)?>) -> Self::Output {
                 self $operator &rhs
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> $trt<&$struct<T, F$(, $const)*>> for $struct<T, F$(, $const)*>
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> $trt<&$struct<T, F$($(, $dim)*)?>> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
-            type Output = $struct<T, F$(, $const)*>;
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
-            fn $mth(self, rhs: &$struct<T, F$(, $const)*>) -> Self::Output {
+            fn $mth(self, rhs: &$struct<T, F$($(, $dim)*)?>) -> Self::Output {
                 &self $operator rhs
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> $trt for $struct<T, F$(, $const)*>
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> $trt for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
-            type Output = $struct<T, F$(, $const)*>;
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
-            fn $mth(self, rhs: $struct<T, F$(, $const)*>) -> Self::Output {
+            fn $mth(self, rhs: $struct<T, F$($(, $dim)*)?>) -> Self::Output {
                 &self $operator &rhs
             }
         }
     };
 }
 
-macro_rules! impl_neg {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Neg for $struct<T, F$(, $const)*> {
+macro_rules! impl_neg2 {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Neg for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn neg(self) -> Self {
@@ -111,35 +145,49 @@ macro_rules! impl_neg {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Neg for &$struct<T, F$(, $const)*> {
-            type Output = $struct<T, F$(, $const)*>;
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Neg for &$struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
+            type Output = $struct<T, F$($(, $dim)*)?>;
             #[inline]
             fn neg(self) -> Self::Output {
-                <$struct<T, F$(, $const)*>>::new(-self.re, $(-self.$im),*)
+                <$struct<T, F$($(, $dim)*)?>>::new(-self.re.clone(), $(-self.$im.clone()),*)
             }
         }
     };
 }
 
-macro_rules! impl_assign_ops {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> MulAssign for $struct<T, F$(, $const)*>
+macro_rules! impl_assign_ops2 {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> MulAssign for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
             #[inline]
             fn mul_assign(&mut self, other: Self) {
-                *self = *self * other;
+                *self = self.clone() * other;
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> DivAssign for $struct<T, F$(, $const)*>
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> DivAssign for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
             #[inline]
             fn div_assign(&mut self, other: Self) {
-                *self = *self / other;
+                *self = self.clone() / other;
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> AddAssign for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> AddAssign for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn add_assign(&mut self, other: Self) {
                 self.re += other.re;
@@ -147,7 +195,11 @@ macro_rules! impl_assign_ops {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> SubAssign for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> SubAssign for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn sub_assign(&mut self, other: Self) {
                 self.re -= other.re;
@@ -155,7 +207,11 @@ macro_rules! impl_assign_ops {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> RemAssign for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> RemAssign for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn rem_assign(&mut self, _other: Self) {
                 unimplemented!()
@@ -164,9 +220,13 @@ macro_rules! impl_assign_ops {
     };
 }
 
-macro_rules! impl_scalar_op {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Mul<F> for $struct<T, F$(, $const)*> {
+macro_rules! impl_scalar_op2 {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Mul<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn mul(mut self, other: F) -> Self {
@@ -175,7 +235,11 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> MulAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> MulAssign<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn mul_assign(&mut self, other: F) {
                 self.re *= other;
@@ -183,7 +247,11 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Div<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Div<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn div(mut self, other: F) -> Self {
@@ -192,7 +260,11 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> DivAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> DivAssign<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn div_assign(&mut self, other: F) {
                 self.re /= other;
@@ -200,7 +272,11 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Add<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> Add<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn add(mut self, other: F) -> Self {
@@ -209,14 +285,22 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> AddAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> AddAssign<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn add_assign(&mut self, other: F)  {
                 self.re += other;
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Sub<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> Sub<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn sub(mut self, other: F) -> Self {
@@ -225,14 +309,22 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> SubAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> SubAssign<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn sub_assign(&mut self, other: F)  {
                 self.re -= other;
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Rem<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> Rem<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn rem(self, _other: F) -> Self {
@@ -240,7 +332,11 @@ macro_rules! impl_scalar_op {
             }
         }
 
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> RemAssign<F> for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> RemAssign<F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn rem_assign(&mut self, _other: F) {
                 unimplemented!()
@@ -249,9 +345,13 @@ macro_rules! impl_scalar_op {
     };
 }
 
-macro_rules! impl_inv {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Inv for $struct<T, F$(, $const)*> {
+macro_rules! impl_inv2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Inv for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type Output = Self;
             #[inline]
             fn inv(self) -> Self {
@@ -261,9 +361,13 @@ macro_rules! impl_inv {
     };
 }
 
-macro_rules! impl_iterator {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Sum for $struct<T, F$(, $const)*> {
+macro_rules! impl_iterator2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Sum for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn sum<I>(iter: I) -> Self
             where
@@ -273,18 +377,25 @@ macro_rules! impl_iterator {
             }
         }
 
-        impl<'a, T: DualNum<F>, F: Float, $(const $const: usize,)*> Sum<&'a $struct<T, F$(, $const)*>>
-            for $struct<T, F$(, $const)*>
+        impl<'a, T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Sum<&'a $struct<T, F$($(, $dim)*)?>>
+            for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
             #[inline]
             fn sum<I>(iter: I) -> Self
             where
-                I: Iterator<Item = &'a $struct<T, F$(, $const)*>>,
+                I: Iterator<Item = &'a $struct<T, F$($(, $dim)*)?>>,
             {
                 iter.fold(Self::zero(), |acc, c| acc + c)
             }
         }
-        impl<T: DualNum<F>, F: Float, $(const $const: usize,)*> Product for $struct<T, F$(, $const)*> {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Product for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn product<I>(iter: I) -> Self
             where
@@ -293,13 +404,16 @@ macro_rules! impl_iterator {
                 iter.fold(Self::one(), |acc, c| acc * c)
             }
         }
-        impl<'a, T: DualNum<F>, F: Float, $(const $const: usize,)*> Product<&'a $struct<T, F$(, $const)*>>
-            for $struct<T, F$(, $const)*>
+        impl<'a, T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Product<&'a $struct<T, F$($(, $dim)*)?>>
+            for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
             #[inline]
             fn product<I>(iter: I) -> Self
             where
-                I: Iterator<Item = &'a $struct<T, F$(, $const)*>>,
+                I: Iterator<Item = &'a $struct<T, F$($(, $dim)*)?>>,
             {
                 iter.fold(Self::one(), |acc, c| acc * c)
             }
@@ -307,9 +421,13 @@ macro_rules! impl_iterator {
     };
 }
 
-macro_rules! impl_from_primitive {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: Float + FromPrimitive, $(const $const: usize,)*> FromPrimitive for $struct<T, F$(, $const)*> {
+macro_rules! impl_from_primitive2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float + FromPrimitive$($(, $dim: Dim)*)?> FromPrimitive for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn from_isize(n: isize) -> Option<Self> {
                 F::from_isize(n).map(|f| f.into())
@@ -383,13 +501,17 @@ macro_rules! impl_from_primitive {
     };
 }
 
-macro_rules! impl_signed {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: DualNumFloat, $(const $const: usize,)*> Signed for $struct<T, F$(, $const)*> {
+macro_rules! impl_signed2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Signed for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             #[inline]
             fn abs(&self) -> Self {
                 if self.is_positive() {
-                    *self
+                    self.clone()
                 } else {
                     -self
                 }
@@ -417,20 +539,24 @@ macro_rules! impl_signed {
 
             #[inline]
             fn is_positive(&self) -> bool {
-                self.re().is_positive()
+                self.re.is_positive()
             }
 
             #[inline]
             fn is_negative(&self) -> bool {
-                self.re().is_negative()
+                self.re.is_negative()
             }
         }
     };
 }
 
-macro_rules! impl_float_const {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F>, F: Float + FloatConst, $(const $const: usize,)*> FloatConst for $struct<T, F$(, $const)*> {
+macro_rules! impl_float_const2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F>, F: Float + FloatConst$($(, $dim: Dim)*)?> FloatConst for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             fn E() -> Self {
                 Self::from(F::E())
             }
@@ -498,9 +624,13 @@ macro_rules! impl_float_const {
     };
 }
 
-macro_rules! impl_num {
-    ($struct:ident, [$($const:tt),*]) => {
-        impl<T: DualNum<F> + Signed, F: Float, $(const $const: usize,)*> Num for $struct<T, F$(, $const)*> {
+macro_rules! impl_num2 {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F> + Signed, F: Float$($(, $dim: Dim)*)?> Num for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
             type FromStrRadixErr = F::FromStrRadixErr;
             #[inline]
             fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
@@ -510,24 +640,24 @@ macro_rules! impl_num {
     };
 }
 
-macro_rules! impl_dual {
-    ($struct:ident, [$($const:tt),*], [$($im:ident),*]) => {
-        impl_from_f!($struct, [$($const),*], [$($im),*]);
-        impl_zero_one!($struct, [$($const),*], [$($im),*]);
-        impl_add_sub_rem!($struct, [$($const),*], [$($im),*]);
-        forward_binop!($struct, [$($const),*], Add, +, add);
-        forward_binop!($struct, [$($const),*], Sub, -, sub);
-        forward_binop!($struct, [$($const),*], Mul, *, mul);
-        forward_binop!($struct, [$($const),*], Div, /, div);
-        forward_binop!($struct, [$($const),*], Rem, %, rem);
-        impl_neg!($struct, [$($const),*], [$($im),*]);
-        impl_assign_ops!($struct, [$($const),*], [$($im),*]);
-        impl_scalar_op!($struct, [$($const),*], [$($im),*]);
-        impl_inv!($struct, [$($const),*]);
-        impl_iterator!($struct, [$($const),*]);
-        impl_from_primitive!($struct, [$($const),*]);
-        impl_signed!($struct, [$($const),*]);
-        impl_num!($struct, [$($const),*]);
-        impl_float_const!($struct, [$($const),*]);
+macro_rules! impl_dual2 {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl_from_f2!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_zero_one2!($struct$(, [$($dim),*])?);
+        impl_add_sub_rem2!($struct, [$($im),*]$(, [$($dim),*])?);
+        forward_binop2!($struct, Add, +, add$(, [$($dim),*])?);
+        forward_binop2!($struct, Sub, -, sub$(, [$($dim),*])?);
+        forward_binop2!($struct, Mul, *, mul$(, [$($dim),*])?);
+        forward_binop2!($struct, Div, /, div$(, [$($dim),*])?);
+        forward_binop2!($struct, Rem, %, rem$(, [$($dim),*])?);
+        impl_neg2!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_assign_ops2!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_scalar_op2!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_inv2!($struct$(, [$($dim),*])?);
+        impl_iterator2!($struct$(, [$($dim),*])?);
+        impl_from_primitive2!($struct$(, [$($dim),*])?);
+        impl_signed2!($struct$(, [$($dim),*])?);
+        impl_num2!($struct$(, [$($dim),*])?);
+        impl_float_const2!($struct$(, [$($dim),*])?);
     };
 }

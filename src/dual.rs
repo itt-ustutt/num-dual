@@ -1,5 +1,6 @@
 use crate::{DualNum, DualNumFloat};
 use nalgebra::allocator::Allocator;
+use nalgebra::constraint::{SameNumberOfRows, ShapeConstraint};
 use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::convert::Infallible;
@@ -7,8 +8,7 @@ use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::{
-    Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Rem, RemAssign, Sub,
-    SubAssign,
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
 /// A dual number for the calculations of gradients or Jacobians.
@@ -20,7 +20,7 @@ where
     /// Real part of the dual number
     pub re: T,
     /// Derivative part of the dual number
-    pub eps: Derivative<T, F, D>,
+    pub eps: Derivative<T, F, D, U1>,
     f: PhantomData<F>,
 }
 
@@ -42,7 +42,7 @@ where
 {
     /// Create a new dual number from its fields.
     #[inline]
-    pub fn new(re: T, eps: Derivative<T, F, D>) -> Self {
+    pub fn new(re: T, eps: Derivative<T, F, D, U1>) -> Self {
         Self {
             re,
             eps,
@@ -76,7 +76,7 @@ impl<T: DualNum<F> + One, F> Dual<T, F> {
     /// # use num_dual::{Dual64, DualNum};
     /// let x = Dual64::from_re(5.0).derivative().powi(2);
     /// assert_eq!(x.re, 25.0);
-    /// assert_eq!(x.eps[0], 10.0);
+    /// assert_eq!(x.eps.unwrap(), 10.0);
     /// ```
     #[inline]
     pub fn derivative(mut self) -> Self {
@@ -104,8 +104,8 @@ pub fn try_first_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T)
 where
     G: FnOnce(Dual<T, F>) -> Result<Dual<T, F>, E>,
 {
-    let x = Dual::new_scalar(x, T::one());
-    g(x).map(|r| (r.re, r.eps[0].clone()))
+    let x = Dual::from_re(x).derivative();
+    g(x).map(|r| (r.re, r.eps.unwrap()))
 }
 
 /// Calculate the gradient of a scalar function
@@ -158,10 +158,9 @@ where
     let mut x = x.map(DualVec::from_re);
     let (r, c) = x.shape_generic();
     for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps = Derivative::some(OVector::zeros_generic(r, c));
-        xi.eps[i] = T::one();
+        xi.eps = Derivative::derivative(r, c, i);
     }
-    g(x).map(|r| (r.re, r.eps.0.unwrap()))
+    g(x).map(|res| (res.re, res.eps.unwrap_generic(r, c)))
 }
 
 /// Calculate the Jacobian of a vector function.
@@ -219,11 +218,13 @@ where
     let mut x = x.map(DualVec::from_re);
     let (r, c) = x.shape_generic();
     for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps = Derivative::some(OVector::zeros_generic(r, c));
-        xi.eps[i] = T::one();
+        xi.eps = Derivative::derivative(r, c, i);
     }
     g(x).map(|res| {
-        let eps = OMatrix::from_rows(res.map(|r| r.eps.0.unwrap().transpose()).as_slice());
+        let eps = OMatrix::from_rows(
+            res.map(|res| res.eps.unwrap_generic(r, c).transpose())
+                .as_slice(),
+        );
         (res.map(|r| r.re), eps)
     })
 }
@@ -276,46 +277,33 @@ where
     DefaultAllocator: Allocator<T, D>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        todo!()
-        // write!(f, "{} + {}ε", self.re, self.eps.0)
+        write!(f, "{}", self.re)?;
+        self.eps.fmt(f, "ε")
     }
 }
 
-impl_first_derivatives2!(DualVec, [D], [eps]);
-impl_dual2!(DualVec, [D], [eps]);
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-
-//     #[test]
-//     fn is_derivative_zero() {
-//         let d = Dual::new(
-//             DualVec64::new(1.0, SVector::from([2.5])),
-//             SVector::from([DualVec64::zero()]),
-//         );
-//         assert!(!d.is_derivative_zero());
-//         let d: DualVec64<1> = Dual::one();
-//         assert!(d.is_derivative_zero())
-//     }
-// }
+impl_first_derivatives2!(DualVec, [eps], [D]);
+impl_dual2!(DualVec, [eps], [D]);
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Derivative<T: DualNum<F>, F, D: Dim>(Option<OVector<T, D>>, PhantomData<F>)
+pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(Option<OMatrix<T, R, C>>, PhantomData<F>)
 where
-    DefaultAllocator: Allocator<T, D>;
+    DefaultAllocator: Allocator<T, R, C>;
 
-impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for Derivative<T, F, Const<N>> {}
-
-impl<T: DualNum<F>, F, D: Dim> Derivative<T, F, D>
-where
-    DefaultAllocator: Allocator<T, D>,
+impl<T: DualNum<F> + Copy, F: Copy, const R: usize, const C: usize> Copy
+    for Derivative<T, F, Const<R>, Const<C>>
 {
-    pub fn new(derivative: Option<OVector<T, D>>) -> Self {
+}
+
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    pub fn new(derivative: Option<OMatrix<T, R, C>>) -> Self {
         Self(derivative, PhantomData)
     }
 
-    pub fn some(derivative: OVector<T, D>) -> Self {
+    pub fn some(derivative: OMatrix<T, R, C>) -> Self {
         Self::new(Some(derivative))
     }
 
@@ -323,12 +311,49 @@ where
         Self::new(None)
     }
 
-    // pub fn new_derivative()
+    #[allow(clippy::self_named_constructors)]
+    pub fn derivative(r: R, c: C, i: usize) -> Self {
+        let mut m = OMatrix::zeros_generic(r, c);
+        m[i] = T::one();
+        Self::some(m)
+    }
+
+    pub fn unwrap_generic(self, r: R, c: C) -> OMatrix<T, R, C> {
+        self.0.unwrap_or_else(|| OMatrix::zeros_generic(r, c))
+    }
+
+    pub fn fmt(&self, f: &mut fmt::Formatter, symbol: &str) -> fmt::Result {
+        if let Some(m) = self.0.as_ref() {
+            write!(f, " + ")?;
+            match m.shape() {
+                (1, 1) => write!(f, "{}", m[0])?,
+                (1, _) | (_, 1) => {
+                    let x: Vec<_> = m.iter().map(T::to_string).collect();
+                    write!(f, "[{}]", x.join(","))?
+                }
+                (_, _) => write!(f, "{}", m)?,
+            };
+            write!(f, "{symbol}")?;
+        }
+        write!(f, "")
+    }
 }
 
-impl<T: DualNum<F>, F, D: Dim> Mul<T> for Derivative<T, F, D>
+impl<T: DualNum<F>, F> Derivative<T, F, U1, U1> {
+    pub fn unwrap(self) -> T {
+        self.0.map_or_else(
+            || T::zero(),
+            |s| {
+                let [[r]] = s.data.0;
+                r
+            },
+        )
+    }
+}
+
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Mul<T> for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     type Output = Self;
 
@@ -337,20 +362,54 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, D: Dim> Mul<T> for &'a Derivative<T, F, D>
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Mul<T> for &'a Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
-    type Output = Derivative<T, F, D>;
+    type Output = Derivative<T, F, R, C>;
 
     fn mul(self, rhs: T) -> Self::Output {
         Derivative::new(self.0.as_ref().map(|x| x * rhs))
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> Add for Derivative<T, F, D>
+impl<'a, 'b, T: DualNum<F>, F, R: Dim, C: Dim, R2: Dim, C2: Dim> Mul<&'b Derivative<T, F, R2, C2>>
+    for &'a Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C> + Allocator<T, R2, C2> + Allocator<T, R, C2>,
+    ShapeConstraint: SameNumberOfRows<C, R2>,
+{
+    type Output = Derivative<T, F, R, C2>;
+
+    fn mul(self, rhs: &Derivative<T, F, R2, C2>) -> Derivative<T, F, R, C2> {
+        Derivative::new(self.0.as_ref().zip(rhs.0.as_ref()).map(|(s, r)| s * r))
+    }
+}
+
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    pub fn tr_mul<R2: Dim, C2: Dim>(
+        &self,
+        rhs: &Derivative<T, F, R2, C2>,
+    ) -> Derivative<T, F, C, C2>
+    where
+        DefaultAllocator: Allocator<T, R2, C2> + Allocator<T, C, C2>,
+        ShapeConstraint: SameNumberOfRows<R, R2>,
+    {
+        Derivative::new(
+            self.0
+                .as_ref()
+                .zip(rhs.0.as_ref())
+                .map(|(s, r)| s.tr_mul(r)),
+        )
+    }
+}
+
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Add for Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
 {
     type Output = Self;
 
@@ -364,11 +423,28 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, D: Dim> Add for &'a Derivative<T, F, D>
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Add<&'a Derivative<T, F, R, C>>
+    for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
-    type Output = Derivative<T, F, D>;
+    type Output = Derivative<T, F, R, C>;
+
+    fn add(self, rhs: &Derivative<T, F, R, C>) -> Self::Output {
+        Derivative::new(match (&self.0, &rhs.0) {
+            (Some(s), Some(r)) => Some(s + r),
+            (Some(s), None) => Some(s.clone()),
+            (None, Some(r)) => Some(r.clone()),
+            (None, None) => None,
+        })
+    }
+}
+
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Add for &'a Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Output = Derivative<T, F, R, C>;
 
     fn add(self, rhs: Self) -> Self::Output {
         Derivative::new(match (&self.0, &rhs.0) {
@@ -380,9 +456,9 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> Sub for Derivative<T, F, D>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Sub for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     type Output = Self;
 
@@ -396,11 +472,28 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, D: Dim> Sub for &'a Derivative<T, F, D>
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Sub<&'a Derivative<T, F, R, C>>
+    for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
-    type Output = Derivative<T, F, D>;
+    type Output = Derivative<T, F, R, C>;
+
+    fn sub(self, rhs: &Derivative<T, F, R, C>) -> Self::Output {
+        Derivative::new(match (&self.0, &rhs.0) {
+            (Some(s), Some(r)) => Some(s - r),
+            (Some(s), None) => Some(s.clone()),
+            (None, Some(r)) => Some(-r.clone()),
+            (None, None) => None,
+        })
+    }
+}
+
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Sub for &'a Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Output = Derivative<T, F, R, C>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Derivative::new(match (&self.0, &rhs.0) {
@@ -412,20 +505,31 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, D: Dim> Neg for &'a Derivative<T, F, D>
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Neg for &'a Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
-    type Output = Derivative<T, F, D>;
+    type Output = Derivative<T, F, R, C>;
 
     fn neg(self) -> Self::Output {
         Derivative::new(self.0.as_ref().map(|x| -x))
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> AddAssign for Derivative<T, F, D>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Neg for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Derivative::new(self.0.map(|x| -x))
+    }
+}
+
+impl<T: DualNum<F>, F, R: Dim, C: Dim> AddAssign for Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn add_assign(&mut self, rhs: Self) {
         match (&mut self.0, rhs.0) {
@@ -436,9 +540,9 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> SubAssign for Derivative<T, F, D>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> SubAssign for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn sub_assign(&mut self, rhs: Self) {
         match (&mut self.0, rhs.0) {
@@ -449,9 +553,9 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> MulAssign<T> for Derivative<T, F, D>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> MulAssign<T> for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn mul_assign(&mut self, rhs: T) {
         match &mut self.0 {
@@ -461,36 +565,14 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> DivAssign<T> for Derivative<T, F, D>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> DivAssign<T> for Derivative<T, F, R, C>
 where
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn div_assign(&mut self, rhs: T) {
         match &mut self.0 {
             Some(s) => *s /= rhs,
             None => (),
         }
-    }
-}
-
-impl<T: DualNum<F>, F, D: Dim> Index<usize> for Derivative<T, F, D>
-where
-    DefaultAllocator: Allocator<T, D>,
-{
-    type Output = T;
-
-    #[inline]
-    fn index(&self, i: usize) -> &Self::Output {
-        &self.0.as_ref().expect("No derivative calculated!")[i]
-    }
-}
-
-impl<T: DualNum<F>, F, D: Dim> IndexMut<usize> for Derivative<T, F, D>
-where
-    DefaultAllocator: Allocator<T, D>,
-{
-    #[inline]
-    fn index_mut(&mut self, i: usize) -> &mut Self::Output {
-        &mut self.0.as_mut().expect("No derivative calculated!")[i]
     }
 }

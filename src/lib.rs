@@ -50,36 +50,34 @@ use std::ops::Neg;
 #[macro_use]
 mod macros;
 #[macro_use]
-mod macros2;
-#[macro_use]
 mod derivatives;
-#[macro_use]
-mod derivatives2;
 
 mod bessel;
 mod dual;
-// mod dual2;
-// mod dual3;
-// mod hyperdual;
-// mod hyperhyperdual;
+mod dual2;
+mod dual3;
+mod hyperdual;
+mod hyperhyperdual;
 pub use bessel::BesselDual;
 pub use dual::{
-    first_derivative, gradient, jacobian, try_first_derivative, try_gradient, try_jacobian, Dual,
-    Dual32, Dual64, DualDVec32, DualDVec64, DualSVec32, DualSVec64, DualVec, DualVec32, DualVec64,
+    first_derivative, gradient, jacobian, try_first_derivative, try_gradient, try_jacobian,
+    Derivative, Dual, Dual32, Dual64, DualDVec32, DualDVec64, DualSVec32, DualSVec64, DualVec,
+    DualVec32, DualVec64,
 };
-// pub use dual2::{
-//     hessian, second_derivative, try_hessian, try_second_derivative, Dual2, Dual2Vec, Dual2Vec32,
-//     Dual2Vec64, Dual2_32, Dual2_64,
-// };
-// pub use dual3::{third_derivative, try_third_derivative, Dual3, Dual3_32, Dual3_64};
-// pub use hyperdual::{
-//     partial_hessian, second_partial_derivative, try_partial_hessian, try_second_partial_derivative,
-//     HyperDual, HyperDual32, HyperDual64, HyperDualVec, HyperDualVec32, HyperDualVec64,
-// };
-// pub use hyperhyperdual::{
-//     third_partial_derivative, third_partial_derivative_vec, try_third_partial_derivative,
-//     try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
-// };
+pub use dual2::{
+    hessian, second_derivative, try_hessian, try_second_derivative, Dual2, Dual2DVec32,
+    Dual2DVec64, Dual2SVec32, Dual2SVec64, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64,
+};
+pub use dual3::{third_derivative, try_third_derivative, Dual3, Dual3_32, Dual3_64};
+pub use hyperdual::{
+    partial_hessian, second_partial_derivative, try_partial_hessian, try_second_partial_derivative,
+    HyperDual, HyperDual32, HyperDual64, HyperDualDVec32, HyperDualDVec64, HyperDualSVec32,
+    HyperDualSVec64, HyperDualVec, HyperDualVec32, HyperDualVec64,
+};
+pub use hyperhyperdual::{
+    third_partial_derivative, third_partial_derivative_vec, try_third_partial_derivative,
+    try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
+};
 
 #[cfg(feature = "linalg")]
 pub mod linalg;
@@ -90,10 +88,10 @@ pub mod python;
 /// A generalized (hyper) dual number.
 pub trait DualNum<F>:
     NumOps
+    + for<'r> NumOps<&'r Self>
     + Neg<Output=Self>
     + Signed
     + NumOps<F>
-    + for<'r> NumOps<&'r Self>
     + NumAssignOps
     + NumAssignOps<F>
     + Clone

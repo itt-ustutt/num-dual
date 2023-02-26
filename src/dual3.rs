@@ -92,9 +92,9 @@ impl<T: DualNum<F>, F: Float> Dual3<T, F> {
         let three = T::one() + T::one() + T::one();
         Self::new(
             f0,
-            f1 * self.v1,
-            f2 * self.v1 * self.v1 + f1 * self.v2,
-            f3 * self.v1 * self.v1 * self.v1 + three * f2 * self.v1 * self.v2 + f1 * self.v3,
+            f1.clone() * &self.v1,
+            f2.clone() * &self.v1 * &self.v1 + f1.clone() * &self.v2,
+            f3 * &self.v1 * &self.v1 * &self.v1 + three * f2 * &self.v1 * &self.v2 + f1 * &self.v3,
         )
     }
 }
@@ -104,15 +104,14 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual3<T, F>> for &'b Dual3<T, F> {
     #[inline]
     fn mul(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
         let two = T::one() + T::one();
-        let three = two + T::one();
+        let three = T::one() + &two;
         Dual3::new(
-            self.re * rhs.re,
-            self.v1 * rhs.re + self.re * rhs.v1,
-            self.v2 * rhs.re + two * self.v1 * rhs.v1 + self.re * rhs.v2,
-            self.v3 * rhs.re
-                + three * self.v2 * rhs.v1
-                + three * self.v1 * rhs.v2
-                + self.re * rhs.v3,
+            self.re.clone() * &rhs.re,
+            self.v1.clone() * &rhs.re + self.re.clone() * &rhs.v1,
+            self.v2.clone() * &rhs.re + two * &self.v1 * &rhs.v1 + self.re.clone() * &rhs.v2,
+            self.v3.clone() * &rhs.re
+                + three * (self.v2.clone() * &rhs.v1 + self.v1.clone() * &rhs.v2)
+                + self.re.clone() * &rhs.v3,
         )
     }
 }
@@ -121,11 +120,11 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a Dual3<T, F>> for &'b Dual3<T, F> {
     type Output = Dual3<T, F>;
     #[inline]
     fn div(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
-        let rec = T::one() / rhs.re;
-        let f0 = rec;
-        let f1 = -f0 * rec;
-        let f2 = f1 * rec * F::from(-2.0).unwrap();
-        let f3 = f2 * rec * F::from(-3.0).unwrap();
+        let rec = T::one() / &rhs.re;
+        let f0 = rec.clone();
+        let f1 = -f0.clone() * &rec;
+        let f2 = f1.clone() * &rec * F::from(-2.0).unwrap();
+        let f3 = f2.clone() * rec * F::from(-3.0).unwrap();
         self * rhs.chain_rule(f0, f1, f2, f3)
     }
 }
@@ -141,5 +140,5 @@ impl<T: fmt::Display, F> fmt::Display for Dual3<T, F> {
     }
 }
 
-impl_third_derivatives!(Dual3, [], [v1, v2, v3]);
-impl_dual!(Dual3, [], [v1, v2, v3]);
+impl_third_derivatives2!(Dual3, [v1, v2, v3]);
+impl_dual2!(Dual3, [v1, v2, v3]);
