@@ -1,17 +1,25 @@
 #![allow(clippy::assign_op_pattern)]
 use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperHyperDual};
+use nalgebra::allocator::Allocator;
+use nalgebra::{DefaultAllocator, Dim, U1};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
-impl<T: DualNum<F>, F: Clone + 'static, const N: usize> ScalarOperand for DualVec<T, F, N> {}
-impl<T: DualNum<F>, F: Clone + 'static, const N: usize> ScalarOperand for Dual2Vec<T, F, N> {}
+impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for DualVec<T, F, N> where
+    DefaultAllocator: Allocator<T, N>
+{
+}
+impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for Dual2Vec<T, F, N> where
+    DefaultAllocator: Allocator<T, U1, N> + Allocator<T, N, N>
+{
+}
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperHyperDual<T, F> {}
-impl<T: DualNum<F>, F: Clone + 'static, const M: usize, const N: usize> ScalarOperand
-    for HyperDualVec<T, F, M, N>
+impl<T: DualNum<F>, F: Clone + 'static, M: Dim, N: Dim> ScalarOperand for HyperDualVec<T, F, M, N> where
+    DefaultAllocator: Allocator<T, M> + Allocator<T, U1, N> + Allocator<T, M, N>
 {
 }
 
@@ -33,7 +41,7 @@ pub struct LU<T, F> {
     f: PhantomData<F>,
 }
 
-impl<T: DualNum<F>, F: Float> LU<T, F> {
+impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
     pub fn new(mut a: Array2<T>) -> Result<Self, LinAlgError> {
         let n = a.shape()[0];
         let mut p = Array1::zeros(n);
@@ -151,16 +159,16 @@ impl<T: DualNum<F>, F: Float> LU<T, F> {
     }
 }
 
-pub fn norm<T: DualNum<F>, F: Float>(x: &Array1<T>) -> T {
+pub fn norm<T: DualNum<F> + Copy, F: Float>(x: &Array1<T>) -> T {
     x.iter().fold(T::zero(), |acc, &x| acc + x * x).sqrt()
 }
 
-pub fn smallest_ev<T: DualNum<F>, F: Float>(a: Array2<T>) -> (T, Array1<T>) {
+pub fn smallest_ev<T: DualNum<F> + Copy, F: Float>(a: Array2<T>) -> (T, Array1<T>) {
     let (e, vecs) = jacobi_eigenvalue(a, 200);
     (e[0], vecs.column(0).to_owned())
 }
 
-pub fn jacobi_eigenvalue<T: DualNum<F>, F: Float>(
+pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float>(
     mut a: Array2<T>,
     max_iter: usize,
 ) -> (Array1<T>, Array2<T>) {
@@ -309,10 +317,10 @@ mod tests {
         ]);
         let lu = LU::new(a).unwrap();
         let det = lu.determinant();
-        assert_eq!((det.re, det.eps[0]), (-6.0, -4.0));
+        assert_eq!((det.re, det.eps.unwrap()), (-6.0, -4.0));
         let x = lu.solve(&b);
         assert_eq!(
-            (x[0].re, x[0].eps[0], x[1].re, x[1].eps[0]),
+            (x[0].re, x[0].eps.unwrap(), x[1].re, x[1].eps.unwrap()),
             (1.0, 2.0, 2.0, 1.0)
         );
     }
@@ -356,23 +364,23 @@ mod tests {
         assert_abs_diff_eq!(av[(0, 1)].re, (l[1] * v[(0, 1)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 1)].re, (l[1] * v[(1, 1)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(
-            av[(0, 0)].eps[0],
-            (l[0] * v[(0, 0)]).eps[0],
+            av[(0, 0)].eps.unwrap(),
+            (l[0] * v[(0, 0)]).eps.unwrap(),
             epsilon = 1e-14
         );
         assert_abs_diff_eq!(
-            av[(1, 0)].eps[0],
-            (l[0] * v[(1, 0)]).eps[0],
+            av[(1, 0)].eps.unwrap(),
+            (l[0] * v[(1, 0)]).eps.unwrap(),
             epsilon = 1e-14
         );
         assert_abs_diff_eq!(
-            av[(0, 1)].eps[0],
-            (l[1] * v[(0, 1)]).eps[0],
+            av[(0, 1)].eps.unwrap(),
+            (l[1] * v[(0, 1)]).eps.unwrap(),
             epsilon = 1e-14
         );
         assert_abs_diff_eq!(
-            av[(1, 1)].eps[0],
-            (l[1] * v[(1, 1)]).eps[0],
+            av[(1, 1)].eps.unwrap(),
+            (l[1] * v[(1, 1)]).eps.unwrap(),
             epsilon = 1e-14
         );
     }
@@ -388,6 +396,6 @@ mod tests {
         let v = arr1(&[Dual64::new_scalar(3.0, 1.0), Dual64::new_scalar(4.0, 3.0)]);
         println!("{}", norm(&v));
         assert_eq!(norm(&v).re, 5.0);
-        assert_eq!(norm(&v).eps[0], 3.0);
+        assert_eq!(norm(&v).eps.unwrap(), 3.0);
     }
 }
