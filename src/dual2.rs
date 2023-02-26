@@ -1,5 +1,4 @@
-use crate::dual::Derivative;
-use crate::{DualNum, DualNumFloat};
+use crate::{Derivative, DualNum, DualNumFloat};
 use nalgebra::allocator::Allocator;
 use nalgebra::{Const, DefaultAllocator, Dim, Dyn, OMatrix, OVector, SMatrix, SVector, U1};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};

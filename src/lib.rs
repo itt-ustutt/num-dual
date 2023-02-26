@@ -53,16 +53,17 @@ mod macros;
 mod derivatives;
 
 mod bessel;
+mod derivative;
 mod dual;
 mod dual2;
 mod dual3;
 mod hyperdual;
 mod hyperhyperdual;
 pub use bessel::BesselDual;
+pub use derivative::Derivative;
 pub use dual::{
-    first_derivative, gradient, jacobian, try_first_derivative, try_gradient, try_jacobian,
-    Derivative, Dual, Dual32, Dual64, DualDVec32, DualDVec64, DualSVec32, DualSVec64, DualVec,
-    DualVec32, DualVec64,
+    first_derivative, gradient, jacobian, try_first_derivative, try_gradient, try_jacobian, Dual,
+    Dual32, Dual64, DualDVec32, DualDVec64, DualSVec32, DualSVec64, DualVec, DualVec32, DualVec64,
 };
 pub use dual2::{
     hessian, second_derivative, try_hessian, try_second_derivative, Dual2, Dual2DVec32,
