@@ -53,7 +53,7 @@ where
                 (1, 1) => write!(f, "{}", m[0])?,
                 (1, _) | (_, 1) => {
                     let x: Vec<_> = m.iter().map(T::to_string).collect();
-                    write!(f, "[{}]", x.join(","))?
+                    write!(f, "[{}]", x.join(", "))?
                 }
                 (_, _) => write!(f, "{}", m)?,
             };
