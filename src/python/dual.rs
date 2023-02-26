@@ -41,7 +41,7 @@ impl PyDual64 {
 
     #[getter]
     pub fn get_first_derivative(&self) -> f64 {
-        self.0.eps[0]
+        self.0.eps.unwrap()
     }
 }
 
@@ -49,21 +49,35 @@ impl_dual_num!(PyDual64, Dual64, f64);
 
 macro_rules! impl_dual_n {
     ($py_type_name:ident, $n:literal) => {
-        #[pyclass(name = "DualVec64")]
+        #[pyclass(name = "DualSVec64")]
         #[derive(Clone, Copy)]
-        pub struct $py_type_name(DualVec64<$n>);
+        pub struct $py_type_name(DualSVec64<$n>);
 
         #[pymethods]
         impl $py_type_name {
             #[getter]
-            pub fn get_first_derivative(&self) -> [f64; $n] {
-                self.0.eps.data.0[0]
+            pub fn get_first_derivative(&self) -> Option<[f64; $n]> {
+                self.0.eps.0.map(|eps| eps.data.0[0])
             }
         }
 
-        impl_dual_num!($py_type_name, DualVec64<$n>, f64);
+        impl_dual_num!($py_type_name, DualSVec64<$n>, f64);
     };
 }
+
+#[pyclass(name = "Dual64Dyn")]
+#[derive(Clone)]
+pub struct PyDual64Dyn(DualDVec64);
+
+#[pymethods]
+impl PyDual64Dyn {
+    #[getter]
+    pub fn get_first_derivative(&self) -> Option<Vec<f64>> {
+        self.0.eps.0.as_ref().map(|eps| eps.data.as_vec().clone())
+    }
+}
+
+impl_dual_num!(PyDual64Dyn, DualDVec64, f64);
 
 #[pyfunction]
 /// Calculate the first derivative of a scalar, univariate function.
@@ -111,7 +125,7 @@ macro_rules! impl_gradient_and_jacobian {
         pub fn gradient(f: &PyAny, x: &PyAny) -> PyResult<(f64, Vec<f64>)> {
             $(
                 if let Ok(x) = x.extract::<[f64; $n]>() {
-                    let g = |x: SVector<DualVec64<$n>, $n>| {
+                    let g = |x: SVector<DualSVec64<$n>, $n>| {
                         let x: Vec<_> = x.into_iter().map(|&x| $py_type_name::from(x)).collect();
                         let res = f.call1((x,))?;
                         if let Ok(res) = res.extract::<$py_type_name>() {
@@ -126,10 +140,20 @@ macro_rules! impl_gradient_and_jacobian {
                     try_gradient(g, SVector::from(x)).map(|(re, eps)| (re, eps.data.0[0].to_vec()))
                 } else
             )+
-            if x.extract::<Vec<f64>>().is_ok() {
-                Err(PyErr::new::<PyTypeError, _>(
-                    "Gradients are only available for up to 10 variables!".to_string(),
-                ))
+            if let Ok(x) = x.extract::<Vec<f64>>() {
+                let g = |x: DVector<DualDVec64>| {
+                    let x: Vec<_> = x.into_iter().map(|x| PyDual64Dyn::from(x.clone())).collect();
+                    let res = f.call1((x,))?;
+                    if let Ok(res) = res.extract::<PyDual64Dyn>() {
+                        Ok(res.0)
+                    } else {
+                        Err(PyErr::new::<PyTypeError, _>(
+                            "argument 'f' must return a scalar. For vector functions use 'jacobian' instead."
+                                .to_string(),
+                        ))
+                    }
+                };
+                try_gradient(g, DVector::from(x)).map(|(re, eps)| (re, eps.data.as_vec().clone()))
             } else {
                 Err(PyErr::new::<PyTypeError, _>(
                         "argument 'x': must be a list. For univariate functions use 'first_derivative' instead.".to_string(),
@@ -153,7 +177,7 @@ macro_rules! impl_gradient_and_jacobian {
         pub fn jacobian(f: &PyAny, x: &PyAny) -> PyResult<(Vec<f64>, Vec<Vec<f64>>)> {
             $(
                 if let Ok(x) = x.extract::<[f64; $n]>() {
-                    let g = |x: SVector<DualVec64<$n>, $n>| {
+                    let g = |x: SVector<DualSVec64<$n>, $n>| {
                         let x: Vec<_> = x.into_iter().map(|&x| $py_type_name::from(x)).collect();
                         let res = f.call1((x,))?;
                         if let Ok(res) = res.extract::<Vec<$py_type_name>>() {

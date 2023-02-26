@@ -1,6 +1,6 @@
 use super::dual::PyDual64;
 use crate::*;
-use nalgebra::SVector;
+use nalgebra::{DVector, SVector};
 use numpy::{PyArray, PyReadonlyArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
@@ -43,12 +43,12 @@ impl PyHyperDual64 {
 
     #[getter]
     fn get_first_derivative(&self) -> (f64, f64) {
-        (self.0.eps1[0], self.0.eps2[0])
+        (self.0.eps1.unwrap(), self.0.eps2.unwrap())
     }
 
     #[getter]
     fn get_second_derivative(&self) -> f64 {
-        self.0.eps1eps2[(0, 0)]
+        self.0.eps1eps2.unwrap()
     }
 }
 
@@ -68,12 +68,12 @@ impl PyHyperDualDual64 {
 
     #[getter]
     fn get_first_derivative(&self) -> (PyDual64, PyDual64) {
-        (self.0.eps1[0].into(), self.0.eps2[0].into())
+        (self.0.eps1.unwrap().into(), self.0.eps2.unwrap().into())
     }
 
     #[getter]
     fn get_second_derivative(&self) -> PyDual64 {
-        self.0.eps1eps2[(0, 0)].into()
+        self.0.eps1eps2.unwrap().into()
     }
 }
 
@@ -83,24 +83,32 @@ macro_rules! impl_hyper_dual_mn {
     ($py_type_name:ident, $m:literal, $n:literal) => {
         #[pyclass(name = "HyperDualVec64")]
         #[derive(Clone, Copy)]
-        pub struct $py_type_name(HyperDualVec64<$m, $n>);
+        pub struct $py_type_name(HyperDualSVec64<$m, $n>);
 
         #[pymethods]
         impl $py_type_name {
             #[getter]
-            fn get_first_derivative(&self) -> ([f64; $m], [f64; $n]) {
-                (self.0.eps1.data.0[0], self.0.eps2.transpose().data.0[0])
+            fn get_first_derivative(&self) -> (Option<[f64; $m]>, Option<[f64; $n]>) {
+                (
+                    self.0.eps1.0.as_ref().map(|eps1| eps1.data.0[0]),
+                    self.0.eps2.0.as_ref().map(|eps2| eps2.transpose().data.0[0]),
+                )
             }
 
             #[getter]
-            pub fn get_second_derivative(&self) -> [[f64; $m]; $n] {
-                self.0.eps1eps2.data.0
+            pub fn get_second_derivative(&self) -> Option<[[f64; $m]; $n]> {
+                self.0.eps1eps2.0.as_ref().map(|eps1eps2| eps1eps2.data.0)
             }
         }
 
-        impl_dual_num!($py_type_name, HyperDualVec64<$m, $n>, f64);
+        impl_dual_num!($py_type_name, HyperDualSVec64<$m, $n>, f64);
     };
 }
+#[pyclass(name = "HyperDual64Dyn")]
+#[derive(Clone)]
+pub struct PyHyperDual64Dyn(HyperDualDVec64);
+
+impl_dual_num!(PyHyperDual64Dyn, HyperDualDVec64, f64);
 
 #[pyfunction]
 /// Calculate the second partial derivatives of a scalar, bivariate function.
@@ -157,7 +165,7 @@ macro_rules! impl_partial_hessian {
         ) -> PyResult<(f64, Vec<f64>, Vec<f64>, Vec<Vec<f64>>)> {
             $(
                 if let (Ok(x), Ok(y)) = (x.extract::<[f64; $m]>(), y.extract::<[f64; $n]>()) {
-                    let g = |x: SVector<HyperDualVec64<$m, $n>, $m>, y: SVector<HyperDualVec64<$m, $n>, $n>| {
+                    let g = |x: SVector<HyperDualSVec64<$m, $n>, $m>, y: SVector<HyperDualSVec64<$m, $n>, $n>| {
                         let x: Vec<_> = x.into_iter().map(|&x| $py_type_name::from(x)).collect();
                         let y: Vec<_> = y.into_iter().map(|&y| $py_type_name::from(y)).collect();
                         let res = f.call1((x, y))?;
@@ -178,10 +186,26 @@ macro_rules! impl_partial_hessian {
                     })
                 } else
             )+
-            if x.extract::<Vec<f64>>().is_ok() {
-                Err(PyErr::new::<PyTypeError, _>(
-                    "partial Hessians are only available for up to 5 variables for x and y!".to_string(),
-                ))
+            if let (Ok(x), Ok(y)) = (x.extract::<Vec<f64>>(), y.extract::<Vec<f64>>()) {
+                let g = |x: DVector<HyperDualDVec64>, y: DVector<HyperDualDVec64>| {
+                    let x: Vec<_> = x.into_iter().map(|x| PyHyperDual64Dyn::from(x.clone())).collect();
+                    let y: Vec<_> = y.into_iter().map(|y| PyHyperDual64Dyn::from(y.clone())).collect();
+                    let res = f.call1((x, y))?;
+                    if let Ok(res) = res.extract::<PyHyperDual64Dyn>() {
+                        Ok(res.0)
+                    } else {
+                        Err(PyErr::new::<PyTypeError, _>(
+                            "argument 'f' must return a scalar.".to_string(),
+                        ))
+                    }
+                };
+                try_partial_hessian(g, DVector::from(x), DVector::from(y)).map(|(f, f_x, f_y, f_xy)| {
+                    let f_xy = f_xy
+                        .row_iter()
+                        .map(|r| r.iter().copied().collect())
+                        .collect();
+                    (f, f_x.data.as_vec().clone(), f_y.data.as_vec().clone(), f_xy)
+                })
             } else {
                 Err(PyErr::new::<PyTypeError, _>(
                         "argument 'x' and 'y' must be lists. For bivariate functions use 'second_partial_derivative' instead.".to_string(),

@@ -286,7 +286,10 @@ impl_first_derivatives2!(DualVec, [eps], [D]);
 impl_dual2!(DualVec, [eps], [D]);
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(Option<OMatrix<T, R, C>>, PhantomData<F>)
+pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(
+    pub(crate) Option<OMatrix<T, R, C>>,
+    PhantomData<F>,
+)
 where
     DefaultAllocator: Allocator<T, R, C>;
 

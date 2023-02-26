@@ -207,30 +207,30 @@ macro_rules! impl_dual_num {
                 self.0.sph_j2().into()
             }
 
-            #[inline]
-            pub fn is_derivative_zero(&self) -> bool {
-                self.0.is_derivative_zero()
-            }
+            // #[inline]
+            // pub fn is_derivative_zero(&self) -> bool {
+            //     self.0.is_derivative_zero()
+            // }
 
-            #[inline]
-            /// Fused multiply-add. Computes (self * a) + b with only one rounding error.
-            fn mul_add(&self, a: Self, b: Self) -> Self {
-                self.0.mul_add(a.0, b.0).into()
-            }
+            // #[inline]
+            // /// Fused multiply-add. Computes (self * a) + b with only one rounding error.
+            // fn mul_add(&self, a: Self, b: Self) -> Self {
+            //     self.0.mul_add(a.0, b.0).into()
+            // }
 
             fn __add__(&self, rhs: &PyAny) -> PyResult<PyObject> {
                 Python::with_gil(|py| {
                     if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0 + r))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() + r))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0 + r.0))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() + r.0))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
                         return Ok(PyArray::from_owned_object_array(
                             py,
                             r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0 + ri)).unwrap()),
+                                .mapv(|ri| Py::new(py, Self(self.0.clone() + ri)).unwrap()),
                         )
                         .into());
                     }
@@ -247,7 +247,7 @@ macro_rules! impl_dual_num {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
                                 r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0 + ri.extract::<Self>(py).unwrap().0))
+                                    Py::new(py, Self(self.0.clone() + ri.extract::<Self>(py).unwrap().0))
                                         .unwrap()
                                 }),
                             )
@@ -270,7 +270,7 @@ macro_rules! impl_dual_num {
 
             fn __radd__(&self, other: &PyAny) -> PyResult<Self> {
                 if let Ok(o) = other.extract::<f64>() {
-                    return Ok((self.0 + o).into());
+                    return Ok((self.0.clone() + o).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -278,16 +278,16 @@ macro_rules! impl_dual_num {
             fn __sub__(&self, rhs: &PyAny) -> PyResult<PyObject> {
                 Python::with_gil(|py| {
                     if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0 - r))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() - r))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0 - r.0))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() - r.0))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
                         return Ok(PyArray::from_owned_object_array(
                             py,
                             r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0 - ri)).unwrap()),
+                                .mapv(|ri| Py::new(py, Self(self.0.clone() - ri)).unwrap()),
                         )
                         .into());
                     }
@@ -304,7 +304,7 @@ macro_rules! impl_dual_num {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
                                 r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0 - ri.extract::<Self>(py).unwrap().0))
+                                    Py::new(py, Self(self.0.clone() - ri.extract::<Self>(py).unwrap().0))
                                         .unwrap()
                                 }),
                             )
@@ -327,7 +327,7 @@ macro_rules! impl_dual_num {
 
             fn __rsub__(&self, other: &PyAny) -> PyResult<Self> {
                 if let Ok(o) = other.extract::<f64>() {
-                    return Ok((-self.0 + o).into());
+                    return Ok((-self.0.clone() + o).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -335,16 +335,16 @@ macro_rules! impl_dual_num {
             fn __mul__(&self, rhs: &PyAny) -> PyResult<PyObject> {
                 Python::with_gil(|py| {
                     if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0 * r))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() * r))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0 * r.0))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() * r.0))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
                         return Ok(PyArray::from_owned_object_array(
                             py,
                             r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0 * ri)).unwrap()),
+                                .mapv(|ri| Py::new(py, Self(self.0.clone() * ri)).unwrap()),
                         )
                         .into());
                     }
@@ -361,7 +361,7 @@ macro_rules! impl_dual_num {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
                                 r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0 * ri.extract::<Self>(py).unwrap().0))
+                                    Py::new(py, Self(self.0.clone() * ri.extract::<Self>(py).unwrap().0))
                                         .unwrap()
                                 }),
                             )
@@ -384,7 +384,7 @@ macro_rules! impl_dual_num {
 
             fn __rmul__(&self, other: &PyAny) -> PyResult<Self> {
                 if let Ok(o) = other.extract::<f64>() {
-                    return Ok((self.0 * o).into());
+                    return Ok((self.0.clone() * o).into());
                 };
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
@@ -392,16 +392,16 @@ macro_rules! impl_dual_num {
             fn __truediv__(&self, rhs: &PyAny) -> PyResult<PyObject> {
                 Python::with_gil(|py| {
                     if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0 / r))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() / r))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0 / r.0))?.to_object(py));
+                        return Ok(PyCell::new(py, Self(self.0.clone() / r.0))?.to_object(py));
                     };
                     if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
                         return Ok(PyArray::from_owned_object_array(
                             py,
                             r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0 / ri)).unwrap()),
+                                .mapv(|ri| Py::new(py, Self(self.0.clone() / ri)).unwrap()),
                         )
                         .into());
                     }
@@ -418,7 +418,7 @@ macro_rules! impl_dual_num {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
                                 r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0 / ri.extract::<Self>(py).unwrap().0))
+                                    Py::new(py, Self(self.0.clone() / ri.extract::<Self>(py).unwrap().0))
                                         .unwrap()
                                 }),
                             )
@@ -460,7 +460,7 @@ macro_rules! impl_dual_num {
             }
 
             fn __neg__(&self) -> PyResult<Self> {
-                Ok((-self.0).into())
+                Ok((-self.0.clone()).into())
             }
 
             fn __repr__(&self) -> PyResult<String> {
