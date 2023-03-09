@@ -45,7 +45,6 @@
 use num_traits::{Float, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::ops::Neg;
 
 #[macro_use]
 mod macros;
@@ -90,21 +89,17 @@ pub mod python;
 pub trait DualNum<F>:
     NumOps
     + for<'r> NumOps<&'r Self>
-    + Neg<Output=Self>
     + Signed
     + NumOps<F>
     + NumAssignOps
     + NumAssignOps<F>
     + Clone
-    // + Copy
     + Inv<Output = Self>
     + Sum
     + Product
     + FromPrimitive
     + From<F>
     + fmt::Display
-    // + Sync
-    // + Send
     + PartialEq
     + fmt::Debug
     + 'static
@@ -114,9 +109,6 @@ pub trait DualNum<F>:
 
     /// Real part (0th derivative) of the number
     fn re(&self) -> F;
-
-    // /// Check if all derivative parts are zero
-    // fn is_derivative_zero(&self) -> bool;
 
     /// Reciprocal (inverse) of a number `1/x`.
     fn recip(&self) -> Self;
@@ -129,6 +121,7 @@ pub trait DualNum<F>:
 
     /// Square root
     fn sqrt(&self) -> Self;
+
     /// Cubic root
     fn cbrt(&self) -> Self;
 
@@ -204,11 +197,11 @@ pub trait DualNum<F>:
     /// 2nd order spherical Bessel function of the first kind
     fn sph_j2(&self) -> Self;
 
-    // /// Fused multiply-add
-    // #[inline]
-    // fn mul_add(&self, a: Self, b: Self) -> Self {
-    //     *self * a + b
-    // }
+    /// Fused multiply-add
+    #[inline]
+    fn mul_add(&self, a: Self, b: Self) -> Self {
+        self.clone() * a + b
+    }
 
     /// Power with dual exponent `x^n`
     #[inline]
@@ -236,13 +229,9 @@ macro_rules! impl_dual_num_float {
                 *self
             }
 
-            // fn is_derivative_zero(&self) -> bool {
-            //     true
-            // }
-
-            // fn mul_add(&self, a: Self, b: Self) -> Self {
-            //     <$float>::mul_add(*self, a, b)
-            // }
+            fn mul_add(&self, a: Self, b: Self) -> Self {
+                <$float>::mul_add(*self, a, b)
+            }
             fn recip(&self) -> Self {
                 <$float>::recip(*self)
             }
