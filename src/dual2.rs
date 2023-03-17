@@ -1,6 +1,6 @@
 use crate::{Derivative, DualNum, DualNumFloat};
 use nalgebra::allocator::Allocator;
-use nalgebra::{Const, DefaultAllocator, Dim, Dyn, OMatrix, OVector, SMatrix, SVector, U1};
+use nalgebra::{Const, DefaultAllocator, Dim, Dyn, OMatrix, OVector, SMatrix, U1};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::convert::Infallible;
 use std::fmt;
@@ -87,7 +87,7 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
     /// ```
     #[inline]
     pub fn derivative(mut self) -> Self {
-        self.v1 = Derivative::some(SVector::from_element(T::one()));
+        self.v1 = Derivative::derivative();
         self
     }
 }
@@ -186,7 +186,7 @@ where
     let mut x = x.map(Dual2Vec::from_re);
     let (r, c) = x.shape_generic();
     for (i, xi) in x.iter_mut().enumerate() {
-        xi.v1 = Derivative::derivative(c, r, i)
+        xi.v1 = Derivative::derivative_generic(c, r, i)
     }
     g(x).map(|res| {
         (

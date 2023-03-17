@@ -35,8 +35,7 @@ where
         Self::new(None)
     }
 
-    #[allow(clippy::self_named_constructors)]
-    pub fn derivative(r: R, c: C, i: usize) -> Self {
+    pub fn derivative_generic(r: R, c: C, i: usize) -> Self {
         let mut m = OMatrix::zeros_generic(r, c);
         m[i] = T::one();
         Self::some(m)
@@ -64,6 +63,11 @@ where
 }
 
 impl<T: DualNum<F>, F> Derivative<T, F, U1, U1> {
+    #[allow(clippy::self_named_constructors)]
+    pub fn derivative() -> Self {
+        Self::some(SVector::identity())
+    }
+
     pub fn unwrap(self) -> T {
         self.0.map_or_else(
             || T::zero(),

@@ -79,7 +79,7 @@ impl<T: DualNum<F> + One, F> Dual<T, F> {
     /// ```
     #[inline]
     pub fn derivative(mut self) -> Self {
-        self.eps = Derivative::some(SVector::from_element(T::one()));
+        self.eps = Derivative::derivative();
         self
     }
 }
@@ -157,7 +157,7 @@ where
     let mut x = x.map(DualVec::from_re);
     let (r, c) = x.shape_generic();
     for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps = Derivative::derivative(r, c, i);
+        xi.eps = Derivative::derivative_generic(r, c, i);
     }
     g(x).map(|res| (res.re, res.eps.unwrap_generic(r, c)))
 }
@@ -217,7 +217,7 @@ where
     let mut x = x.map(DualVec::from_re);
     let (r, c) = x.shape_generic();
     for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps = Derivative::derivative(r, c, i);
+        xi.eps = Derivative::derivative_generic(r, c, i);
     }
     g(x).map(|res| {
         let eps = OMatrix::from_rows(

@@ -1,6 +1,6 @@
 use crate::{Derivative, DualNum, DualNumFloat};
 use nalgebra::allocator::Allocator;
-use nalgebra::{Const, DefaultAllocator, Dim, Dyn, OMatrix, OVector, SMatrix, SVector, U1};
+use nalgebra::{Const, DefaultAllocator, Dim, Dyn, OMatrix, OVector, SMatrix, U1};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::convert::Infallible;
 use std::fmt;
@@ -81,14 +81,14 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
     /// Set the partial derivative part w.r.t. the 1st variable to 1.
     #[inline]
     pub fn derivative1(mut self) -> Self {
-        self.eps1 = Derivative::some(SVector::from_element(T::one()));
+        self.eps1 = Derivative::derivative();
         self
     }
 
     /// Set the partial derivative part w.r.t. the 2nd variable to 1.
     #[inline]
     pub fn derivative2(mut self) -> Self {
-        self.eps2 = Derivative::some(SVector::from_element(T::one()));
+        self.eps2 = Derivative::derivative();
         self
     }
 }
@@ -203,11 +203,11 @@ where
     let mut y = y.map(HyperDualVec::from_re);
     let (m, _) = x.shape_generic();
     for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps1 = Derivative::derivative(m, U1, i)
+        xi.eps1 = Derivative::derivative_generic(m, U1, i)
     }
     let (n, _) = y.shape_generic();
     for (i, yi) in y.iter_mut().enumerate() {
-        yi.eps2 = Derivative::derivative(U1, n, i)
+        yi.eps2 = Derivative::derivative_generic(U1, n, i)
     }
     g(x, y).map(|r| {
         (
