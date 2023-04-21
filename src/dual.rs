@@ -281,5 +281,5 @@ where
     }
 }
 
-impl_first_derivatives2!(DualVec, [eps], [D]);
-impl_dual2!(DualVec, [eps], [D]);
+impl_first_derivatives!(DualVec, [eps], [D]);
+impl_dual!(DualVec, [eps], [D]);

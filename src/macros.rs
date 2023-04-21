@@ -1,4 +1,4 @@
-macro_rules! impl_from_f2 {
+macro_rules! impl_from_f {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> From<F> for $struct<T, F$($(, $dim)*)?>
         where
@@ -13,7 +13,7 @@ macro_rules! impl_from_f2 {
     };
 }
 
-macro_rules! impl_zero_one2 {
+macro_rules! impl_zero_one {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Zero for $struct<T, F$($(, $dim)*)?>
         where
@@ -49,7 +49,7 @@ macro_rules! impl_zero_one2 {
     };
 }
 
-macro_rules! impl_add_sub_rem2 {
+macro_rules! impl_add_sub_rem {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
         impl<'a, 'b, T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Add<&'a $struct<T, F$($(, $dim)*)?>>
             for &'b $struct<T, F$($(, $dim)*)?>
@@ -91,7 +91,7 @@ macro_rules! impl_add_sub_rem2 {
     };
 }
 
-macro_rules! forward_binop2 {
+macro_rules! forward_binop {
     ($struct:ident, $trt:ident, $operator:tt, $mth:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> $trt<$struct<T, F$($(, $dim)*)?>> for &$struct<T, F$($(, $dim)*)?>
         where
@@ -131,7 +131,7 @@ macro_rules! forward_binop2 {
     };
 }
 
-macro_rules! impl_neg2 {
+macro_rules! impl_neg {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Neg for $struct<T, F$($(, $dim)*)?>
         where
@@ -159,7 +159,7 @@ macro_rules! impl_neg2 {
     };
 }
 
-macro_rules! impl_assign_ops2 {
+macro_rules! impl_assign_ops {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> MulAssign for $struct<T, F$($(, $dim)*)?>
         where
@@ -220,7 +220,7 @@ macro_rules! impl_assign_ops2 {
     };
 }
 
-macro_rules! impl_scalar_op2 {
+macro_rules! impl_scalar_op {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Mul<F> for $struct<T, F$($(, $dim)*)?>
         where
@@ -345,7 +345,7 @@ macro_rules! impl_scalar_op2 {
     };
 }
 
-macro_rules! impl_inv2 {
+macro_rules! impl_inv {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Inv for $struct<T, F$($(, $dim)*)?>
         where
@@ -361,7 +361,7 @@ macro_rules! impl_inv2 {
     };
 }
 
-macro_rules! impl_iterator2 {
+macro_rules! impl_iterator {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> Sum for $struct<T, F$($(, $dim)*)?>
         where
@@ -421,7 +421,7 @@ macro_rules! impl_iterator2 {
     };
 }
 
-macro_rules! impl_from_primitive2 {
+macro_rules! impl_from_primitive {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float + FromPrimitive$($(, $dim: Dim)*)?> FromPrimitive for $struct<T, F$($(, $dim)*)?>
         where
@@ -501,7 +501,7 @@ macro_rules! impl_from_primitive2 {
     };
 }
 
-macro_rules! impl_signed2 {
+macro_rules! impl_signed {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Signed for $struct<T, F$($(, $dim)*)?>
         where
@@ -550,7 +550,7 @@ macro_rules! impl_signed2 {
     };
 }
 
-macro_rules! impl_float_const2 {
+macro_rules! impl_float_const {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: Float + FloatConst$($(, $dim: Dim)*)?> FloatConst for $struct<T, F$($(, $dim)*)?>
         where
@@ -624,7 +624,7 @@ macro_rules! impl_float_const2 {
     };
 }
 
-macro_rules! impl_num2 {
+macro_rules! impl_num {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F> + Signed, F: Float$($(, $dim: Dim)*)?> Num for $struct<T, F$($(, $dim)*)?>
         where
@@ -640,24 +640,24 @@ macro_rules! impl_num2 {
     };
 }
 
-macro_rules! impl_dual2 {
+macro_rules! impl_dual {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
-        impl_from_f2!($struct, [$($im),*]$(, [$($dim),*])?);
-        impl_zero_one2!($struct$(, [$($dim),*])?);
-        impl_add_sub_rem2!($struct, [$($im),*]$(, [$($dim),*])?);
-        forward_binop2!($struct, Add, +, add$(, [$($dim),*])?);
-        forward_binop2!($struct, Sub, -, sub$(, [$($dim),*])?);
-        forward_binop2!($struct, Mul, *, mul$(, [$($dim),*])?);
-        forward_binop2!($struct, Div, /, div$(, [$($dim),*])?);
-        forward_binop2!($struct, Rem, %, rem$(, [$($dim),*])?);
-        impl_neg2!($struct, [$($im),*]$(, [$($dim),*])?);
-        impl_assign_ops2!($struct, [$($im),*]$(, [$($dim),*])?);
-        impl_scalar_op2!($struct, [$($im),*]$(, [$($dim),*])?);
-        impl_inv2!($struct$(, [$($dim),*])?);
-        impl_iterator2!($struct$(, [$($dim),*])?);
-        impl_from_primitive2!($struct$(, [$($dim),*])?);
-        impl_signed2!($struct$(, [$($dim),*])?);
-        impl_num2!($struct$(, [$($dim),*])?);
-        impl_float_const2!($struct$(, [$($dim),*])?);
+        impl_from_f!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_zero_one!($struct$(, [$($dim),*])?);
+        impl_add_sub_rem!($struct, [$($im),*]$(, [$($dim),*])?);
+        forward_binop!($struct, Add, +, add$(, [$($dim),*])?);
+        forward_binop!($struct, Sub, -, sub$(, [$($dim),*])?);
+        forward_binop!($struct, Mul, *, mul$(, [$($dim),*])?);
+        forward_binop!($struct, Div, /, div$(, [$($dim),*])?);
+        forward_binop!($struct, Rem, %, rem$(, [$($dim),*])?);
+        impl_neg!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_assign_ops!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_scalar_op!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_inv!($struct$(, [$($dim),*])?);
+        impl_iterator!($struct$(, [$($dim),*])?);
+        impl_from_primitive!($struct$(, [$($dim),*])?);
+        impl_signed!($struct$(, [$($dim),*])?);
+        impl_num!($struct$(, [$($dim),*])?);
+        impl_float_const!($struct$(, [$($dim),*])?);
     };
 }

@@ -311,11 +311,11 @@ impl<T: fmt::Display, F> fmt::Display for HyperHyperDual<T, F> {
     }
 }
 
-impl_third_derivatives2!(
+impl_third_derivatives!(
     HyperHyperDual,
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
-impl_dual2!(
+impl_dual!(
     HyperHyperDual,
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );

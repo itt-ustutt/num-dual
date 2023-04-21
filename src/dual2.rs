@@ -267,5 +267,5 @@ where
     }
 }
 
-impl_second_derivatives2!(Dual2Vec, [v1, v2], [D]);
-impl_dual2!(Dual2Vec, [v1, v2], [D]);
+impl_second_derivatives!(Dual2Vec, [v1, v2], [D]);
+impl_dual!(Dual2Vec, [v1, v2], [D]);

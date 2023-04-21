@@ -140,5 +140,5 @@ impl<T: fmt::Display, F> fmt::Display for Dual3<T, F> {
     }
 }
 
-impl_third_derivatives2!(Dual3, [v1, v2, v3]);
-impl_dual2!(Dual3, [v1, v2, v3]);
+impl_third_derivatives!(Dual3, [v1, v2, v3]);
+impl_dual!(Dual3, [v1, v2, v3]);
