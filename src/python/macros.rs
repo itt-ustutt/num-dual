@@ -207,16 +207,11 @@ macro_rules! impl_dual_num {
                 self.0.sph_j2().into()
             }
 
-            // #[inline]
-            // pub fn is_derivative_zero(&self) -> bool {
-            //     self.0.is_derivative_zero()
-            // }
-
-            // #[inline]
-            // /// Fused multiply-add. Computes (self * a) + b with only one rounding error.
-            // fn mul_add(&self, a: Self, b: Self) -> Self {
-            //     self.0.mul_add(a.0, b.0).into()
-            // }
+            #[inline]
+            /// Fused multiply-add. Computes (self * a) + b with only one rounding error.
+            fn mul_add(&self, a: Self, b: Self) -> Self {
+                self.0.mul_add(a.0, b.0).into()
+            }
 
             fn __add__(&self, rhs: &PyAny) -> PyResult<PyObject> {
                 Python::with_gil(|py| {
