@@ -206,7 +206,10 @@ pub fn try_third_partial_derivative_vec<G, T: DualNum<F>, F, E>(
 where
     G: FnOnce(&[HyperHyperDual<T, F>]) -> Result<HyperHyperDual<T, F>, E>,
 {
-    let mut x: Vec<_> = x.iter().map(|&x| HyperHyperDual::from_re(x)).collect();
+    let mut x: Vec<_> = x
+        .iter()
+        .map(|x| HyperHyperDual::from_re(x.clone()))
+        .collect();
     x[i].eps1 = T::one();
     x[j].eps2 = T::one();
     x[k].eps3 = T::one();
@@ -229,17 +232,17 @@ impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
         Self::new(
             f0,
-            f1 * self.eps1,
-            f1 * self.eps2,
-            f1 * self.eps3,
-            f1 * self.eps1eps2 + f2 * self.eps1 * self.eps2,
-            f1 * self.eps1eps3 + f2 * self.eps1 * self.eps3,
-            f1 * self.eps2eps3 + f2 * self.eps2 * self.eps3,
-            f1 * self.eps1eps2eps3
-                + f2 * (self.eps1 * self.eps2eps3
-                    + self.eps2 * self.eps1eps3
-                    + self.eps3 * self.eps1eps2)
-                + f3 * self.eps1 * self.eps2 * self.eps3,
+            f1.clone() * &self.eps1,
+            f1.clone() * &self.eps2,
+            f1.clone() * &self.eps3,
+            f1.clone() * &self.eps1eps2 + f2.clone() * &self.eps1 * &self.eps2,
+            f1.clone() * &self.eps1eps3 + f2.clone() * &self.eps1 * &self.eps3,
+            f1.clone() * &self.eps2eps3 + f2.clone() * &self.eps2 * &self.eps3,
+            f1 * &self.eps1eps2eps3
+                + f2 * (self.eps1.clone() * &self.eps2eps3
+                    + self.eps2.clone() * &self.eps1eps3
+                    + self.eps3.clone() * &self.eps1eps2)
+                + f3 * self.eps1.clone() * &self.eps2 * &self.eps3,
         )
     }
 }
@@ -249,30 +252,30 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperHyperDual<T, F>> for &'b Hype
     #[inline]
     fn mul(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
         HyperHyperDual::new(
-            self.re * rhs.re,
-            self.eps1 * rhs.re + self.re * rhs.eps1,
-            self.eps2 * rhs.re + self.re * rhs.eps2,
-            self.eps3 * rhs.re + self.re * rhs.eps3,
-            self.eps1eps2 * rhs.re
-                + self.eps1 * rhs.eps2
-                + self.eps2 * rhs.eps1
-                + self.re * rhs.eps1eps2,
-            self.eps1eps3 * rhs.re
-                + self.eps1 * rhs.eps3
-                + self.eps3 * rhs.eps1
-                + self.re * rhs.eps1eps3,
-            self.eps2eps3 * rhs.re
-                + self.eps2 * rhs.eps3
-                + self.eps3 * rhs.eps2
-                + self.re * rhs.eps2eps3,
-            self.eps1eps2eps3 * rhs.re
-                + self.eps1 * rhs.eps2eps3
-                + self.eps2 * rhs.eps1eps3
-                + self.eps3 * rhs.eps1eps2
-                + self.eps2eps3 * rhs.eps1
-                + self.eps1eps3 * rhs.eps2
-                + self.eps1eps2 * rhs.eps3
-                + self.re * rhs.eps1eps2eps3,
+            self.re.clone() * &rhs.re,
+            self.eps1.clone() * &rhs.re + self.re.clone() * &rhs.eps1,
+            self.eps2.clone() * &rhs.re + self.re.clone() * &rhs.eps2,
+            self.eps3.clone() * &rhs.re + self.re.clone() * &rhs.eps3,
+            self.eps1eps2.clone() * &rhs.re
+                + self.eps1.clone() * &rhs.eps2
+                + self.eps2.clone() * &rhs.eps1
+                + self.re.clone() * &rhs.eps1eps2,
+            self.eps1eps3.clone() * &rhs.re
+                + self.eps1.clone() * &rhs.eps3
+                + self.eps3.clone() * &rhs.eps1
+                + self.re.clone() * &rhs.eps1eps3,
+            self.eps2eps3.clone() * &rhs.re
+                + self.eps2.clone() * &rhs.eps3
+                + self.eps3.clone() * &rhs.eps2
+                + self.re.clone() * &rhs.eps2eps3,
+            self.eps1eps2eps3.clone() * &rhs.re
+                + self.eps1.clone() * &rhs.eps2eps3
+                + self.eps2.clone() * &rhs.eps1eps3
+                + self.eps3.clone() * &rhs.eps1eps2
+                + self.eps2eps3.clone() * &rhs.eps1
+                + self.eps1eps3.clone() * &rhs.eps2
+                + self.eps1eps2.clone() * &rhs.eps3
+                + self.re.clone() * &rhs.eps1eps2eps3,
         )
     }
 }
@@ -281,11 +284,11 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperHyperDual<T, F>> for &'b Hype
     type Output = HyperHyperDual<T, F>;
     #[inline]
     fn div(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
-        let rec = T::one() / rhs.re;
-        let f0 = rec;
-        let f1 = -f0 * rec;
-        let f2 = f1 * rec * F::from(-2.0).unwrap();
-        let f3 = f2 * rec * F::from(-3.0).unwrap();
+        let rec = T::one() / &rhs.re;
+        let f0 = rec.clone();
+        let f1 = -f0.clone() * &rec;
+        let f2 = f1.clone() * &rec * F::from(-2.0).unwrap();
+        let f3 = f2.clone() * rec * F::from(-3.0).unwrap();
         self * rhs.chain_rule(f0, f1, f2, f3)
     }
 }
@@ -310,11 +313,9 @@ impl<T: fmt::Display, F> fmt::Display for HyperHyperDual<T, F> {
 
 impl_third_derivatives!(
     HyperHyperDual,
-    [],
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
 impl_dual!(
     HyperHyperDual,
-    [],
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
