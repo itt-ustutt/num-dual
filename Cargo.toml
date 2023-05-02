@@ -20,6 +20,7 @@ pyo3 = { version = "0.18", optional = true, features = ["multiple-pymethods"] }
 ndarray = { version = "0.15", optional = true }
 numpy = { version = "0.18", optional = true }
 approx = "0.5"
+simba = "0.8"
 
 [profile.release]
 lto = true
