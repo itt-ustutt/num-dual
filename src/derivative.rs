@@ -37,6 +37,15 @@ where
         Self::new(None)
     }
 
+    pub(crate) fn map<T2, F2>(&self, mut f: impl FnMut(T) -> T2) -> Derivative<T2, F2, R, C>
+    where
+        T2: DualNum<F2>,
+        DefaultAllocator: Allocator<T2, R, C>,
+    {
+        let opt = self.0.as_ref().map(move |eps| eps.map(|e| f(e)));
+        Derivative::new(opt)
+    }
+
     // A version of map that doesn't clone values before mapping. Useful for the SimdValue impl,
     // which would be redundantly cloning all the lanes of each epsilon value before extracting
     // just one of them.
@@ -73,6 +82,7 @@ where
         Derivative::new(opt)
     }
 
+    /// Same but bails out if the closure returns None
     pub(crate) fn try_map_borrowed<T2, F2>(
         &self,
         mut f: impl FnMut(&T) -> Option<T2>,
@@ -103,15 +113,6 @@ where
                 Some(unsafe { res.assume_init() })
             })
             .map(Derivative::some)
-    }
-
-    pub fn map<T2, F2>(&self, mut f: impl FnMut(T) -> T2) -> Derivative<T2, F2, R, C>
-    where
-        T2: DualNum<F2>,
-        DefaultAllocator: Allocator<T2, R, C>,
-    {
-        let opt = self.0.as_ref().map(move |eps| eps.map(|e| f(e)));
-        Derivative::new(opt)
     }
 
     pub fn derivative_generic(r: R, c: C, i: usize) -> Self {
