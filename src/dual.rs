@@ -645,7 +645,7 @@ where
 
     #[inline]
     fn norm1(self) -> Self::RealField {
-        panic!("called norm1() on a dual number")
+        self.abs()
     }
 
     #[inline]
@@ -873,12 +873,12 @@ where
 {
     #[inline]
     fn copysign(self, _sign: Self) -> Self {
-        todo!()
+        todo!("copysign not yet implemented on dual numbers")
     }
 
     #[inline]
     fn atan2(self, _other: Self) -> Self {
-        todo!()
+        todo!("atan2 not yet implemented on dual numbers")
     }
 
     #[inline]
@@ -966,10 +966,9 @@ where
         self.re.is_sign_negative()
     }
 
+    /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn max(self, other: Self) -> Self {
-        // Got to be careful using this, because you throw away the derivatives of the ones you
-        // don't use.
         if other > self {
             other
         } else {
@@ -977,9 +976,9 @@ where
         }
     }
 
+    /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn min(self, other: Self) -> Self {
-        // Got to be careful using this, because you throw away the derivatives of one of them.
         if other < self {
             other
         } else {
@@ -987,9 +986,9 @@ where
         }
     }
 
+    /// If the min/max values are constants and the clamping has an effect, you lose your gradients.
     #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
-        // Got to be careful using this, because you throw away the derivatives of one of them.
         if self < min {
             min
         } else if self > max {
