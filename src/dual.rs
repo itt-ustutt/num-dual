@@ -11,7 +11,7 @@ use std::ops::{
 };
 
 /// A dual number for the calculations of gradients or Jacobians.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct DualVec<T: DualNum<F>, F, D: Dim>
 where
     DefaultAllocator: Allocator<T, D>,
@@ -283,3 +283,174 @@ where
 
 impl_first_derivatives!(DualVec, [eps], [D]);
 impl_dual!(DualVec, [eps], [D]);
+
+/**
+ * The SimdValue trait is for rearranging data into a form more suitable for Simd,
+ * and rearranging it back into a usable form.
+ *
+ * The primary job of this SimdValue impl is to allow people to use `simba::simd::AutoSimd`,
+ * which implements the `num` traits, as their T, with our F parameter
+ * set to <T as SimdValue>::Element. The AutoSimd type stores short arrays of floats etc, but
+ * needs to be treated like a scalar. Therefore you need to be able to split up any type that
+ * contains an AutoSimd<[f32; 4]> into four of your wrapper type. Then you can do normal math
+ * operations on each one without having to know that underneath, everything was stored in
+ * batches of [f32; 4]. But if you _do_ want to take advantage of SIMD instructions,
+ * specialized implementations of `SimdRealField` can choose *not* to decompose the wrapper of
+ * [f32; 4] into * individual wrappers of f32, and instead do bulk operations on the [f32; 4]s.
+ * That's the idea. SimdValue is plumbing to be able to plug any wrapper type in to use
+ * the non-specialized math operations that you would * find * in `nalgebra::RealField`.
+ * `RealField` provides the default implementation of `SimdRealField`'s methods.
+ *
+ * Ultimately, if you want more than _mere plumbing compatibility_ with AutoSimd and the like,
+ * then you would have to implement SimdRealField on DualVec in such a way that it uses
+ * SIMD instructions on particular CPUs. That's future work for someone who finds num_dual is not
+ * fast enough.
+ *
+ */
+impl<T, D: Dim> nalgebra::SimdValue for DualVec<T, T::Element, D>
+where
+    DefaultAllocator: Allocator<T, D> + Allocator<T::Element, D>,
+    T: DualNum<T::Element> + SimdValue + Scalar,
+    T::Element: DualNum<T::Element> + Scalar,
+{
+    // Say T = AutoSimd<[f32; 4]>. T::Element is f32. T::SimdBool is AutoSimd<[bool; 4]>.
+    // AutoSimd<[f32; 4]> stores an actual [f32; 4], i.e. four floats in one slot.
+    // So our DualVec<AutoSimd<[f32; 4], f32, N> has 4 * (1+N) floats in it, stored in blocks of
+    // four. When we want to do ANY math on it, we need to break that type into
+    // FOUR of DualVec<f32, f32, N>; then we do math on it, then we bring it back together. The
+    // SimdValue trait lets other nalgebra code do this:
+    //
+    // 1. Ask us how many lanes to use (4, because AutoSimd<[f32; 4]> says "4 lanes please")
+    // 2. Extract the  i-th lane, for i < 4, returning DualVec<f32, f32, N>.
+    // 2.
+    //
+    type Element = DualVec<T::Element, T::Element, D>;
+    type SimdBool = T::SimdBool;
+
+    #[inline]
+    fn lanes() -> usize {
+        T::lanes()
+    }
+
+    #[inline]
+    fn splat(val: Self::Element) -> Self {
+        // Need to make `lanes` copies of each of:
+        // - the real part
+        // - each of the N epsilon parts
+        let re = T::splat(val.re);
+        let eps = Derivative::splat(val.eps);
+        Self {
+            re,
+            eps,
+            f: PhantomData,
+        }
+    }
+
+    #[inline]
+    fn extract(&self, i: usize) -> Self::Element {
+        let re = self.re.extract(i);
+        let eps = self.eps.extract(i);
+        Self::Element {
+            re,
+            eps,
+            f: PhantomData,
+        }
+    }
+
+    #[inline]
+    unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
+        let re = self.re.extract_unchecked(i);
+        let eps = self.eps.extract_unchecked(i);
+        Self::Element {
+            re,
+            eps,
+            f: PhantomData,
+        }
+    }
+
+    #[inline]
+    fn replace(&mut self, i: usize, val: Self::Element) {
+        self.re.replace(i, val.re);
+        self.eps.replace(i, val.eps);
+    }
+
+    #[inline]
+    unsafe fn replace_unchecked(&mut self, i: usize, val: Self::Element) {
+        self.re.replace_unchecked(i, val.re);
+        self.eps.replace_unchecked(i, val.eps);
+    }
+
+    #[inline]
+    fn select(self, cond: Self::SimdBool, other: Self) -> Self {
+        let re = self.re.select(cond, other.re);
+        let eps = self.eps.select(cond, other.eps);
+        Self {
+            re,
+            eps,
+            f: PhantomData,
+        }
+    }
+}
+
+/// Comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialEq, F: Float, D: Dim> PartialEq for DualVec<T, F, D>
+where
+    DefaultAllocator: Allocator<T, D>,
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.re.eq(&other.re)
+    }
+}
+/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialOrd, F: Float, D: Dim> PartialOrd for DualVec<T, F, D>
+where
+    DefaultAllocator: Allocator<T, D>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other.re)
+    }
+}
+/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = F>, F: Float, D: Dim> approx::AbsDiffEq
+    for DualVec<T, F, D>
+where
+    DefaultAllocator: Allocator<T, D>,
+{
+    type Epsilon = F;
+    #[inline]
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.re.abs_diff_eq(&other.re, epsilon)
+    }
+
+    #[inline]
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+}
+/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + approx::RelativeEq<Epsilon = F>, F: Float, D: Dim> approx::RelativeEq
+    for DualVec<T, F, D>
+where
+    DefaultAllocator: Allocator<T, D>,
+{
+    #[inline]
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    #[inline]
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        self.re.relative_eq(&other.re, epsilon, max_relative)
+    }
+}

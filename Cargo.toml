@@ -19,6 +19,7 @@ nalgebra = "0.32"
 pyo3 = { version = "0.18", optional = true, features = ["multiple-pymethods"] }
 ndarray = { version = "0.15", optional = true }
 numpy = { version = "0.18", optional = true }
+approx = "0.5"
 
 [profile.release]
 lto = true
@@ -30,7 +31,6 @@ linalg = ["ndarray"]
 
 [dev-dependencies]
 criterion = "0.4"
-approx = "0.5"
 
 [[bench]]
 name = "benchmark"
