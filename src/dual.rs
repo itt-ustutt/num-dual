@@ -601,12 +601,12 @@ use nalgebra::{ComplexField, RealField};
 impl<T, D: Dim> ComplexField for DualVec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SupersetOf<T> + AbsDiffEq<Epsilon = T> + Sync + Send,
-    T::Element: DualNum<T::Element> + Scalar + Float + Sync + Send,
+    T::Element: DualNum<T::Element> + Scalar + DualNumFloat + Sync + Send,
     T: SupersetOf<T::Element>,
     T: SupersetOf<f64>,
     T: SimdPartialOrd + PartialOrd,
     T: SimdValue<Element = T, SimdBool = bool>,
-    T: RelativeEq + UlpsEq + AbsDiffEq + From<f64>,
+    T: RelativeEq + UlpsEq + AbsDiffEq,
     DefaultAllocator:
         Allocator<T, D> + Allocator<T, U1, D> + Allocator<T, D, U1> + Allocator<T, D, D>,
     <DefaultAllocator as Allocator<T, D>>::Buffer: Sync + Send,
@@ -859,7 +859,7 @@ where
 impl<T, D: Dim> RealField for DualVec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SupersetOf<T> + Sync + Send,
-    T::Element: DualNum<T::Element> + Scalar + Float + From<f64>,
+    T::Element: DualNum<T::Element> + Scalar + DualNumFloat,
     T: SupersetOf<T::Element>,
     T: SupersetOf<f64>,
     T: SimdPartialOrd + PartialOrd,
@@ -883,77 +883,77 @@ where
 
     #[inline]
     fn pi() -> Self {
-        Self::from_re(std::f64::consts::PI.into())
+        Self::from_re(<T as FloatConst>::PI())
     }
 
     #[inline]
     fn two_pi() -> Self {
-        Self::from_re(std::f64::consts::TAU.into())
+        Self::from_re(<T as FloatConst>::TAU())
     }
 
     #[inline]
     fn frac_pi_2() -> Self {
-        Self::from_re(std::f64::consts::FRAC_PI_4.into())
+        Self::from_re(<T as FloatConst>::FRAC_PI_4())
     }
 
     #[inline]
     fn frac_pi_3() -> Self {
-        Self::from_re(std::f64::consts::FRAC_PI_3.into())
+        Self::from_re(<T as FloatConst>::FRAC_PI_3())
     }
 
     #[inline]
     fn frac_pi_4() -> Self {
-        Self::from_re(std::f64::consts::FRAC_PI_4.into())
+        Self::from_re(<T as FloatConst>::FRAC_PI_4())
     }
 
     #[inline]
     fn frac_pi_6() -> Self {
-        Self::from_re(std::f64::consts::FRAC_PI_6.into())
+        Self::from_re(<T as FloatConst>::FRAC_PI_6())
     }
 
     #[inline]
     fn frac_pi_8() -> Self {
-        Self::from_re(std::f64::consts::FRAC_PI_8.into())
+        Self::from_re(<T as FloatConst>::FRAC_PI_8())
     }
 
     #[inline]
     fn frac_1_pi() -> Self {
-        Self::from_re(std::f64::consts::FRAC_1_PI.into())
+        Self::from_re(<T as FloatConst>::FRAC_1_PI())
     }
 
     #[inline]
     fn frac_2_pi() -> Self {
-        Self::from_re(std::f64::consts::FRAC_2_PI.into())
+        Self::from_re(<T as FloatConst>::FRAC_2_PI())
     }
 
     #[inline]
     fn frac_2_sqrt_pi() -> Self {
-        Self::from_re(std::f64::consts::FRAC_2_SQRT_PI.into())
+        Self::from_re(<T as FloatConst>::FRAC_2_SQRT_PI())
     }
 
     #[inline]
     fn e() -> Self {
-        Self::from_re(std::f64::consts::E.into())
+        Self::from_re(<T as FloatConst>::E())
     }
 
     #[inline]
     fn log2_e() -> Self {
-        Self::from_re(std::f64::consts::LOG2_E.into())
+        Self::from_re(<T as FloatConst>::LOG2_E())
     }
 
     #[inline]
     fn log10_e() -> Self {
-        Self::from_re(std::f64::consts::LOG10_E.into())
+        Self::from_re(<T as FloatConst>::LOG10_E())
     }
 
     #[inline]
     fn ln_2() -> Self {
-        Self::from_re(std::f64::consts::LN_2.into())
+        Self::from_re(<T as FloatConst>::LN_2())
     }
 
     #[inline]
     fn ln_10() -> Self {
-        Self::from_re(std::f64::consts::LN_10.into())
+        Self::from_re(<T as FloatConst>::LN_10())
     }
 
     #[inline]
