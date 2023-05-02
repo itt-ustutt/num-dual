@@ -633,169 +633,210 @@ where
         self.abs()
     }
 
+    #[inline]
     fn modulus_squared(self) -> Self::RealField {
         &self * &self
     }
 
+    #[inline]
     fn argument(self) -> Self::RealField {
         Self::zero()
     }
 
+    #[inline]
     fn norm1(self) -> Self::RealField {
         panic!("called norm1() on a dual number")
     }
 
+    #[inline]
     fn scale(self, factor: Self::RealField) -> Self {
         self * factor
     }
 
+    #[inline]
     fn unscale(self, factor: Self::RealField) -> Self {
         self / factor
     }
 
+    #[inline]
     fn floor(self) -> Self {
         panic!("called floor() on a dual number")
     }
 
+    #[inline]
     fn ceil(self) -> Self {
         panic!("called ceil() on a dual number")
     }
 
+    #[inline]
     fn round(self) -> Self {
         panic!("called round() on a dual number")
     }
 
+    #[inline]
     fn trunc(self) -> Self {
         panic!("called trunc() on a dual number")
     }
 
+    #[inline]
     fn fract(self) -> Self {
         panic!("called fract() on a dual number")
     }
 
+    #[inline]
     fn mul_add(self, a: Self, b: Self) -> Self {
         DualNum::mul_add(&self, a, b)
     }
 
+    #[inline]
     fn abs(self) -> Self::RealField {
         Signed::abs(&self)
     }
 
+    #[inline]
     fn hypot(self, other: Self) -> Self::RealField {
         let sum_sq = self.powi(2) + other.powi(2);
         DualNum::sqrt(&sum_sq)
     }
 
+    #[inline]
     fn recip(self) -> Self {
         DualNum::recip(&self)
     }
 
+    #[inline]
     fn conjugate(self) -> Self {
         self
     }
 
+    #[inline]
     fn sin(self) -> Self {
         DualNum::sin(&self)
     }
 
+    #[inline]
     fn cos(self) -> Self {
         DualNum::cos(&self)
     }
 
+    #[inline]
     fn sin_cos(self) -> (Self, Self) {
         DualNum::sin_cos(&self)
     }
 
+    #[inline]
     fn tan(self) -> Self {
         DualNum::tan(&self)
     }
 
+    #[inline]
     fn asin(self) -> Self {
         DualNum::asin(&self)
     }
 
+    #[inline]
     fn acos(self) -> Self {
         DualNum::acos(&self)
     }
 
+    #[inline]
     fn atan(self) -> Self {
         DualNum::atan(&self)
     }
 
+    #[inline]
     fn sinh(self) -> Self {
         DualNum::sinh(&self)
     }
 
+    #[inline]
     fn cosh(self) -> Self {
         DualNum::cosh(&self)
     }
 
+    #[inline]
     fn tanh(self) -> Self {
         DualNum::tanh(&self)
     }
 
+    #[inline]
     fn asinh(self) -> Self {
         DualNum::asinh(&self)
     }
 
+    #[inline]
     fn acosh(self) -> Self {
         DualNum::acosh(&self)
     }
 
+    #[inline]
     fn atanh(self) -> Self {
         DualNum::atanh(&self)
     }
 
+    #[inline]
     fn log(self, base: Self::RealField) -> Self {
         DualNum::ln(&self) / DualNum::ln(&base)
     }
 
+    #[inline]
     fn log2(self) -> Self {
         DualNum::log2(&self)
     }
 
+    #[inline]
     fn log10(self) -> Self {
         DualNum::log10(&self)
     }
 
+    #[inline]
     fn ln(self) -> Self {
         DualNum::ln(&self)
     }
 
+    #[inline]
     fn ln_1p(self) -> Self {
         DualNum::ln_1p(&self)
     }
 
+    #[inline]
     fn sqrt(self) -> Self {
         DualNum::sqrt(&self)
     }
 
+    #[inline]
     fn exp(self) -> Self {
         DualNum::exp(&self)
     }
 
+    #[inline]
     fn exp2(self) -> Self {
         DualNum::exp2(&self)
     }
 
+    #[inline]
     fn exp_m1(self) -> Self {
         DualNum::exp_m1(&self)
     }
 
+    #[inline]
     fn powi(self, n: i32) -> Self {
         DualNum::powi(&self, n)
     }
 
+    #[inline]
     fn powf(self, n: Self::RealField) -> Self {
         // n could be a dual.
         DualNum::powd(&self, n)
     }
 
+    #[inline]
     fn powc(self, n: Self) -> Self {
         // same as powf, Self isn't complex
         self.powf(n)
     }
 
+    #[inline]
     fn cbrt(self) -> Self {
         DualNum::cbrt(&self)
     }
@@ -830,82 +871,102 @@ where
         Allocator<T, D> + Allocator<T, U1, D> + Allocator<T, D, U1> + Allocator<T, D, D>,
     <DefaultAllocator as Allocator<T, D>>::Buffer: Sync + Send,
 {
+    #[inline]
     fn copysign(self, _sign: Self) -> Self {
         todo!()
     }
 
+    #[inline]
     fn atan2(self, _other: Self) -> Self {
         todo!()
     }
 
+    #[inline]
     fn pi() -> Self {
         Self::from_re(std::f64::consts::PI.into())
     }
 
+    #[inline]
     fn two_pi() -> Self {
         Self::from_re(std::f64::consts::TAU.into())
     }
 
+    #[inline]
     fn frac_pi_2() -> Self {
         Self::from_re(std::f64::consts::FRAC_PI_4.into())
     }
 
+    #[inline]
     fn frac_pi_3() -> Self {
         Self::from_re(std::f64::consts::FRAC_PI_3.into())
     }
 
+    #[inline]
     fn frac_pi_4() -> Self {
         Self::from_re(std::f64::consts::FRAC_PI_4.into())
     }
 
+    #[inline]
     fn frac_pi_6() -> Self {
         Self::from_re(std::f64::consts::FRAC_PI_6.into())
     }
 
+    #[inline]
     fn frac_pi_8() -> Self {
         Self::from_re(std::f64::consts::FRAC_PI_8.into())
     }
 
+    #[inline]
     fn frac_1_pi() -> Self {
         Self::from_re(std::f64::consts::FRAC_1_PI.into())
     }
 
+    #[inline]
     fn frac_2_pi() -> Self {
         Self::from_re(std::f64::consts::FRAC_2_PI.into())
     }
 
+    #[inline]
     fn frac_2_sqrt_pi() -> Self {
         Self::from_re(std::f64::consts::FRAC_2_SQRT_PI.into())
     }
 
+    #[inline]
     fn e() -> Self {
         Self::from_re(std::f64::consts::E.into())
     }
 
+    #[inline]
     fn log2_e() -> Self {
         Self::from_re(std::f64::consts::LOG2_E.into())
     }
 
+    #[inline]
     fn log10_e() -> Self {
         Self::from_re(std::f64::consts::LOG10_E.into())
     }
 
+    #[inline]
     fn ln_2() -> Self {
         Self::from_re(std::f64::consts::LN_2.into())
     }
 
+    #[inline]
     fn ln_10() -> Self {
         Self::from_re(std::f64::consts::LN_10.into())
     }
 
+    #[inline]
     fn is_sign_positive(&self) -> bool {
         self.re.is_sign_positive()
     }
 
+    #[inline]
     fn is_sign_negative(&self) -> bool {
         self.re.is_sign_negative()
     }
 
+    #[inline]
     fn max(self, other: Self) -> Self {
         // Got to be careful using this, because you throw away the derivatives of the ones you
         // don't use.
@@ -916,6 +977,7 @@ where
         }
     }
 
+    #[inline]
     fn min(self, other: Self) -> Self {
         // Got to be careful using this, because you throw away the derivatives of one of them.
         if other < self {
@@ -925,6 +987,7 @@ where
         }
     }
 
+    #[inline]
     fn clamp(self, min: Self, max: Self) -> Self {
         // Got to be careful using this, because you throw away the derivatives of one of them.
         if self < min {
@@ -936,10 +999,12 @@ where
         }
     }
 
+    #[inline]
     fn min_value() -> Option<Self> {
         Some(Self::from_re(T::min_value()))
     }
 
+    #[inline]
     fn max_value() -> Option<Self> {
         Some(Self::from_re(T::max_value()))
     }
