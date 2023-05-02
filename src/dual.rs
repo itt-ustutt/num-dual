@@ -447,7 +447,10 @@ where
         self.re.relative_eq(&other.re, epsilon.re, max_relative.re)
     }
 }
-impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float, const N: usize> UlpsEq for DualVec<T, F, N> {
+impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float, D: Dim> UlpsEq for DualVec<T, F, D>
+where
+    DefaultAllocator: Allocator<T, D>,
+{
     #[inline]
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
@@ -459,24 +462,36 @@ impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float, const N: usize> UlpsEq for D
     }
 }
 
-impl<T, const N: usize> nalgebra::Field for DualVec<T, T::Element, N>
+impl<T, D: Dim> nalgebra::Field for DualVec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SimdValue,
     T::Element: DualNum<T::Element> + Scalar + Float,
+    DefaultAllocator:
+        Allocator<T, D> + Allocator<T, U1, D> + Allocator<T, D, U1> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<T::Element, D>
+        + Allocator<T::Element, U1, D>
+        + Allocator<T::Element, D, U1>
+        + Allocator<T::Element, D, D>,
 {
 }
 
 use simba::scalar::{SubsetOf, SupersetOf};
 
-impl<TSuper, FSuper, T, F, const N: usize> SubsetOf<DualVec<TSuper, FSuper, N>> for DualVec<T, F, N>
+impl<TSuper, FSuper, T, F, D: Dim> SubsetOf<DualVec<TSuper, FSuper, D>> for DualVec<T, F, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<T>,
     T: DualNum<F>,
+    DefaultAllocator:
+        Allocator<T, D> + Allocator<T, U1, D> + Allocator<T, D, U1> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<TSuper, D>
+        + Allocator<TSuper, U1, D>
+        + Allocator<TSuper, D, U1>
+        + Allocator<TSuper, D, D>,
 {
     #[inline(always)]
-    fn to_superset(&self) -> DualVec<TSuper, FSuper, N> {
+    fn to_superset(&self) -> DualVec<TSuper, FSuper, D> {
         let re = TSuper::from_subset(&self.re);
-        let eps = SVector::<TSuper, N>::from_subset(&self.eps);
+        let eps = Derivative::from_subset(&self.eps);
         DualVec {
             re,
             eps,
@@ -484,9 +499,9 @@ where
         }
     }
     #[inline(always)]
-    fn from_superset(element: &DualVec<TSuper, FSuper, N>) -> Option<Self> {
+    fn from_superset(element: &DualVec<TSuper, FSuper, D>) -> Option<Self> {
         let re = TSuper::to_subset(&element.re)?;
-        let eps = SVector::<TSuper, N>::to_subset(&element.eps)?;
+        let eps = Derivative::to_subset(&element.eps)?;
         Some(Self {
             re,
             eps,
@@ -494,9 +509,9 @@ where
         })
     }
     #[inline(always)]
-    fn from_superset_unchecked(element: &DualVec<TSuper, FSuper, N>) -> Self {
+    fn from_superset_unchecked(element: &DualVec<TSuper, FSuper, D>) -> Self {
         let re = TSuper::to_subset_unchecked(&element.re);
-        let eps = SVector::<TSuper, N>::to_subset_unchecked(&element.eps);
+        let eps = Derivative::to_subset_unchecked(&element.eps);
         Self {
             re,
             eps,
@@ -504,15 +519,21 @@ where
         }
     }
     #[inline(always)]
-    fn is_in_subset(element: &DualVec<TSuper, FSuper, N>) -> bool {
+    fn is_in_subset(element: &DualVec<TSuper, FSuper, D>) -> bool {
         TSuper::is_in_subset(&element.re)
-            && <SVector<TSuper, N> as SupersetOf<SVector<T, N>>>::is_in_subset(&element.eps)
+            && <Derivative<_, _, _, _> as SupersetOf<Derivative<_, _, _, _>>>::is_in_subset(
+                &element.eps,
+            )
     }
 }
 
-impl<TSuper, FSuper, const N: usize> SupersetOf<f32> for DualVec<TSuper, FSuper, N>
+impl<TSuper, FSuper, D: Dim> SupersetOf<f32> for DualVec<TSuper, FSuper, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<f32>,
+    DefaultAllocator: Allocator<TSuper, D>
+        + Allocator<TSuper, U1, D>
+        + Allocator<TSuper, D, U1>
+        + Allocator<TSuper, D, D>,
 {
     #[inline(always)]
     fn is_in_subset(&self) -> bool {
@@ -528,7 +549,7 @@ where
     fn from_subset(element: &f32) -> Self {
         // Interpret as a purely real number
         let re = TSuper::from_subset(element);
-        let eps = SVector::zeros();
+        let eps = Derivative::none();
         Self {
             re,
             eps,
@@ -537,9 +558,13 @@ where
     }
 }
 
-impl<TSuper, FSuper, const N: usize> SupersetOf<f64> for DualVec<TSuper, FSuper, N>
+impl<TSuper, FSuper, D: Dim> SupersetOf<f64> for DualVec<TSuper, FSuper, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<f64>,
+    DefaultAllocator: Allocator<TSuper, D>
+        + Allocator<TSuper, U1, D>
+        + Allocator<TSuper, D, U1>
+        + Allocator<TSuper, D, D>,
 {
     #[inline(always)]
     fn is_in_subset(&self) -> bool {
@@ -555,7 +580,7 @@ where
     fn from_subset(element: &f64) -> Self {
         // Interpret as a purely real number
         let re = TSuper::from_subset(element);
-        let eps = SVector::zeros();
+        let eps = Derivative::none();
         Self {
             re,
             eps,
@@ -573,15 +598,18 @@ where
 
 use nalgebra::{ComplexField, RealField};
 // This impl is modelled on `impl ComplexField for f32`. The imaginary part is nothing.
-impl<T, const N: usize> ComplexField for DualVec<T, T::Element, N>
+impl<T, D: Dim> ComplexField for DualVec<T, T::Element, D>
 where
-    T: DualNum<T::Element> + SupersetOf<T> + AbsDiffEq<Epsilon = T>,
-    T::Element: DualNum<T::Element> + Scalar + Float,
+    T: DualNum<T::Element> + SupersetOf<T> + AbsDiffEq<Epsilon = T> + Sync + Send,
+    T::Element: DualNum<T::Element> + Scalar + Float + Sync + Send,
     T: SupersetOf<T::Element>,
     T: SupersetOf<f64>,
     T: SimdPartialOrd + PartialOrd,
     T: SimdValue<Element = T, SimdBool = bool>,
     T: RelativeEq + UlpsEq + AbsDiffEq + From<f64>,
+    DefaultAllocator:
+        Allocator<T, D> + Allocator<T, U1, D> + Allocator<T, D, U1> + Allocator<T, D, D>,
+    <DefaultAllocator as Allocator<T, D>>::Buffer: Sync + Send,
 {
     type RealField = Self;
 
@@ -606,7 +634,7 @@ where
     }
 
     fn modulus_squared(self) -> Self::RealField {
-        self * self
+        &self * &self
     }
 
     fn argument(self) -> Self::RealField {
@@ -787,9 +815,9 @@ where
     }
 }
 
-impl<T, const N: usize> RealField for DualVec<T, T::Element, N>
+impl<T, D: Dim> RealField for DualVec<T, T::Element, D>
 where
-    T: DualNum<T::Element> + SupersetOf<T>,
+    T: DualNum<T::Element> + SupersetOf<T> + Sync + Send,
     T::Element: DualNum<T::Element> + Scalar + Float + From<f64>,
     T: SupersetOf<T::Element>,
     T: SupersetOf<f64>,
@@ -798,6 +826,9 @@ where
     T: SimdValue<Element = T, SimdBool = bool>,
     T: UlpsEq,
     T: AbsDiffEq,
+    DefaultAllocator:
+        Allocator<T, D> + Allocator<T, U1, D> + Allocator<T, D, U1> + Allocator<T, D, D>,
+    <DefaultAllocator as Allocator<T, D>>::Buffer: Sync + Send,
 {
     fn copysign(self, _sign: Self) -> Self {
         todo!()
