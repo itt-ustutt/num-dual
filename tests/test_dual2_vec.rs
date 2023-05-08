@@ -1,4 +1,4 @@
-use nalgebra::*;
+use nalgebra::{Const, RowSVector};
 use num_dual::*;
 
 #[test]
