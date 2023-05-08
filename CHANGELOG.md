@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new `HyerHyperDual` number for the calculation of third partial derivatives. [#51](https://github.com/itt-ustutt/num-dual/pull/51)
 - Added new functions `first_derivative`, `gradient`, `jacobian`, `second_derivative`, `hessian`, `third_derivative`, `second_partial_derivative`, `partial_hessian`, `third_partial_derivative` and `third_partial_derivative_vec` that provide a convenient interface for the calculation of derivatives. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
 - Added new functions `try_first_derivative`, `try_gradient`, `try_jacobian`, `try_second_derivative`, `try_hessian`, `try_third_derivative`, `try_second_partial_derivative`, `try_partial_hessian`, `try_third_partial_derivative` and `try_third_partial_derivative_vec` that provide the same functionalities for fallible functions. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
+- Implemented the `RealField` and `ComplexField` traits from `nalgebra` for `DualVec`. [#59](https://github.com/itt-ustutt/num-dual/pull/59)
+- Added the `python_macro` feature that provides the `impl_dual_num` macro. [#63](https://github.com/itt-ustutt/num-dual/pull/63)
 
 ### Changed
 - Renamed `derive*` methods to `derivative*`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `StaticMat` struct in favor of the analogous implementations from `nalgebra`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
 - Removed the `derive*` methods for vector types due to the change to `nalgebra`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
 - Removed the `derive*` functions in Python in favor of the aforementioned new functions. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
+- Removed the `build_wheel` workspace crate. The main crate is now also used to build the Python package. [#63](https://github.com/itt-ustutt/num-dual/pull/63)
 
 ## [0.6.0] - 2023-01-20
 ### Added
