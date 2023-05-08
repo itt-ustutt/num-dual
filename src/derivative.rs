@@ -2,11 +2,11 @@ use crate::DualNum;
 use nalgebra::allocator::Allocator;
 use nalgebra::constraint::{SameNumberOfRows, ShapeConstraint};
 use nalgebra::*;
+use num_traits::Zero;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::ops::{Add, AddAssign, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use num_traits::Zero;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(
@@ -37,12 +37,12 @@ where
         Self::new(None)
     }
 
-    pub(crate) fn map<T2, F2>(&self, mut f: impl FnMut(T) -> T2) -> Derivative<T2, F2, R, C>
+    pub(crate) fn map<T2, F2>(&self, f: impl FnMut(T) -> T2) -> Derivative<T2, F2, R, C>
     where
         T2: DualNum<F2>,
         DefaultAllocator: Allocator<T2, R, C>,
     {
-        let opt = self.0.as_ref().map(move |eps| eps.map(|e| f(e)));
+        let opt = self.0.as_ref().map(|eps| eps.map(f));
         Derivative::new(opt)
     }
 
@@ -61,16 +61,14 @@ where
         DefaultAllocator: Allocator<T2, R, C>,
     {
         let opt = self.0.as_ref().map(move |eps| {
-            let ref this = eps;
-            let mut f = |e| f(e);
-            let (nrows, ncols) = this.shape_generic();
+            let (nrows, ncols) = eps.shape_generic();
             let mut res: Matrix<MaybeUninit<T2>, R, C, _> = Matrix::uninit(nrows, ncols);
 
             for j in 0..ncols.value() {
                 for i in 0..nrows.value() {
                     // Safety: all indices are in range.
                     unsafe {
-                        let a = this.data.get_unchecked(i, j);
+                        let a = eps.data.get_unchecked(i, j);
                         *res.data.get_unchecked_mut(i, j) = MaybeUninit::new(f(a));
                     }
                 }
@@ -94,16 +92,14 @@ where
         self.0
             .as_ref()
             .and_then(move |eps| {
-                let ref this = eps;
-                let mut f = |e| f(e);
-                let (nrows, ncols) = this.shape_generic();
+                let (nrows, ncols) = eps.shape_generic();
                 let mut res: Matrix<MaybeUninit<T2>, R, C, _> = Matrix::uninit(nrows, ncols);
 
                 for j in 0..ncols.value() {
                     for i in 0..nrows.value() {
                         // Safety: all indices are in range.
                         unsafe {
-                            let a = this.data.get_unchecked(i, j);
+                            let a = eps.data.get_unchecked(i, j);
                             *res.data.get_unchecked_mut(i, j) = MaybeUninit::new(f(a)?);
                         }
                     }

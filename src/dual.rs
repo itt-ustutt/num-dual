@@ -332,11 +332,7 @@ where
         // - each of the N epsilon parts
         let re = T::splat(val.re);
         let eps = Derivative::splat(val.eps);
-        Self {
-            re,
-            eps,
-            f: PhantomData,
-        }
+        Self::new(re, eps)
     }
 
     #[inline]
@@ -377,11 +373,7 @@ where
     fn select(self, cond: Self::SimdBool, other: Self) -> Self {
         let re = self.re.select(cond, other.re);
         let eps = self.eps.select(cond, other.eps);
-        Self {
-            re,
-            eps,
-            f: PhantomData,
-        }
+        Self::new(re, eps)
     }
 }
 
@@ -502,21 +494,13 @@ where
     fn from_superset(element: &DualVec<TSuper, FSuper, D>) -> Option<Self> {
         let re = TSuper::to_subset(&element.re)?;
         let eps = Derivative::to_subset(&element.eps)?;
-        Some(Self {
-            re,
-            eps,
-            f: PhantomData,
-        })
+        Some(Self::new(re, eps))
     }
     #[inline(always)]
     fn from_superset_unchecked(element: &DualVec<TSuper, FSuper, D>) -> Self {
         let re = TSuper::to_subset_unchecked(&element.re);
         let eps = Derivative::to_subset_unchecked(&element.eps);
-        Self {
-            re,
-            eps,
-            f: PhantomData,
-        }
+        Self::new(re, eps)
     }
     #[inline(always)]
     fn is_in_subset(element: &DualVec<TSuper, FSuper, D>) -> bool {
@@ -550,11 +534,7 @@ where
         // Interpret as a purely real number
         let re = TSuper::from_subset(element);
         let eps = Derivative::none();
-        Self {
-            re,
-            eps,
-            f: PhantomData,
-        }
+        Self::new(re, eps)
     }
 }
 
@@ -581,11 +561,7 @@ where
         // Interpret as a purely real number
         let re = TSuper::from_subset(element);
         let eps = Derivative::none();
-        Self {
-            re,
-            eps,
-            f: PhantomData,
-        }
+        Self::new(re, eps)
     }
 }
 
