@@ -42,7 +42,7 @@
 #![warn(clippy::all)]
 #![allow(clippy::needless_range_loop)]
 
-use num_traits::{Float, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
+use num_traits::{Float, FloatConst, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
 use std::iter::{Product, Sum};
 
@@ -212,11 +212,11 @@ pub trait DualNum<F>:
 
 /// The underlying data type of individual derivatives. Usually f32 or f64.
 pub trait DualNumFloat:
-    Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
+    Float + FloatConst + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
 {
 }
 impl<T> DualNumFloat for T where
-    T: Float + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
+    T: Float + FloatConst + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
 {
 }
 

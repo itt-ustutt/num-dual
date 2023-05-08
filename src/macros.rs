@@ -557,66 +557,82 @@ macro_rules! impl_float_const {
             $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
             DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
+            #[allow(non_snake_case)]
             fn E() -> Self {
                 Self::from(F::E())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_1_PI() -> Self {
                 Self::from(F::FRAC_1_PI())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_1_SQRT_2() -> Self {
                 Self::from(F::FRAC_1_SQRT_2())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_2_PI() -> Self {
                 Self::from(F::FRAC_2_PI())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_2_SQRT_PI() -> Self {
                 Self::from(F::FRAC_2_SQRT_PI())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_PI_2() -> Self {
                 Self::from(F::FRAC_PI_2())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_PI_3() -> Self {
                 Self::from(F::FRAC_PI_3())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_PI_4() -> Self {
                 Self::from(F::FRAC_PI_4())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_PI_6() -> Self {
                 Self::from(F::FRAC_PI_6())
             }
 
+            #[allow(non_snake_case)]
             fn FRAC_PI_8() -> Self {
                 Self::from(F::FRAC_PI_8())
             }
 
+            #[allow(non_snake_case)]
             fn LN_10() -> Self {
                 Self::from(F::LN_10())
             }
 
+            #[allow(non_snake_case)]
             fn LN_2() -> Self {
                 Self::from(F::LN_2())
             }
 
+            #[allow(non_snake_case)]
             fn LOG10_E() -> Self {
                 Self::from(F::LOG10_E())
             }
 
+            #[allow(non_snake_case)]
             fn LOG2_E() -> Self {
                 Self::from(F::LOG2_E())
             }
 
+            #[allow(non_snake_case)]
             fn PI() -> Self {
                 Self::from(F::PI())
             }
 
+            #[allow(non_snake_case)]
             fn SQRT_2() -> Self {
                 Self::from(F::SQRT_2())
             }
