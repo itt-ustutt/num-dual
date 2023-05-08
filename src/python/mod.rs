@@ -1,8 +1,6 @@
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
-#[macro_use]
-mod macros;
 mod dual;
 mod dual2;
 mod dual3;
@@ -35,6 +33,7 @@ pub use hyperdual::{
 };
 pub use hyperhyperdual::PyHyperHyperDual64;
 
+#[pymodule]
 pub fn num_dual(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_class::<PyDual64>()?;
