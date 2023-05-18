@@ -80,6 +80,10 @@ pub use hyperhyperdual::{
 };
 
 #[cfg(feature = "linalg")]
+#[deprecated(
+    since = "0.7.0",
+    note = "please use methods from `nalgebra` or other linear algebra libraries instead"
+)]
 pub mod linalg;
 
 #[cfg(feature = "python")]
@@ -216,7 +220,15 @@ pub trait DualNumFloat:
 {
 }
 impl<T> DualNumFloat for T where
-    T: Float + FloatConst + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
+    T: Float
+        + FloatConst
+        + FromPrimitive
+        + Signed
+        + fmt::Display
+        + fmt::Debug
+        + Sync
+        + Send
+        + 'static
 {
 }
 
