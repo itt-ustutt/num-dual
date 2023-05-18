@@ -848,13 +848,20 @@ where
     <DefaultAllocator as Allocator<T, D>>::Buffer: Sync + Send,
 {
     #[inline]
-    fn copysign(self, _sign: Self) -> Self {
-        todo!("copysign not yet implemented on dual numbers")
+    fn copysign(self, sign: Self) -> Self {
+        if sign.re.is_sign_positive() {
+            self.simd_abs()
+        } else {
+            -self.simd_abs()
+        }
     }
 
     #[inline]
-    fn atan2(self, _other: Self) -> Self {
-        todo!("atan2 not yet implemented on dual numbers")
+    fn atan2(self, other: Self) -> Self {
+        let re = self.re.atan2(other.re);
+        let eps =
+            (self.eps * other.re - other.eps * self.re) / (self.re.powi(2) + other.re.powi(2));
+        DualVec::new(re, eps)
     }
 
     #[inline]
@@ -982,5 +989,20 @@ where
     #[inline]
     fn max_value() -> Option<Self> {
         Some(Self::from_re(T::max_value()))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn test_atan2() {
+        let x = Dual64::from(2.0).derivative();
+        let y = Dual64::from(-3.0);
+        let z = x.atan2(y);
+        let z2 = (x / y).atan();
+        assert_relative_eq!(z.eps.unwrap(), z2.eps.unwrap(), epsilon = 1e-14);
     }
 }
