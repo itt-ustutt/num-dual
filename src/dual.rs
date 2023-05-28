@@ -292,11 +292,11 @@ impl_dual!(DualVec, [eps], [D]);
  * The primary job of this SimdValue impl is to allow people to use `simba::simd::f32x4` etc,
  * instead of f32/f64. Those types implement nalgebra::SimdRealField/ComplexField, so they
  * behave like scalars. When we use them, we would have `DualVec<f32x4, f32, N>` etc, with our
- * F parameter set to <T as SimdValue>::Element. We will need to be able to split up that type
+ * F parameter set to `<T as SimdValue>::Element`. We will need to be able to split up that type
  * into four of DualVec in order to get out of simd-land. That's what the SimdValue trait is for.
  *
  * Ultimately, someone will have to to implement SimdRealField on DualVec and call the
- * simd_ functions of <T as SimdRealField>. That's future work for someone who finds
+ * simd_ functions of `<T as SimdRealField>`. That's future work for someone who finds
  * num_dual is not fast enough.
  *
  * Unfortunately, doing anything with SIMD is blocked on

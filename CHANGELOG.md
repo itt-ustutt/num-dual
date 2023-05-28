@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7.0] - 2023-05-20
+## [0.7.0] - 2023-05-29
 ### Added
 - Added new `HyerHyperDual` number for the calculation of third partial derivatives. [#51](https://github.com/itt-ustutt/num-dual/pull/51)
 - Added new functions `first_derivative`, `gradient`, `jacobian`, `second_derivative`, `hessian`, `third_derivative`, `second_partial_derivative`, `partial_hessian`, `third_partial_derivative` and `third_partial_derivative_vec` that provide a convenient interface for the calculation of derivatives. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
