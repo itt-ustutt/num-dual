@@ -6,7 +6,7 @@ use num_traits::Zero;
 use std::fmt;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
-use std::ops::{Add, AddAssign, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(
@@ -187,6 +187,28 @@ where
 
     fn mul(self, rhs: &Derivative<T, F, R2, C2>) -> Derivative<T, F, R, C2> {
         Derivative::new(self.0.as_ref().zip(rhs.0.as_ref()).map(|(s, r)| s * r))
+    }
+}
+
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Div<T> for Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+        Derivative::new(self.0.map(|x| x / rhs))
+    }
+}
+
+impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Div<T> for &'a Derivative<T, F, R, C>
+where
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Output = Derivative<T, F, R, C>;
+
+    fn div(self, rhs: T) -> Self::Output {
+        Derivative::new(self.0.as_ref().map(|x| x / rhs))
     }
 }
 
