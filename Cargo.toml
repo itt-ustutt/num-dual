@@ -13,10 +13,13 @@ keywords = ["mathematics", "numerics", "differentiation"]
 categories = ["data-structures", "science", "mathematics"]
 exclude = ["/.github/*", "*.ipynb", "./docs/*"]
 
+[lib]
+name = "num_dual"
+
 [dependencies]
 num-traits = "0.2"
 nalgebra = "0.32"
-pyo3 = { version = "0.18", optional = true, features = ["multiple-pymethods"] }
+pyo3 = { version = "0.18", optional = true, features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py37"] }
 ndarray = { version = "0.15", optional = true }
 numpy = { version = "0.18", optional = true }
 approx = "0.5"
@@ -27,7 +30,8 @@ lto = true
 
 [features]
 default = []
-python = ["pyo3", "numpy", "ndarray"]
+python_macro = []
+python = ["pyo3", "numpy", "ndarray", "python_macro"]
 linalg = ["ndarray"]
 
 [dev-dependencies]
