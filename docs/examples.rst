@@ -6,19 +6,19 @@ First, second and third derivatives
 
 Let's define a simple, scalar valued function for which we want to compute the first, second and third derivative.
 
+>>> # f(x) = x**3, f'(x) = 3 * x**2, f''(x) = 6 * x
 >>> def f(x):
->>> """f'(x) = 3 * x**2, f''(x) = 6 * x"""
 >>>     return x**3
 
 The function is defined just like a regular python function.
-Different from a regular python function though, we use (hyper)dual numbers as arguments.
+Different from a regular python function though, we use (hyper-) dual numbers as arguments.
 For example, to compute the first derivative at x = 2, we need to call the function with a dual number as input, setting the dual part (ε)
 to 1.0.
 
 >>> from num_dual import Dual64
 >>> x = Dual64(2.0, 1.0)
 >>> x
-2 + [1]ε
+2 + 1ε
 
 Then, calling the function, the result is also a dual number, where the real part (or value)
 is the result of the function that we would get by simply calling it with a floating point number,
@@ -28,23 +28,23 @@ whereas the dual part (or first derivative) contains the derivative.
 >>> result
 8 + 12ε
 >>> result.value
-8
+8.0
 >>> result.first_derivative
-12
+12.0
 
 The value we used for the dual part (1.0) is not important, however,
 the resulting derivatives will be multiples of the chosen value and as such we set it to unity.
 
 The procedure as outlined above works fine, but you have to know what type of dual number you have to use.
-E.g. for the second derivative, the function argument has to be a hyerdual number. We therefore introduce
-helper functions that can be used to simply declare the order of the derivative you want to compute.
+E.g., for the second partial derivative, the function argument has to be a hyperdual number. We therefore introduce
+helper functions that can be used to simply declare which derivative you want to compute.
 
 The same result as above can be created via
 
 >>> from num_dual import first_derivative
 >>> (result, derivative) = first_derivative(f, 2.0)
 >>> derivative
-12
+12.0
 
 Internally, the correct dual number is constructed and used to evaluate the function.
 
@@ -61,7 +61,7 @@ f'''(x) = 6.0
 Partial derivatives
 ^^^^^^^^^^^^^^^^^^^
 
-Hyperdual numbers can be used to compute partial derivatives of multivariate functions (functions of several real valued variables) as well.
+Hyper-dual numbers can be used to compute partial derivatives of multivariate functions (functions of several real valued variables) as well.
 A function that is often used as benchmark in optimization problems is the Rosenbrock function which is defined as:
 
   .. math::
@@ -70,12 +70,12 @@ A function that is often used as benchmark in optimization problems is the Rosen
 
 The function and its derivatives are implemented in `scipy`. Let's compute the partial derivatives of the Rosenbrock function.
 
->>> from num_dual import derive2
+>>> from num_dual import second_partial_derivative
 >>> from scipy.optimize import rosen, rosen_der
 >>> import numpy as np
 >>> x, y = 0.5, 1.0
 
-`seond_partial_derivative` can be used to calculate partial derivatives of bivariate functions (functions with two input parameters. Because the Rosenbrock function takes one single vector of inputs, it is wrapped in a lambda function.
+`second_partial_derivative` can be used to calculate partial derivatives of bivariate functions (functions with two input parameters). Because the Rosenbrock function takes one single vector of inputs, it is wrapped in a lambda function.
 
 >>> second_partial_derivative(lambda x, y: rosen([x, y]), x, y)
 (56.5, -151.0, 150.0, -200.0)
@@ -97,7 +97,7 @@ Compute partial derivatives of multiple arguments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Consider a function that takes three arguments as input, one of which is vector valued.
-Such a function is e.g. the helmholtz energy, denoted as :math:`A`, a function important in statistical mechanics.
+Such a function is, e.g., the helmholtz energy, denoted as :math:`A`, a function important in statistical mechanics and thermodynamics.
 It is a function of the volume, :math:`V`, the temperature, :math:`T`, and the number of particles of possibly
 multiple components, :math:`N`. Let's define this function (for an ideal gas) and compute some interesting properties.
 
@@ -124,13 +124,13 @@ The specifics of the equation are not important, but note that besides `t` and `
 
 Now, we can compute different partial derivatives. For example, we can compute the first derivative with respect to `t` (temperature).
 
->>> (_, s) = first_derivative(lambda t: -helmholtz_energy(t, v, n, mw), t) # entropy
+>>> (_, s) = first_derivative(lambda t: -helmholtz_energy(t, v, n, mw), t) # (negative) entropy
 >>> s
 956.4722861925324
 
 Or the partial derivative with respect to the values of `n`:
 
->>> (_, mu) = first_derivative(lambda n: helmholtz_energy(t, v, n, mw), n) # chemical potential
+>>> (_, mu) = gradient(lambda n: helmholtz_energy(t, v, n, mw), n) # chemical potential
 >>> mu
 [-54192.23064420561, -46593.74696257142]
 
@@ -141,7 +141,7 @@ The examples shown above contain very simple mathematical equations.
 We provide evaluations for a lot of useful mathematical expressions that are defined in `numpy`.
 
 >>> def f(x):
-...     return np.exp(x) / np.sqrt(np.sin(x)**3 + np.cos(x)**3)
+>>>     return np.exp(x) / np.sqrt(np.sin(x)**3 + np.cos(x)**3)
 >>> f(1.5)
 4.497780053946161
 

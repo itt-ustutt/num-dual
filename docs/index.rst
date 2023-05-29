@@ -1,5 +1,5 @@
 num_dual - generalized (hyper) dual numbers in python
-====================================================
+=====================================================
 
 Using dual numbers, you can compute exact derivatives of functions without writing analytical derivatives
 or using numeric differentiation.
@@ -7,7 +7,7 @@ or using numeric differentiation.
 Installation
 ------------
 
-You can install `num_dual` from pypi using `pip`:
+You can install `num_dual` from PyPI using `pip`:
 
 ```
 pip install num_dual
