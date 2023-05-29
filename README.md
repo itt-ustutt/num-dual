@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-dual = "0.6"
+num-dual = "0.7"
 ```
 
 ## Example
@@ -105,7 +105,7 @@ Open `_build/html/index.html` in your browser.
 
 If you want to learn more about the topic of dual numbers and automatic differentiation, we have listed some useful resources for you here:
 
-- Initial paper about hyper-dual numbers: [Fike, J. and Alonso, 2011](https://arc.aiaa.org/doi/abs/10.2514/6.2011-886)
+- Initial paper about hyper-dual numbers: [Fike, J. and Alonso, J., 2011](https://arc.aiaa.org/doi/abs/10.2514/6.2011-886)
 - Website about all topics regarding automatic differentiation: [autodiff.org](http://www.autodiff.org/)
 - Our paper about dual numbers in equation of state modeling: [Rehner, P. and Bauer, G., 2021](https://www.frontiersin.org/article/10.3389/fceng.2021.758090)
 

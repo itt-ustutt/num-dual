@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `derive*` methods to `derivative*`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
 - Generalized the implementation of vector dual numbers to use both statically and dynamically sized arrays internally. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
 - Removed `Copy`, `Send` and `Sync` as supertraits of `DualNum`. The individual dual number data types still implement the traits if they are statically allocated. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
-- Renamed type aliases from, e.g.,  `DualVec` to `DualSVec` and `DualDVec` for statically and dynamically allocated dual numbers, respectively. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
+- Renamed type aliases from, e.g., `DualVec` to `DualSVec` and `DualDVec` for statically and dynamically allocated dual numbers, respectively. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
 
 ### Removed
 - Removed the `StaticMat` struct in favor of the analogous implementations from `nalgebra`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
