@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.7.0] - 2023-05-29
 ### Added
 - Added new `HyerHyperDual` number for the calculation of third partial derivatives. [#51](https://github.com/itt-ustutt/num-dual/pull/51)
 - Added new functions `first_derivative`, `gradient`, `jacobian`, `second_derivative`, `hessian`, `third_derivative`, `second_partial_derivative`, `partial_hessian`, `third_partial_derivative` and `third_partial_derivative_vec` that provide a convenient interface for the calculation of derivatives. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
@@ -16,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `derive*` methods to `derivative*`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)
 - Generalized the implementation of vector dual numbers to use both statically and dynamically sized arrays internally. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
 - Removed `Copy`, `Send` and `Sync` as supertraits of `DualNum`. The individual dual number data types still implement the traits if they are statically allocated. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
-- Renamed type aliases from, e.g.,  `DualVec` to `DualSVec` and `DualDVec` for statically and dynamically allocated dual numbers, respectively. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
+- Renamed type aliases from, e.g., `DualVec` to `DualSVec` and `DualDVec` for statically and dynamically allocated dual numbers, respectively. [#58](https://github.com/itt-ustutt/num-dual/pull/58)
 
 ### Removed
 - Removed the `StaticMat` struct in favor of the analogous implementations from `nalgebra`. [#52](https://github.com/itt-ustutt/num-dual/pull/52)

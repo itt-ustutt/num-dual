@@ -8,6 +8,7 @@ use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+/// Wrapper struct for a derivative vector or matrix.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(
     pub(crate) Option<OMatrix<T, R, C>>,
