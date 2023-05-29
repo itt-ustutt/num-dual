@@ -1,0 +1,6 @@
+﻿num\_dual.second\_partial\_derivative
+=====================================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: second_partial_derivative

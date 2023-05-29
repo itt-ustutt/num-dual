@@ -1,0 +1,6 @@
+﻿num\_dual.third\_derivative
+===========================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: third_derivative

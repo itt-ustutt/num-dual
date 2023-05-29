@@ -1,6 +1,6 @@
-﻿num\_dual.derive1
+﻿num\_dual.hessian
 =================
 
 .. currentmodule:: num_dual
 
-.. autofunction:: derive1
+.. autofunction:: hessian

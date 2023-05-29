@@ -1,98 +1,60 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>num_dual.Dual64 &mdash; num_dual 0.6.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>num_dual.Dual64 &mdash; num_dual 0.7.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="num_dual.HyperDual64" href="num_dual.HyperDual64.html" />
-    <link rel="prev" title="num_dual.derive3" href="num_dual.derive3.html" /> 
+    <link rel="prev" title="num_dual.third_partial_derivative_vec" href="num_dual.third_partial_derivative_vec.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="../index.html" class="icon icon-home"> num_dual
           
-
-          
+          <a href="../index.html" class="icon icon-home">
+            num_dual
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="num_dual.derive1.html">num_dual.derive1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="num_dual.derive2.html">num_dual.derive2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="num_dual.derive3.html">num_dual.derive3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.first_derivative.html">num_dual.first_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.gradient.html">num_dual.gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.jacobian.html">num_dual.jacobian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.second_derivative.html">num_dual.second_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.hessian.html">num_dual.hessian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.third_derivative.html">num_dual.third_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.second_partial_derivative.html">num_dual.second_partial_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.partial_hessian.html">num_dual.partial_hessian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.third_partial_derivative.html">num_dual.third_partial_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.third_partial_derivative_vec.html">num_dual.third_partial_derivative_vec</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">num_dual.Dual64</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#num_dual.Dual64"><code class="docutils literal notranslate"><span class="pre">Dual64</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#num_dual.Dual64.__init__"><code class="docutils literal notranslate"><span class="pre">Dual64.__init__()</span></code></a></li>
@@ -103,82 +65,41 @@
 <li class="toctree-l2"><a class="reference internal" href="num_dual.HyperDual64.html">num_dual.HyperDual64</a></li>
 <li class="toctree-l2"><a class="reference internal" href="num_dual.Dual2_64.html">num_dual.Dual2_64</a></li>
 <li class="toctree-l2"><a class="reference internal" href="num_dual.Dual3_64.html">num_dual.Dual3_64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="num_dual.HyperHyperDual64.html">num_dual.HyperHyperDual64</a></li>
 </ul>
 </li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">num_dual</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="../api.html">API</a> &raquo;</li>
-        
-      <li>num_dual.Dual64</li>
-    
-    
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API</a></li>
+      <li class="breadcrumb-item active">num_dual.Dual64</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/generated/num_dual.Dual64.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <section id="num-dual-dual64">
-<h1>num_dual.Dual64<a class="headerlink" href="#num-dual-dual64" title="Permalink to this heading">¶</a></h1>
+<h1>num_dual.Dual64<a class="headerlink" href="#num-dual-dual64" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="num_dual.Dual64">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">num_dual.</span></span><span class="sig-name descname"><span class="pre">Dual64</span></span><a class="headerlink" href="#num_dual.Dual64" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">num_dual.</span></span><span class="sig-name descname"><span class="pre">Dual64</span></span><a class="headerlink" href="#num_dual.Dual64" title="Permalink to this definition"></a></dt>
 <dd><p>Dual number using 64-bit-floats as fields.</p>
 <p>A dual number consists of
 f_0 + f_1 ε
@@ -192,21 +113,18 @@ where f_0 is the function value and f_1 its first derivative.</p>
 </pre></div>
 </div>
 <p>First derivative of a function.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">Dual64</span> <span class="k">as</span> <span class="n">D64</span><span class="p">,</span> <span class="n">derive1</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">first_derivative</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">derive1</span><span class="p">(</span><span class="mf">4.0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># this is equivalent to the above</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">D64</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fx</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fx</span><span class="o">.</span><span class="n">value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">,</span> <span class="n">df</span> <span class="o">=</span> <span class="n">first_derivative</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">4.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span>
 <span class="go">18.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fx</span><span class="o">.</span><span class="n">first_derivative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span>
 <span class="go">8.25</span>
 </pre></div>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="num_dual.Dual64.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#num_dual.Dual64.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#num_dual.Dual64.__init__" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
@@ -254,64 +172,61 @@ where f_0 is the function value and f_1 its first derivative.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_re</span></code>(re)</p></td>
 <td><p>(Hyper) dual number from real part, setting all other parts to zero.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_derivative_zero</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>()</p></td>
 <td><p>Calculate natural logarithm.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log10</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log10</span></code>()</p></td>
 <td><p>Calculate logarithm with base 10.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log1p</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log1p</span></code>()</p></td>
 <td><p>Returns ln(1+n) (natural logarithm) more accurately than if the operations were performed separately.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log2</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log2</span></code>()</p></td>
 <td><p>Calculate logarithm with base 2.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_base</span></code>(base)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_base</span></code>(base)</p></td>
 <td><p>Calculate logarithm with given base.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mul_add</span></code>(a, b)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mul_add</span></code>(a, b)</p></td>
 <td><p>Fused multiply-add.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">powd</span></code>(n)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">powd</span></code>(n)</p></td>
 <td><p>Power using self (hyper) dual number as exponent.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">powf</span></code>(n)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">powf</span></code>(n)</p></td>
 <td><p>Power using 64-bin float as exponent.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">powi</span></code>(n)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">powi</span></code>(n)</p></td>
 <td><p>Power using 32-bit integer as exponent.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">recip</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">recip</span></code>()</p></td>
 <td><p>Reciprocal value of self.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sin</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sin</span></code>()</p></td>
 <td><p>Hyperbolic sine function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sin_cos</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sin_cos</span></code>()</p></td>
 <td><p>Simultaneously computes the sine and cosine of the (hyper) dual number, x.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sinh</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sinh</span></code>()</p></td>
 <td><p>Computes the hyperbolic sine of a (hyper) dual number.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sph_j0</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sph_j0</span></code>()</p></td>
 <td><p>Computes the first spherical bessel function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sph_j1</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sph_j1</span></code>()</p></td>
 <td><p>Computes the second spherical bessel function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sph_j2</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sph_j2</span></code>()</p></td>
 <td><p>Computes the third spherical bessel function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sqrt</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sqrt</span></code>()</p></td>
 <td><p>Sqaure root.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tan</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tan</span></code>()</p></td>
 <td><p>Computes the tangent of a (hyper) dual number (in radians).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tanh</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tanh</span></code>()</p></td>
 <td><p>Computes the hyperbolic tangent of a (hyper) dual number.</p></td>
 </tr>
 </tbody>
@@ -320,7 +235,7 @@ where f_0 is the function value and f_1 its first derivative.</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_derivative</span></code></p></td>
-<td><p>Dual part.</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">value</span></code></p></td>
 <td><p>Real part.</p></td>
@@ -333,50 +248,33 @@ where f_0 is the function value and f_1 its first derivative.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="num_dual.third_partial_derivative_vec.html" class="btn btn-neutral float-left" title="num_dual.third_partial_derivative_vec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="num_dual.HyperDual64.html" class="btn btn-neutral float-right" title="num_dual.HyperDual64" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="num_dual.derive3.html" class="btn btn-neutral float-left" title="num_dual.derive3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Philipp Rehner, Gernot Bauer.
-
-    </p>
+    <p>&#169; Copyright 2021, Philipp Rehner, Gernot Bauer.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

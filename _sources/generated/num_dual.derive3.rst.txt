@@ -1,6 +1,0 @@
-﻿num\_dual.derive3
-=================
-
-.. currentmodule:: num_dual
-
-.. autofunction:: derive3

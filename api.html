@@ -1,195 +1,141 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>API &mdash; num_dual 0.6.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>API &mdash; num_dual 0.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="num_dual.derive1" href="generated/num_dual.derive1.html" />
+    <link rel="next" title="num_dual.first_derivative" href="generated/num_dual.first_derivative.html" />
     <link rel="prev" title="Examples" href="examples.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
           
-            <a href="index.html" class="icon icon-home"> num_dual
           
-
-          
+          <a href="index.html" class="icon icon-home">
+            num_dual
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.derive1.html">num_dual.derive1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.derive2.html">num_dual.derive2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.derive3.html">num_dual.derive3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.first_derivative.html">num_dual.first_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.gradient.html">num_dual.gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.jacobian.html">num_dual.jacobian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.second_derivative.html">num_dual.second_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.hessian.html">num_dual.hessian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.third_derivative.html">num_dual.third_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.second_partial_derivative.html">num_dual.second_partial_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.partial_hessian.html">num_dual.partial_hessian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.third_partial_derivative.html">num_dual.third_partial_derivative</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.third_partial_derivative_vec.html">num_dual.third_partial_derivative_vec</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/num_dual.Dual64.html">num_dual.Dual64</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/num_dual.HyperDual64.html">num_dual.HyperDual64</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/num_dual.Dual2_64.html">num_dual.Dual2_64</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/num_dual.Dual3_64.html">num_dual.Dual3_64</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/num_dual.HyperHyperDual64.html">num_dual.HyperHyperDual64</a></li>
 </ul>
 </li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">num_dual</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
-      <li>API</li>
-    
-    
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <section id="api">
-<h1>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h1>
+<h1>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h1>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.derive1.html#num_dual.derive1" title="num_dual.derive1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derive1</span></code></a>(x)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.first_derivative.html#num_dual.first_derivative" title="num_dual.first_derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_derivative</span></code></a>(f, x)</p></td>
+<td><p>Calculate the first derivative of a scalar, univariate function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.derive2.html#num_dual.derive2" title="num_dual.derive2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derive2</span></code></a>(x1[, x2])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.gradient.html#num_dual.gradient" title="num_dual.gradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradient</span></code></a>(f, x)</p></td>
+<td><p>Calculate the gradient of a scalar, multivariate function.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.derive3.html#num_dual.derive3" title="num_dual.derive3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derive3</span></code></a>(x)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.jacobian.html#num_dual.jacobian" title="num_dual.jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jacobian</span></code></a>(f, x)</p></td>
+<td><p>Calculate the Jacobian of a vector, multivariate function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.Dual64.html#num_dual.Dual64" title="num_dual.Dual64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dual64</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.second_derivative.html#num_dual.second_derivative" title="num_dual.second_derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">second_derivative</span></code></a>(f, x)</p></td>
+<td><p>Calculate the second derivative of a scalar, univariate function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.hessian.html#num_dual.hessian" title="num_dual.hessian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hessian</span></code></a>(f, x)</p></td>
+<td><p>Calculate the Hessian of a scalar, multivariate function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.third_derivative.html#num_dual.third_derivative" title="num_dual.third_derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">third_derivative</span></code></a>(f, x)</p></td>
+<td><p>Calculate the third derivative of a scalar, univariate function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.second_partial_derivative.html#num_dual.second_partial_derivative" title="num_dual.second_partial_derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">second_partial_derivative</span></code></a>(f, x, y)</p></td>
+<td><p>Calculate the second partial derivatives of a scalar, bivariate function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.partial_hessian.html#num_dual.partial_hessian" title="num_dual.partial_hessian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partial_hessian</span></code></a>(f, x, y)</p></td>
+<td><p>Calculate the Hessian of a scalar function w.r.t.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.third_partial_derivative.html#num_dual.third_partial_derivative" title="num_dual.third_partial_derivative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">third_partial_derivative</span></code></a>(f, x, y, z)</p></td>
+<td><p>Calculate the third partial derivative of a scalar, trivariate function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.third_partial_derivative_vec.html#num_dual.third_partial_derivative_vec" title="num_dual.third_partial_derivative_vec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">third_partial_derivative_vec</span></code></a>(f, x, i, j, k)</p></td>
+<td><p>Calculate the third partial derivative of a scalar function with arbitrary many variables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.Dual64.html#num_dual.Dual64" title="num_dual.Dual64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dual64</span></code></a></p></td>
 <td><p>Dual number using 64-bit-floats as fields.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.HyperDual64.html#num_dual.HyperDual64" title="num_dual.HyperDual64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HyperDual64</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.HyperDual64.html#num_dual.HyperDual64" title="num_dual.HyperDual64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HyperDual64</span></code></a></p></td>
 <td><p>Hyper-dual number using 64-bit-floats as fields.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.Dual2_64.html#num_dual.Dual2_64" title="num_dual.Dual2_64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dual2_64</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.Dual2_64.html#num_dual.Dual2_64" title="num_dual.Dual2_64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dual2_64</span></code></a></p></td>
 <td><p>Second order dual number using 64-bit-floats as fields.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.Dual3_64.html#num_dual.Dual3_64" title="num_dual.Dual3_64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dual3_64</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/num_dual.Dual3_64.html#num_dual.Dual3_64" title="num_dual.Dual3_64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dual3_64</span></code></a></p></td>
 <td><p>Third order dual number using 64-bit-floats as fields.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/num_dual.HyperHyperDual64.html#num_dual.HyperHyperDual64" title="num_dual.HyperHyperDual64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HyperHyperDual64</span></code></a></p></td>
+<td><p>Third order hyper dual number using 64-bit-floats as fields.</p></td>
 </tr>
 </tbody>
 </table>
@@ -197,50 +143,33 @@
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="generated/num_dual.derive1.html" class="btn btn-neutral float-right" title="num_dual.derive1" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="generated/num_dual.first_derivative.html" class="btn btn-neutral float-right" title="num_dual.first_derivative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Philipp Rehner, Gernot Bauer.
-
-    </p>
+    <p>&#169; Copyright 2021, Philipp Rehner, Gernot Bauer.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

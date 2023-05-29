@@ -1,0 +1,63 @@
+﻿num\_dual.HyperHyperDual64
+==========================
+
+.. currentmodule:: num_dual
+
+.. autoclass:: HyperHyperDual64
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HyperHyperDual64.__init__
+      ~HyperHyperDual64.arccos
+      ~HyperHyperDual64.arccosh
+      ~HyperHyperDual64.arcsin
+      ~HyperHyperDual64.arcsinh
+      ~HyperHyperDual64.arctan
+      ~HyperHyperDual64.arctanh
+      ~HyperHyperDual64.cbrt
+      ~HyperHyperDual64.cos
+      ~HyperHyperDual64.cosh
+      ~HyperHyperDual64.exp
+      ~HyperHyperDual64.exp2
+      ~HyperHyperDual64.expm1
+      ~HyperHyperDual64.from_re
+      ~HyperHyperDual64.log
+      ~HyperHyperDual64.log10
+      ~HyperHyperDual64.log1p
+      ~HyperHyperDual64.log2
+      ~HyperHyperDual64.log_base
+      ~HyperHyperDual64.mul_add
+      ~HyperHyperDual64.powd
+      ~HyperHyperDual64.powf
+      ~HyperHyperDual64.powi
+      ~HyperHyperDual64.recip
+      ~HyperHyperDual64.sin
+      ~HyperHyperDual64.sin_cos
+      ~HyperHyperDual64.sinh
+      ~HyperHyperDual64.sph_j0
+      ~HyperHyperDual64.sph_j1
+      ~HyperHyperDual64.sph_j2
+      ~HyperHyperDual64.sqrt
+      ~HyperHyperDual64.tan
+      ~HyperHyperDual64.tanh
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HyperHyperDual64.first_derivative
+      ~HyperHyperDual64.second_derivative
+      ~HyperHyperDual64.third_derivative
+      ~HyperHyperDual64.value
+   
+   

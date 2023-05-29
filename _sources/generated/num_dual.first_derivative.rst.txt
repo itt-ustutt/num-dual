@@ -1,0 +1,6 @@
+﻿num\_dual.first\_derivative
+===========================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: first_derivative

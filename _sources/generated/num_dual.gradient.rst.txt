@@ -1,0 +1,6 @@
+﻿num\_dual.gradient
+==================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: gradient

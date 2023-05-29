@@ -1,0 +1,6 @@
+﻿num\_dual.jacobian
+==================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: jacobian

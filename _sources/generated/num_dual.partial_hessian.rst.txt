@@ -1,0 +1,6 @@
+﻿num\_dual.partial\_hessian
+==========================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: partial_hessian

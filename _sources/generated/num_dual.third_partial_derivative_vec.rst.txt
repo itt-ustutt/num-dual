@@ -1,0 +1,6 @@
+﻿num\_dual.third\_partial\_derivative\_vec
+=========================================
+
+.. currentmodule:: num_dual
+
+.. autofunction:: third_partial_derivative_vec
