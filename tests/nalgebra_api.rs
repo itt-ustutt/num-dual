@@ -18,7 +18,7 @@ fn use_nalgebra_2d() {
     let t = Dual32::from_re(0.25).derivative();
     let point = unit_circle(t);
     let real = point.map(|x| x.re);
-    let grad = point.map(|x| x.eps.unwrap());
+    let grad = point.map(|x| x.eps);
     println!("point: {}", point.coords);
     approx::assert_relative_eq!(real, Point2::new(0., 1.), epsilon = 1e-3);
     approx::assert_relative_eq!(grad, Point2::new(-TAU, 0.), epsilon = 1e-3);
@@ -39,7 +39,7 @@ fn use_nalgebra_3d() {
     let function = |t: Dual32| rotation * lifted_3d_circle(t);
     let point = function(Dual32::from_re(0.25).derivative());
     let real = point.map(|x| x.re);
-    let grad = point.map(|x| x.eps.unwrap());
+    let grad = point.map(|x| x.eps);
     println!("rotated point: {}", point.coords);
     approx::assert_relative_eq!(real.coords, real.coords.normalize(), epsilon = 1e-3);
     approx::assert_relative_eq!(real, Point3::new(0.146, 0.924, 0.354), epsilon = 1e-3);
@@ -55,7 +55,7 @@ fn eigenvalues() {
     let v = SymmetricEigen::new(m).eigenvalues;
     println!("{v}");
     approx::assert_relative_eq!(v[0].re, 5.0);
-    approx::assert_relative_eq!(v[0].eps.unwrap(), 0.2);
+    approx::assert_relative_eq!(v[0].eps, 0.2);
     approx::assert_relative_eq!(v[1].re, 0.0);
-    approx::assert_relative_eq!(v[1].eps.unwrap(), 0.8);
+    approx::assert_relative_eq!(v[1].eps, 0.8);
 }

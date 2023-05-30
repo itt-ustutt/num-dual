@@ -1,5 +1,5 @@
 #![allow(clippy::assign_op_pattern)]
-use crate::{Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperHyperDual};
+use crate::{Dual, Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperHyperDual};
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, U1};
 use ndarray::{Array1, Array2, ScalarOperand};
@@ -8,6 +8,7 @@ use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
+impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for DualVec<T, F, N> where
     DefaultAllocator: Allocator<T, N>
 {
