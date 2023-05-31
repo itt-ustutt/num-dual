@@ -67,7 +67,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     {
         let mut group = c.benchmark_group("Hard sphere contribution");
         group.bench_function("f64", |b| b.iter(|| bench(1.0)));
-        group.bench_function("Dual64", |b| b.iter(|| bench(Dual64::new_scalar(1.0, 1.0))));
+        group.bench_function("Dual64", |b| b.iter(|| bench(Dual64::new(1.0, 1.0))));
         group.bench_function("DualVec64<2>", |b| {
             b.iter(|| {
                 bench(DualVec::new(
