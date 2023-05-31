@@ -38,17 +38,17 @@ pub struct PyHyperDual64(HyperDual64);
 impl PyHyperDual64 {
     #[new]
     pub fn new(re: f64, eps1: f64, eps2: f64, eps1eps2: f64) -> Self {
-        HyperDual::new_scalar(re, eps1, eps2, eps1eps2).into()
+        HyperDual::new(re, eps1, eps2, eps1eps2).into()
     }
 
     #[getter]
     fn get_first_derivative(&self) -> (f64, f64) {
-        (self.0.eps1.unwrap(), self.0.eps2.unwrap())
+        (self.0.eps1, self.0.eps2)
     }
 
     #[getter]
     fn get_second_derivative(&self) -> f64 {
-        self.0.eps1eps2.unwrap()
+        self.0.eps1eps2
     }
 }
 
@@ -63,17 +63,17 @@ pub struct PyHyperDualDual64(HyperDual<Dual64, f64>);
 impl PyHyperDualDual64 {
     #[new]
     pub fn new(re: PyDual64, eps1: PyDual64, eps2: PyDual64, eps1eps2: PyDual64) -> Self {
-        HyperDual::new_scalar(re.into(), eps1.into(), eps2.into(), eps1eps2.into()).into()
+        HyperDual::new(re.into(), eps1.into(), eps2.into(), eps1eps2.into()).into()
     }
 
     #[getter]
     fn get_first_derivative(&self) -> (PyDual64, PyDual64) {
-        (self.0.eps1.unwrap().into(), self.0.eps2.unwrap().into())
+        (self.0.eps1.into(), self.0.eps2.into())
     }
 
     #[getter]
     fn get_second_derivative(&self) -> PyDual64 {
-        self.0.eps1eps2.unwrap().into()
+        self.0.eps1eps2.into()
     }
 }
 

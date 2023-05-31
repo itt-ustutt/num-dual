@@ -6,24 +6,24 @@ use std::iter::{Product, Sum};
 use std::marker::PhantomData;
 use std::ops::*;
 
-/// A scalar hyper hyper dual number for the calculation of third partial derivatives.
+/// A scalar hyper-hyper-dual number for the calculation of third partial derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct HyperHyperDual<T, F = T> {
-    /// Real part of the hyper hyper dual number
+    /// Real part of the hyper-hyper-dual number
     pub re: T,
-    /// First partial derivative part of the hyper hyper dual number
+    /// First partial derivative part of the hyper-hyper-dual number
     pub eps1: T,
-    /// First partial derivative part of the hyper hyper dual number
+    /// First partial derivative part of the hyper-hyper-dual number
     pub eps2: T,
-    /// First partial derivative part of the hyper hyper dual number
+    /// First partial derivative part of the hyper-hyper-dual number
     pub eps3: T,
-    /// Second partial derivative part of the hyper hyper dual number
+    /// Second partial derivative part of the hyper-hyper-dual number
     pub eps1eps2: T,
-    /// Second partial derivative part of the hyper hyper dual number
+    /// Second partial derivative part of the hyper-hyper-dual number
     pub eps1eps3: T,
-    /// Second partial derivative part of the hyper hyper dual number
+    /// Second partial derivative part of the hyper-hyper-dual number
     pub eps2eps3: T,
-    /// Third partial derivative part of the hyper hyper dual number
+    /// Third partial derivative part of the hyper-hyper-dual number
     pub eps1eps2eps3: T,
     f: PhantomData<F>,
 }
@@ -32,7 +32,7 @@ pub type HyperHyperDual32 = HyperHyperDual<f32>;
 pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
 impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
-    /// Create a new hyper hyper dual number from its fields.
+    /// Create a new hyper-hyper-dual number from its fields.
     #[inline]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -79,7 +79,7 @@ impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
         self
     }
 
-    /// Create a new hyper hyper dual number from the real part.
+    /// Create a new hyper-hyper-dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(

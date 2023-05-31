@@ -39,17 +39,17 @@ pub struct PyDual2_64(Dual2_64);
 impl PyDual2_64 {
     #[new]
     fn new(eps: f64, v1: f64, v2: f64) -> Self {
-        Dual2::new_scalar(eps, v1, v2).into()
+        Dual2::new(eps, v1, v2).into()
     }
 
     #[getter]
     fn get_first_derivative(&self) -> f64 {
-        self.0.v1.unwrap()
+        self.0.v1
     }
 
     #[getter]
     fn get_second_derivative(&self) -> f64 {
-        self.0.v2.unwrap()
+        self.0.v2
     }
 }
 
@@ -64,17 +64,17 @@ pub struct PyDual2Dual64(Dual2<Dual64, f64>);
 impl PyDual2Dual64 {
     #[new]
     pub fn new(v0: PyDual64, v1: PyDual64, v2: PyDual64) -> Self {
-        Dual2::new_scalar(v0.into(), v1.into(), v2.into()).into()
+        Dual2::new(v0.into(), v1.into(), v2.into()).into()
     }
 
     #[getter]
     fn get_first_derivative(&self) -> PyDual64 {
-        self.0.v1.unwrap().into()
+        self.0.v1.into()
     }
 
     #[getter]
     fn get_second_derivative(&self) -> PyDual64 {
-        self.0.v2.unwrap().into()
+        self.0.v2.into()
     }
 }
 
