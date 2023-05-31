@@ -55,16 +55,19 @@ mod bessel;
 mod derivative;
 mod dual;
 mod dual2;
+mod dual2_vec;
 mod dual3;
 mod dual_vec;
 mod hyperdual;
+mod hyperdual_vec;
 mod hyperhyperdual;
 pub use bessel::BesselDual;
 pub use derivative::Derivative;
 pub use dual::{first_derivative, try_first_derivative, Dual, Dual32, Dual64};
-pub use dual2::{
-    hessian, second_derivative, try_hessian, try_second_derivative, Dual2, Dual2DVec32,
-    Dual2DVec64, Dual2SVec32, Dual2SVec64, Dual2Vec, Dual2Vec32, Dual2Vec64, Dual2_32, Dual2_64,
+pub use dual2::{second_derivative, try_second_derivative, Dual2, Dual2_32, Dual2_64};
+pub use dual2_vec::{
+    hessian, try_hessian, Dual2DVec32, Dual2DVec64, Dual2SVec32, Dual2SVec64, Dual2Vec, Dual2Vec32,
+    Dual2Vec64,
 };
 pub use dual3::{third_derivative, try_third_derivative, Dual3, Dual3_32, Dual3_64};
 pub use dual_vec::{
@@ -72,8 +75,10 @@ pub use dual_vec::{
     DualVec, DualVec32, DualVec64,
 };
 pub use hyperdual::{
-    partial_hessian, second_partial_derivative, try_partial_hessian, try_second_partial_derivative,
-    HyperDual, HyperDual32, HyperDual64, HyperDualDVec32, HyperDualDVec64, HyperDualSVec32,
+    second_partial_derivative, try_second_partial_derivative, HyperDual, HyperDual32, HyperDual64,
+};
+pub use hyperdual_vec::{
+    partial_hessian, try_partial_hessian, HyperDualDVec32, HyperDualDVec64, HyperDualSVec32,
     HyperDualSVec64, HyperDualVec, HyperDualVec32, HyperDualVec64,
 };
 pub use hyperhyperdual::{

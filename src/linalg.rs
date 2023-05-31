@@ -1,5 +1,7 @@
 #![allow(clippy::assign_op_pattern)]
-use crate::{Dual, Dual2Vec, Dual3, DualNum, DualVec, HyperDualVec, HyperHyperDual};
+use crate::{
+    Dual, Dual2, Dual2Vec, Dual3, DualNum, DualVec, HyperDual, HyperDualVec, HyperHyperDual,
+};
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, U1};
 use ndarray::{Array1, Array2, ScalarOperand};
@@ -13,12 +15,14 @@ impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for DualVec<T, F, 
     DefaultAllocator: Allocator<T, N>
 {
 }
+impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual2<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for Dual2Vec<T, F, N> where
     DefaultAllocator: Allocator<T, U1, N> + Allocator<T, N, N>
 {
 }
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperHyperDual<T, F> {}
+impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static, M: Dim, N: Dim> ScalarOperand for HyperDualVec<T, F, M, N> where
     DefaultAllocator: Allocator<T, M> + Allocator<T, U1, N> + Allocator<T, M, N>
 {
