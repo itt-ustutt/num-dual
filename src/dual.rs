@@ -49,7 +49,7 @@ impl<T: DualNum<F> + One, F> Dual<T, F> {
     /// # use num_dual::{Dual64, DualNum};
     /// let x = Dual64::from_re(5.0).derivative().powi(2);
     /// assert_eq!(x.re, 25.0);
-    /// assert_eq!(x.eps.unwrap(), 10.0);
+    /// assert_eq!(x.eps, 10.0);
     /// ```
     #[inline]
     pub fn derivative(mut self) -> Self {

@@ -21,7 +21,7 @@
 //!     assert_eq!(df, 75.0);
 //!
 //!     // Manually construct the dual number
-//!     let x = Dual64::new_scalar(5.0, 1.0);
+//!     let x = Dual64::new(5.0, 1.0);
 //!     println!("{}", foo(x));                     // 125 + [75]ε
 //!
 //!     // Calculate a gradient

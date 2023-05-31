@@ -42,8 +42,8 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
     /// # use num_dual::{Dual2, DualNum};
     /// let x = Dual2::from_re(5.0).derivative().powi(2);
     /// assert_eq!(x.re, 25.0);             // x²
-    /// assert_eq!(x.v1.unwrap(), 10.0);    // 2x
-    /// assert_eq!(x.v2.unwrap(), 2.0);     // 2
+    /// assert_eq!(x.v1, 10.0);    // 2x
+    /// assert_eq!(x.v2, 2.0);     // 2
     /// ```
     ///
     /// Can also be used for higher order derivatives.
@@ -52,11 +52,11 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
     /// let x = Dual2::from_re(Dual64::from_re(5.0).derivative())
     ///     .derivative()
     ///     .powi(2);
-    /// assert_eq!(x.re.re, 25.0);                    // x²
-    /// assert_eq!(x.re.eps.unwrap(), 10.0);          // 2x
-    /// assert_eq!(x.v1.unwrap().re, 10.0);           // 2x
-    /// assert_eq!(x.v1.unwrap().eps.unwrap(), 2.0);  // 2
-    /// assert_eq!(x.v2.unwrap().re, 2.0);            // 2
+    /// assert_eq!(x.re.re, 25.0);      // x²
+    /// assert_eq!(x.re.eps, 10.0);     // 2x
+    /// assert_eq!(x.v1.re, 10.0);      // 2x
+    /// assert_eq!(x.v1.eps, 2.0);      // 2
+    /// assert_eq!(x.v2.re, 2.0);       // 2
     /// ```
     #[inline]
     pub fn derivative(mut self) -> Self {
@@ -85,14 +85,14 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
 /// The argument can also be a dual number.
 /// ```
 /// # use num_dual::{second_derivative, Dual2, Dual64, DualNum};
-/// let x = Dual64::new_scalar(5.0, 1.0);
+/// let x = Dual64::new(5.0, 1.0);
 /// let (f, df, d2f) = second_derivative(|x| x.powi(3), x);
-/// assert_eq!(f.re(), 125.0);           // x³
-/// assert_eq!(f.eps.unwrap(), 75.0);    // 3x²
-/// assert_eq!(df.re, 75.0);             // 3x²
-/// assert_eq!(df.eps.unwrap(), 30.0);   // 6x
-/// assert_eq!(d2f.re, 30.0);            // 6x
-/// assert_eq!(d2f.eps.unwrap(), 6.0);   // 6
+/// assert_eq!(f.re, 125.0);    // x³
+/// assert_eq!(f.eps, 75.0);    // 3x²
+/// assert_eq!(df.re, 75.0);    // 3x²
+/// assert_eq!(df.eps, 30.0);   // 6x
+/// assert_eq!(d2f.re, 30.0);   // 6x
+/// assert_eq!(d2f.eps, 6.0);   // 6
 /// ```
 pub fn second_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T, T)
 where
