@@ -8,7 +8,7 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A second order dual number for the calculation of second derivatives.
+/// A scalar second order dual number for the calculation of second derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Dual2<T: DualNum<F>, F> {
     /// Real part of the second order dual number

@@ -10,7 +10,7 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A second order dual number for the calculation of Hessians.
+/// A vector second order dual number for the calculation of Hessians.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Dual2Vec<T: DualNum<F>, F, D: Dim>
 where

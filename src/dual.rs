@@ -10,7 +10,7 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A dual number for the calculations of first derivatives.
+/// A scalar dual number for the calculations of first derivatives.
 #[derive(Copy, Clone, Debug)]
 pub struct Dual<T: DualNum<F>, F> {
     /// Real part of the dual number

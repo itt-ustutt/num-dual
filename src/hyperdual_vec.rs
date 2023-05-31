@@ -10,19 +10,19 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A hyper dual number for the calculation of partial Hessians.
+/// A vector hyper-dual number for the calculation of partial Hessians.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct HyperDualVec<T: DualNum<F>, F, M: Dim, N: Dim>
 where
     DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
 {
-    /// Real part of the hyper dual number
+    /// Real part of the hyper-dual number
     pub re: T,
-    /// Gradient part of the hyper dual number
+    /// Gradient part of the hyper-dual number
     pub eps1: Derivative<T, F, M, U1>,
-    /// Gradient part of the hyper dual number
+    /// Gradient part of the hyper-dual number
     pub eps2: Derivative<T, F, U1, N>,
-    /// Partial Hessian part of the hyper dual number
+    /// Partial Hessian part of the hyper-dual number
     pub eps1eps2: Derivative<T, F, M, N>,
     f: PhantomData<F>,
 }
@@ -45,7 +45,7 @@ impl<T: DualNum<F>, F, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
 where
     DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
 {
-    /// Create a new hyper dual number from its fields.
+    /// Create a new hyper-dual number from its fields.
     #[inline]
     pub fn new(
         re: T,
@@ -67,7 +67,7 @@ impl<T: DualNum<F>, F, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
 where
     DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
 {
-    /// Create a new hyper dual number from the real part.
+    /// Create a new hyper-dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(

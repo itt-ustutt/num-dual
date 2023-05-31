@@ -8,16 +8,16 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A hyper dual number for the calculation of second partial derivatives.
+/// A scalar hyper-dual number for the calculation of second partial derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct HyperDual<T: DualNum<F>, F> {
-    /// Real part of the hyper dual number
+    /// Real part of the hyper-dual number
     pub re: T,
-    /// Partial derivative part of the hyper dual number
+    /// Partial derivative part of the hyper-dual number
     pub eps1: T,
-    /// Partial derivative part of the hyper dual number
+    /// Partial derivative part of the hyper-dual number
     pub eps2: T,
-    /// Second partial derivative part of the hyper dual number
+    /// Second partial derivative part of the hyper-dual number
     pub eps1eps2: T,
     f: PhantomData<F>,
 }
@@ -26,7 +26,7 @@ pub type HyperDual32 = HyperDual<f32, f32>;
 pub type HyperDual64 = HyperDual<f64, f64>;
 
 impl<T: DualNum<F>, F> HyperDual<T, F> {
-    /// Create a new hyper dual number from its fields.
+    /// Create a new hyper-dual number from its fields.
     #[inline]
     pub fn new(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
         Self {
@@ -56,7 +56,7 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
 }
 
 impl<T: DualNum<F>, F> HyperDual<T, F> {
-    /// Create a new hyper dual number from the real part.
+    /// Create a new hyper-dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
         Self::new(re, T::zero(), T::zero(), T::zero())

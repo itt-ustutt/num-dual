@@ -11,7 +11,7 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A dual number for the calculations of gradients or Jacobians.
+/// A vector dual number for the calculations of gradients or Jacobians.
 #[derive(Clone, Debug)]
 pub struct DualVec<T: DualNum<F>, F, D: Dim>
 where
