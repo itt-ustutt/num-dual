@@ -36,12 +36,12 @@ pub struct PyDual64(Dual64);
 impl PyDual64 {
     #[new]
     pub fn new(re: f64, eps: f64) -> Self {
-        Self(Dual64::new_scalar(re, eps))
+        Self(Dual64::new(re, eps))
     }
 
     #[getter]
     pub fn get_first_derivative(&self) -> f64 {
-        self.0.eps.unwrap()
+        self.0.eps
     }
 }
 
