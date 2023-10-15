@@ -237,7 +237,6 @@ macro_rules! impl_dual_num {
                             .unwrap()
                             .as_ref(py)
                             .is_instance_of::<Self>()
-                            .unwrap()
                         {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
@@ -294,7 +293,6 @@ macro_rules! impl_dual_num {
                             .unwrap()
                             .as_ref(py)
                             .is_instance_of::<Self>()
-                            .unwrap()
                         {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
@@ -351,7 +349,6 @@ macro_rules! impl_dual_num {
                             .unwrap()
                             .as_ref(py)
                             .is_instance_of::<Self>()
-                            .unwrap()
                         {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
@@ -408,7 +405,6 @@ macro_rules! impl_dual_num {
                             .unwrap()
                             .as_ref(py)
                             .is_instance_of::<Self>()
-                            .unwrap()
                         {
                             return Ok(PyArray::from_owned_object_array(
                                 py,
