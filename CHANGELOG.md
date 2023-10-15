@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2023-10-15
+### Packaging
+- Updated `pyo3` and `numpy` dependencies to 0.20.
+
 ## [0.7.1] - 2023-05-31
 ### Fixed
 - Added dedicated implementations for scalar dual numbers (`Dual`, `Dual2`, `HyperDual`) to avoid a performance regression introduced in `0.7.0`. [#68](https://github.com/itt-ustutt/num-dual/pull/68)
