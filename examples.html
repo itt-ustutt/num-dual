@@ -4,18 +4,18 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; num_dual 0.7.1 documentation</title>
+  <title>Examples &mdash; num_dual 0.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=486e5634"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -79,9 +79,9 @@
            <div itemprop="articleBody">
              
   <section id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h1>
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h1>
 <section id="first-second-and-third-derivatives">
-<h2>First, second and third derivatives<a class="headerlink" href="#first-second-and-third-derivatives" title="Permalink to this heading"></a></h2>
+<h2>First, second and third derivatives<a class="headerlink" href="#first-second-and-third-derivatives" title="Link to this heading"></a></h2>
 <p>Let’s define a simple, scalar valued function for which we want to compute the first, second and third derivative.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># f(x) = x**3, f&#39;(x) = 3 * x**2, f&#39;&#39;(x) = 6 * x</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -135,7 +135,7 @@ helper functions that can be used to simply declare which derivative you want to
 </div>
 </section>
 <section id="partial-derivatives">
-<h2>Partial derivatives<a class="headerlink" href="#partial-derivatives" title="Permalink to this heading"></a></h2>
+<h2>Partial derivatives<a class="headerlink" href="#partial-derivatives" title="Link to this heading"></a></h2>
 <p>Hyper-dual numbers can be used to compute partial derivatives of multivariate functions (functions of several real valued variables) as well.
 A function that is often used as benchmark in optimization problems is the Rosenbrock function which is defined as:</p>
 <blockquote>
@@ -168,7 +168,7 @@ A function that is often used as benchmark in optimization problems is the Rosen
 </div>
 </section>
 <section id="compute-partial-derivatives-of-multiple-arguments">
-<h2>Compute partial derivatives of multiple arguments<a class="headerlink" href="#compute-partial-derivatives-of-multiple-arguments" title="Permalink to this heading"></a></h2>
+<h2>Compute partial derivatives of multiple arguments<a class="headerlink" href="#compute-partial-derivatives-of-multiple-arguments" title="Link to this heading"></a></h2>
 <p>Consider a function that takes three arguments as input, one of which is vector valued.
 Such a function is, e.g., the helmholtz energy, denoted as <span class="math notranslate nohighlight">\(A\)</span>, a function important in statistical mechanics and thermodynamics.
 It is a function of the volume, <span class="math notranslate nohighlight">\(V\)</span>, the temperature, <span class="math notranslate nohighlight">\(T\)</span>, and the number of particles of possibly
@@ -208,7 +208,7 @@ multiple components, <span class="math notranslate nohighlight">\(N\)</span>. Le
 </div>
 </section>
 <section id="compatibility-with-numpy">
-<h2>Compatibility with <cite>numpy</cite><a class="headerlink" href="#compatibility-with-numpy" title="Permalink to this heading"></a></h2>
+<h2>Compatibility with <cite>numpy</cite><a class="headerlink" href="#compatibility-with-numpy" title="Link to this heading"></a></h2>
 <p>The examples shown above contain very simple mathematical equations.
 We provide evaluations for a lot of useful mathematical expressions that are defined in <cite>numpy</cite>.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
