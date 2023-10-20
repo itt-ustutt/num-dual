@@ -87,10 +87,6 @@ pub use hyperhyperdual::{
 };
 
 #[cfg(feature = "linalg")]
-#[deprecated(
-    since = "0.7.0",
-    note = "please use methods from `nalgebra` or other linear algebra libraries instead"
-)]
 pub mod linalg;
 
 #[cfg(feature = "python")]
