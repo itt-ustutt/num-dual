@@ -79,7 +79,7 @@ impl_dual_num!(PyHyperHyperDual64, HyperHyperDual64, f64);
 /// third partial derivative
 #[allow(clippy::type_complexity)]
 pub fn third_partial_derivative(
-    f: &PyAny,
+    f: &Bound<'_, PyAny>,
     x: f64,
     y: f64,
     z: f64,
@@ -130,7 +130,7 @@ pub fn third_partial_derivative(
 /// third partial derivative
 #[allow(clippy::type_complexity)]
 pub fn third_partial_derivative_vec(
-    f: &PyAny,
+    f: &Bound<'_, PyAny>,
     x: Vec<f64>,
     i: usize,
     j: usize,

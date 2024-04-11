@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
@@ -34,7 +35,7 @@ pub use hyperdual::{
 pub use hyperhyperdual::PyHyperHyperDual64;
 
 #[pymodule]
-pub fn num_dual(_py: Python, m: &PyModule) -> PyResult<()> {
+pub fn num_dual(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_class::<PyDual64>()?;
     m.add_class::<PyHyperDual64>()?;

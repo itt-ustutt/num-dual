@@ -1,6 +1,6 @@
 [package]
 name = "num-dual"
-version = "0.8.1"
+version = "0.9.0"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <prehner@ethz.ch>"]
 edition = "2021"
@@ -19,9 +19,9 @@ name = "num_dual"
 [dependencies]
 num-traits = "0.2"
 nalgebra = "0.32"
-pyo3 = { version = "0.20", optional = true, features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py37"] }
+pyo3 = { version = "0.21", optional = true, features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py37"] }
 ndarray = { version = "0.15", optional = true }
-numpy = { version = "0.20", optional = true }
+numpy = { version = "0.21", optional = true }
 approx = "0.5"
 simba = "0.8"
 
