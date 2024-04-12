@@ -126,7 +126,11 @@ impl_dual_num!(PyHyperDual64Dyn, HyperDualDVec64, f64);
 /// -------
 /// function value, first partial derivative w.r.t. x,
 /// first parital derivative w.r.t. y, and second partial derivative
-pub fn second_partial_derivative(f: &PyAny, x: f64, y: f64) -> PyResult<(f64, f64, f64, f64)> {
+pub fn second_partial_derivative(
+    f: &Bound<'_, PyAny>,
+    x: f64,
+    y: f64,
+) -> PyResult<(f64, f64, f64, f64)> {
     let g = |x, y| {
         let res = f.call1((PyHyperDual64::from(x), PyHyperDual64::from(y)))?;
         if let Ok(res) = res.extract::<PyHyperDual64>() {
@@ -159,9 +163,9 @@ macro_rules! impl_partial_hessian {
         /// function value, gradient w.r.t. x, gradient w.r.t. y, and partial Hessian
         #[allow(clippy::type_complexity)]
         pub fn partial_hessian(
-            f: &PyAny,
-            x: &PyAny,
-            y: &PyAny,
+            f: &Bound<'_, PyAny>,
+            x: &Bound<'_, PyAny>,
+            y: &Bound<'_, PyAny>,
         ) -> PyResult<(f64, Vec<f64>, Vec<f64>, Vec<Vec<f64>>)> {
             $(
                 if let (Ok(x), Ok(y)) = (x.extract::<[f64; $m]>(), y.extract::<[f64; $n]>()) {

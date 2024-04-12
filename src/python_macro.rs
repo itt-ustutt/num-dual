@@ -213,231 +213,207 @@ macro_rules! impl_dual_num {
                 self.0.mul_add(a.0, b.0).into()
             }
 
-            fn __add__(&self, rhs: &PyAny) -> PyResult<PyObject> {
-                Python::with_gil(|py| {
-                    if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() + r))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() + r.0))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                        return Ok(PyArray::from_owned_object_array(
-                            py,
-                            r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0.clone() + ri)).unwrap()),
-                        )
-                        .into());
-                    }
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
-                        // check data type of first element
-                        if r.readonly()
-                            .as_array()
-                            .get(0)
-                            .unwrap()
-                            .as_ref(py)
-                            .is_instance_of::<Self>()
-                        {
-                            return Ok(PyArray::from_owned_object_array(
-                                py,
-                                r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0.clone() + ri.extract::<Self>(py).unwrap().0))
-                                        .unwrap()
-                                }),
-                            )
-                            .into());
-                        } else {
-                            return Err(PyErr::new::<PyTypeError, _>(format!(
-                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
-                                stringify!($py_type_name)
-                            )));
-                        }
-                    }
-
-                    Err(PyErr::new::<PyTypeError, _>(format!(
-                        "Addition of \nleft:  {}\nright: {:?}\nis not implemented!",
-                        stringify!($py_type_name),
-                        rhs.get_type()
-                    )))
-                })
-            }
-
-            fn __radd__(&self, other: &PyAny) -> PyResult<Self> {
-                if let Ok(o) = other.extract::<f64>() {
-                    return Ok((self.0.clone() + o).into());
+            fn __add__<'py>(&self, rhs: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+                if let Ok(r) = rhs.extract::<f64>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() + r))?.into_any());
                 };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
-            }
-
-            fn __sub__(&self, rhs: &PyAny) -> PyResult<PyObject> {
-                Python::with_gil(|py| {
-                    if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() - r))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() - r.0))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                        return Ok(PyArray::from_owned_object_array(
-                            py,
-                            r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0.clone() - ri)).unwrap()),
-                        )
-                        .into());
-                    }
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
-                        // check data type of first element
-                        if r.readonly()
-                            .as_array()
-                            .get(0)
-                            .unwrap()
-                            .as_ref(py)
-                            .is_instance_of::<Self>()
-                        {
-                            return Ok(PyArray::from_owned_object_array(
-                                py,
-                                r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0.clone() - ri.extract::<Self>(py).unwrap().0))
-                                        .unwrap()
-                                }),
-                            )
-                            .into());
-                        } else {
-                            return Err(PyErr::new::<PyTypeError, _>(format!(
-                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
-                                stringify!($py_type_name)
-                            )));
-                        }
-                    }
-
-                    Err(PyErr::new::<PyTypeError, _>(format!(
-                        "Subtraction of \nleft:  {}\nright: {:?}\nis not implemented!",
-                        stringify!($py_type_name),
-                        rhs.get_type()
-                    )))
-                })
-            }
-
-            fn __rsub__(&self, other: &PyAny) -> PyResult<Self> {
-                if let Ok(o) = other.extract::<f64>() {
-                    return Ok((-self.0.clone() + o).into());
+                if let Ok(r) = rhs.extract::<Self>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() + r.0))?.into_any());
                 };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
-            }
-
-            fn __mul__(&self, rhs: &PyAny) -> PyResult<PyObject> {
-                Python::with_gil(|py| {
-                    if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() * r))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() * r.0))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                        return Ok(PyArray::from_owned_object_array(
-                            py,
-                            r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0.clone() * ri)).unwrap()),
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                    return Ok(PyArray::from_owned_object_array_bound(
+                        rhs.py(),
+                        r.as_array()
+                            .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() + ri)).unwrap()),
+                    )
+                    .into_any());
+                }
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                    // check data type of first element
+                    if r.as_array()
+                        .get(0)
+                        .unwrap()
+                        .bind(rhs.py())
+                        .is_instance_of::<Self>()
+                    {
+                        return Ok(PyArray::from_owned_object_array_bound(
+                            rhs.py(),
+                            r.as_array().mapv(|ri| {
+                                Py::new(rhs.py(), Self(self.0.clone() + ri.extract::<Self>(rhs.py()).unwrap().0))
+                                    .unwrap()
+                            }),
                         )
-                        .into());
+                        .into_any());
+                    } else {
+                        return Err(PyErr::new::<PyTypeError, _>(format!(
+                            "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                            stringify!($py_type_name)
+                        )));
                     }
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
-                        // check data type of first element
-                        if r.readonly()
-                            .as_array()
-                            .get(0)
-                            .unwrap()
-                            .as_ref(py)
-                            .is_instance_of::<Self>()
-                        {
-                            return Ok(PyArray::from_owned_object_array(
-                                py,
-                                r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0.clone() * ri.extract::<Self>(py).unwrap().0))
-                                        .unwrap()
-                                }),
-                            )
-                            .into());
-                        } else {
-                            return Err(PyErr::new::<PyTypeError, _>(format!(
-                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
-                                stringify!($py_type_name)
-                            )));
-                        }
-                    }
+                }
 
-                    Err(PyErr::new::<PyTypeError, _>(format!(
-                        "Multiplication of \nleft:  {}\nright: {:?}\nis not implemented!",
-                        stringify!($py_type_name),
-                        rhs.get_type()
-                    )))
-                })
+                Err(PyErr::new::<PyTypeError, _>(format!(
+                    "Addition of \nleft:  {}\nright: {:?}\nis not implemented!",
+                    stringify!($py_type_name),
+                    rhs.get_type()
+                )))
             }
 
-            fn __rmul__(&self, other: &PyAny) -> PyResult<Self> {
-                if let Ok(o) = other.extract::<f64>() {
-                    return Ok((self.0.clone() * o).into());
+            fn __radd__(&self, lhs: f64) -> Self {
+                (self.0.clone() + lhs).into()
+            }
+
+            fn __sub__<'py>(&self, rhs: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+                if let Ok(r) = rhs.extract::<f64>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() - r))?.into_any());
                 };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
-            }
-
-            fn __truediv__(&self, rhs: &PyAny) -> PyResult<PyObject> {
-                Python::with_gil(|py| {
-                    if let Ok(r) = rhs.extract::<f64>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() / r))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<Self>() {
-                        return Ok(PyCell::new(py, Self(self.0.clone() / r.0))?.to_object(py));
-                    };
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                        return Ok(PyArray::from_owned_object_array(
-                            py,
-                            r.as_array()
-                                .mapv(|ri| Py::new(py, Self(self.0.clone() / ri)).unwrap()),
+                if let Ok(r) = rhs.extract::<Self>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() - r.0))?.into_any());
+                };
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                    return Ok(PyArray::from_owned_object_array_bound(
+                        rhs.py(),
+                        r.as_array()
+                            .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() - ri)).unwrap()),
+                    )
+                    .into_any());
+                }
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                    // check data type of first element
+                    if r.as_array()
+                        .get(0)
+                        .unwrap()
+                        .bind(rhs.py())
+                        .is_instance_of::<Self>()
+                    {
+                        return Ok(PyArray::from_owned_object_array_bound(
+                            rhs.py(),
+                            r.as_array().mapv(|ri| {
+                                Py::new(rhs.py(), Self(self.0.clone() - ri.extract::<Self>(rhs.py()).unwrap().0))
+                                    .unwrap()
+                            }),
                         )
-                        .into());
+                        .into_any());
+                    } else {
+                        return Err(PyErr::new::<PyTypeError, _>(format!(
+                            "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                            stringify!($py_type_name)
+                        )));
                     }
-                    if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
-                        // check data type of first element
-                        if r.readonly()
-                            .as_array()
-                            .get(0)
-                            .unwrap()
-                            .as_ref(py)
-                            .is_instance_of::<Self>()
-                        {
-                            return Ok(PyArray::from_owned_object_array(
-                                py,
-                                r.as_array().mapv(|ri| {
-                                    Py::new(py, Self(self.0.clone() / ri.extract::<Self>(py).unwrap().0))
-                                        .unwrap()
-                                }),
-                            )
-                            .into());
-                        } else {
-                            return Err(PyErr::new::<PyTypeError, _>(format!(
-                                "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
-                                stringify!($py_type_name)
-                            )));
-                        }
-                    }
+                }
 
-                    Err(PyErr::new::<PyTypeError, _>(format!(
-                        "Division of \nleft:  {}\nright: {:?}\nis not implemented!",
-                        stringify!($py_type_name),
-                        rhs.get_type()
-                    )))
-                })
+                Err(PyErr::new::<PyTypeError, _>(format!(
+                    "Subtraction of \nleft:  {}\nright: {:?}\nis not implemented!",
+                    stringify!($py_type_name),
+                    rhs.get_type()
+                )))
             }
 
-            fn __rtruediv__(&self, other: &PyAny) -> PyResult<Self> {
-                if let Ok(o) = other.extract::<f64>() {
-                    return Ok((self.0.recip() * o).into());
+            fn __rsub__(&self, lhs: f64) -> Self {
+                (-self.0.clone() + lhs).into()
+            }
+
+            fn __mul__<'py>(&self, rhs: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+                if let Ok(r) = rhs.extract::<f64>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() * r))?.into_any());
                 };
-                Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
+                if let Ok(r) = rhs.extract::<Self>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() * r.0))?.into_any());
+                };
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                    return Ok(PyArray::from_owned_object_array_bound(
+                        rhs.py(),
+                        r.as_array()
+                            .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() * ri)).unwrap()),
+                    )
+                    .into_any());
+                }
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                    // check data type of first element
+                    if r.as_array()
+                        .get(0)
+                        .unwrap()
+                        .bind(rhs.py())
+                        .is_instance_of::<Self>()
+                    {
+                        return Ok(PyArray::from_owned_object_array_bound(
+                            rhs.py(),
+                            r.as_array().mapv(|ri| {
+                                Py::new(rhs.py(), Self(self.0.clone() * ri.extract::<Self>(rhs.py()).unwrap().0))
+                                    .unwrap()
+                            }),
+                        )
+                        .into_any());
+                    } else {
+                        return Err(PyErr::new::<PyTypeError, _>(format!(
+                            "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                            stringify!($py_type_name)
+                        )));
+                    }
+                }
+
+                Err(PyErr::new::<PyTypeError, _>(format!(
+                    "Multiplication of \nleft:  {}\nright: {:?}\nis not implemented!",
+                    stringify!($py_type_name),
+                    rhs.get_type()
+                )))
             }
 
-            fn __pow__(&self, rhs: &PyAny, _mod: Option<u32>) -> PyResult<Self> {
+            fn __rmul__(&self, lhs: f64) -> Self {
+                (self.0.clone() * lhs).into()
+            }
+
+            fn __truediv__<'py>(&self, rhs: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+                if let Ok(r) = rhs.extract::<f64>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() / r))?.into_any());
+                };
+                if let Ok(r) = rhs.extract::<Self>() {
+                    return Ok(Bound::new(rhs.py(), Self(self.0.clone() / r.0))?.into_any());
+                };
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
+                    return Ok(PyArray::from_owned_object_array_bound(
+                        rhs.py(),
+                        r.as_array()
+                            .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() / ri)).unwrap()),
+                    )
+                    .into_any());
+                }
+                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                    // check data type of first element
+                    if r.as_array()
+                        .get(0)
+                        .unwrap()
+                        .bind(rhs.py())
+                        .is_instance_of::<Self>()
+                    {
+                        return Ok(PyArray::from_owned_object_array_bound(
+                            rhs.py(),
+                            r.as_array().mapv(|ri| {
+                                Py::new(rhs.py(), Self(self.0.clone() / ri.extract::<Self>(rhs.py()).unwrap().0))
+                                    .unwrap()
+                            }),
+                        )
+                        .into_any());
+                    } else {
+                        return Err(PyErr::new::<PyTypeError, _>(format!(
+                            "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
+                            stringify!($py_type_name)
+                        )));
+                    }
+                }
+
+                Err(PyErr::new::<PyTypeError, _>(format!(
+                    "Division of \nleft:  {}\nright: {:?}\nis not implemented!",
+                    stringify!($py_type_name),
+                    rhs.get_type()
+                )))
+            }
+
+            fn __rtruediv__(&self, lhs: f64) -> Self {
+                (self.0.recip() * lhs).into()
+            }
+
+            fn __pow__(&self, rhs: &Bound<'_, PyAny>, _mod: Option<u32>) -> PyResult<Self> {
                 if let Ok(r) = rhs.extract::<i32>() {
                     return Ok(self.0.powi(r).into());
                 };

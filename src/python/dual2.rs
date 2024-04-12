@@ -122,7 +122,7 @@ impl_dual_num!(PyDual2_64Dyn, Dual2DVec64, f64);
 /// Returns
 /// -------
 /// function value, first derivative, and second derivative
-pub fn second_derivative(f: &PyAny, x: f64) -> PyResult<(f64, f64, f64)> {
+pub fn second_derivative(f: &Bound<'_, PyAny>, x: f64) -> PyResult<(f64, f64, f64)> {
     let g = |x| {
         let res = f.call1((PyDual2_64::from(x),))?;
         if let Ok(res) = res.extract::<PyDual2_64>() {
@@ -151,7 +151,7 @@ macro_rules! impl_hessian {
         /// Returns
         /// -------
         /// function value, gradient and Hessian
-        pub fn hessian(f: &PyAny, x: &PyAny) -> PyResult<(f64, Vec<f64>, Vec<Vec<f64>>)> {
+        pub fn hessian(f: &Bound<'_, PyAny>, x: &Bound<'_, PyAny>) -> PyResult<(f64, Vec<f64>, Vec<Vec<f64>>)> {
             $(
                 if let Ok(x) = x.extract::<[f64; $n]>() {
                     let g = |x: SVector<Dual2SVec64<$n>, $n>| {

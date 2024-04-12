@@ -313,21 +313,15 @@ mod tests {
     #[test]
     fn test_solve_dual64() {
         let a = arr2(&[
-            [Dual64::new_scalar(4.0, 3.0), Dual64::new_scalar(3.0, 3.0)],
-            [Dual64::new_scalar(6.0, 1.0), Dual64::new_scalar(3.0, 2.0)],
+            [Dual64::new(4.0, 3.0), Dual64::new(3.0, 3.0)],
+            [Dual64::new(6.0, 1.0), Dual64::new(3.0, 2.0)],
         ]);
-        let b = arr1(&[
-            Dual64::new_scalar(10.0, 20.0),
-            Dual64::new_scalar(12.0, 20.0),
-        ]);
+        let b = arr1(&[Dual64::new(10.0, 20.0), Dual64::new(12.0, 20.0)]);
         let lu = LU::new(a).unwrap();
         let det = lu.determinant();
-        assert_eq!((det.re, det.eps.unwrap()), (-6.0, -4.0));
+        assert_eq!((det.re, det.eps), (-6.0, -4.0));
         let x = lu.solve(&b);
-        assert_eq!(
-            (x[0].re, x[0].eps.unwrap(), x[1].re, x[1].eps.unwrap()),
-            (1.0, 2.0, 2.0, 1.0)
-        );
+        assert_eq!((x[0].re, x[0].eps, x[1].re, x[1].eps), (1.0, 2.0, 2.0, 1.0));
     }
 
     #[test]
@@ -358,8 +352,8 @@ mod tests {
     #[test]
     fn test_eig_dual64() {
         let a = arr2(&[
-            [Dual64::new_scalar(2.0, 1.0), Dual64::new_scalar(2.0, 2.0)],
-            [Dual64::new_scalar(2.0, 2.0), Dual64::new_scalar(5.0, 3.0)],
+            [Dual64::new(2.0, 1.0), Dual64::new(2.0, 2.0)],
+            [Dual64::new(2.0, 2.0), Dual64::new(5.0, 3.0)],
         ]);
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
         let av = a.dot(&v);
@@ -368,26 +362,10 @@ mod tests {
         assert_abs_diff_eq!(av[(1, 0)].re, (l[0] * v[(1, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)].re, (l[1] * v[(0, 1)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 1)].re, (l[1] * v[(1, 1)]).re, epsilon = 1e-14);
-        assert_abs_diff_eq!(
-            av[(0, 0)].eps.unwrap(),
-            (l[0] * v[(0, 0)]).eps.unwrap(),
-            epsilon = 1e-14
-        );
-        assert_abs_diff_eq!(
-            av[(1, 0)].eps.unwrap(),
-            (l[0] * v[(1, 0)]).eps.unwrap(),
-            epsilon = 1e-14
-        );
-        assert_abs_diff_eq!(
-            av[(0, 1)].eps.unwrap(),
-            (l[1] * v[(0, 1)]).eps.unwrap(),
-            epsilon = 1e-14
-        );
-        assert_abs_diff_eq!(
-            av[(1, 1)].eps.unwrap(),
-            (l[1] * v[(1, 1)]).eps.unwrap(),
-            epsilon = 1e-14
-        );
+        assert_abs_diff_eq!(av[(0, 0)].eps, (l[0] * v[(0, 0)]).eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(1, 0)].eps, (l[0] * v[(1, 0)]).eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(0, 1)].eps, (l[1] * v[(0, 1)]).eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(1, 1)].eps, (l[1] * v[(1, 1)]).eps, epsilon = 1e-14);
     }
 
     #[test]
@@ -398,9 +376,9 @@ mod tests {
 
     #[test]
     fn test_norm_dual64() {
-        let v = arr1(&[Dual64::new_scalar(3.0, 1.0), Dual64::new_scalar(4.0, 3.0)]);
+        let v = arr1(&[Dual64::new(3.0, 1.0), Dual64::new(4.0, 3.0)]);
         println!("{}", norm(&v));
         assert_eq!(norm(&v).re, 5.0);
-        assert_eq!(norm(&v).eps.unwrap(), 3.0);
+        assert_eq!(norm(&v).eps, 3.0);
     }
 }

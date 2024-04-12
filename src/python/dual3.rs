@@ -77,7 +77,7 @@ impl_dual_num!(PyDual3Dual64, Dual3<Dual64, f64>, PyDual64);
 /// Returns
 /// -------
 /// function value, first derivative, second derivative, and third derivative
-pub fn third_derivative(f: &PyAny, x: f64) -> PyResult<(f64, f64, f64, f64)> {
+pub fn third_derivative(f: &Bound<'_, PyAny>, x: f64) -> PyResult<(f64, f64, f64, f64)> {
     let g = |x| {
         let res = f.call1((PyDual3_64::from(x),))?;
         if let Ok(res) = res.extract::<PyDual3_64>() {

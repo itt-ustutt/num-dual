@@ -3,7 +3,6 @@ use nalgebra::{DVector, SVector};
 use numpy::{PyArray, PyReadonlyArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
-use pyo3::Python;
 
 #[pyclass(name = "Dual64")]
 #[derive(Clone, Debug)]
@@ -92,7 +91,7 @@ impl_dual_num!(PyDual64Dyn, DualDVec64, f64);
 /// Returns
 /// -------
 /// function value and first derivative
-pub fn first_derivative(f: &PyAny, x: f64) -> PyResult<(f64, f64)> {
+pub fn first_derivative(f: &Bound<'_, PyAny>, x: f64) -> PyResult<(f64, f64)> {
     let g = |x| {
         let res = f.call1((PyDual64::from(x),))?;
         if let Ok(res) = res.extract::<PyDual64>() {
@@ -122,7 +121,7 @@ macro_rules! impl_gradient_and_jacobian {
         /// Returns
         /// -------
         /// function value and gradient
-        pub fn gradient(f: &PyAny, x: &PyAny) -> PyResult<(f64, Vec<f64>)> {
+        pub fn gradient(f: &Bound<'_, PyAny>, x: &Bound<'_, PyAny>) -> PyResult<(f64, Vec<f64>)> {
             $(
                 if let Ok(x) = x.extract::<[f64; $n]>() {
                     let g = |x: SVector<DualSVec64<$n>, $n>| {
@@ -174,7 +173,7 @@ macro_rules! impl_gradient_and_jacobian {
         /// Returns
         /// -------
         /// function values and Jacobian
-        pub fn jacobian(f: &PyAny, x: &PyAny) -> PyResult<(Vec<f64>, Vec<Vec<f64>>)> {
+        pub fn jacobian(f: &Bound<'_, PyAny>, x: &Bound<'_, PyAny>) -> PyResult<(Vec<f64>, Vec<Vec<f64>>)> {
             $(
                 if let Ok(x) = x.extract::<[f64; $n]>() {
                     let g = |x: SVector<DualSVec64<$n>, $n>| {
