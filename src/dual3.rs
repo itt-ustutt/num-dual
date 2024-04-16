@@ -1,5 +1,7 @@
 use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -8,6 +10,7 @@ use std::ops::*;
 
 /// A scalar third order dual number for the calculation of third derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Dual3<T, F = T> {
     /// Real part of the third order dual number
     pub re: T,
@@ -17,6 +20,7 @@ pub struct Dual3<T, F = T> {
     pub v2: T,
     /// Third derivative part of the third order dual number
     pub v3: T,
+    #[cfg_attr(feature = "serde", serde(skip))]
     f: PhantomData<F>,
 }
 

@@ -2,6 +2,8 @@ use crate::{DualNum, DualNumFloat};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -12,11 +14,13 @@ use std::ops::{
 
 /// A scalar dual number for the calculations of first derivatives.
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Dual<T: DualNum<F>, F> {
     /// Real part of the dual number
     pub re: T,
     /// Derivative part of the dual number
     pub eps: T,
+    #[cfg_attr(feature = "serde", serde(skip))]
     f: PhantomData<F>,
 }
 

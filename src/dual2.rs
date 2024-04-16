@@ -1,5 +1,7 @@
 use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -10,6 +12,7 @@ use std::ops::{
 
 /// A scalar second order dual number for the calculation of second derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Dual2<T: DualNum<F>, F> {
     /// Real part of the second order dual number
     pub re: T,
@@ -17,6 +20,7 @@ pub struct Dual2<T: DualNum<F>, F> {
     pub v1: T,
     /// Second derivative part of the second order dual number
     pub v2: T,
+    #[cfg_attr(feature = "serde", serde(skip))]
     f: PhantomData<F>,
 }
 

@@ -1,5 +1,7 @@
 use crate::{DualNum, DualNumFloat};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
@@ -10,6 +12,7 @@ use std::ops::{
 
 /// A scalar hyper-dual number for the calculation of second partial derivatives.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HyperDual<T: DualNum<F>, F> {
     /// Real part of the hyper-dual number
     pub re: T,
@@ -19,6 +22,7 @@ pub struct HyperDual<T: DualNum<F>, F> {
     pub eps2: T,
     /// Second partial derivative part of the hyper-dual number
     pub eps1eps2: T,
+    #[cfg_attr(feature = "serde", serde(skip))]
     f: PhantomData<F>,
 }
 

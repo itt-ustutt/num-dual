@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2024-04-15
+### Added
+- Added `serde` feature that enables serialization and deserialization of all scalar dual numbers. [#74](https://github.com/itt-ustutt/num-dual/pull/74)
+
 ## [0.9.0] - 2024-04-11
 ### Packaging
 - Updated `pyo3` and `numpy` dependencies to 0.21 and adapted to the new `Bound` API.
