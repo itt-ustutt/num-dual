@@ -261,10 +261,7 @@ where
     type Element = DualVec<T::Element, T::Element, D>;
     type SimdBool = T::SimdBool;
 
-    #[inline]
-    fn lanes() -> usize {
-        T::lanes()
-    }
+    const LANES: usize = T::LANES;
 
     #[inline]
     fn splat(val: Self::Element) -> Self {

@@ -414,10 +414,7 @@ where
 
     type SimdBool = T::SimdBool;
 
-    #[inline]
-    fn lanes() -> usize {
-        T::lanes()
-    }
+    const LANES: usize = T::LANES;
 
     #[inline]
     fn splat(val: Self::Element) -> Self {
