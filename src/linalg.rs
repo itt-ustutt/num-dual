@@ -12,19 +12,19 @@ use std::marker::PhantomData;
 
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for DualVec<T, F, N> where
-    DefaultAllocator: Allocator<T, N>
+    DefaultAllocator: Allocator<N>
 {
 }
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual2<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for Dual2Vec<T, F, N> where
-    DefaultAllocator: Allocator<T, U1, N> + Allocator<T, N, N>
+    DefaultAllocator: Allocator<U1, N> + Allocator<N, N>
 {
 }
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperHyperDual<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
 impl<T: DualNum<F>, F: Clone + 'static, M: Dim, N: Dim> ScalarOperand for HyperDualVec<T, F, M, N> where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, U1, N> + Allocator<T, M, N>
+    DefaultAllocator: Allocator<M> + Allocator<U1, N> + Allocator<M, N>
 {
 }
 

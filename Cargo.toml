@@ -18,12 +18,12 @@ name = "num_dual"
 
 [dependencies]
 num-traits = "0.2"
-nalgebra = "0.32"
+nalgebra = "0.33"
 pyo3 = { version = "0.21", optional = true, features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py37"] }
 ndarray = { version = "0.15", optional = true }
 numpy = { version = "0.21", optional = true }
 approx = "0.5"
-simba = "0.8"
+simba = "0.9"
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 [profile.release]
