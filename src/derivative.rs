@@ -406,7 +406,7 @@ where
 
 impl<T, R: Dim, C: Dim> nalgebra::SimdValue for Derivative<T, T::Element, R, C>
 where
-    DefaultAllocator: Allocator<R, C> + Allocator<R, C>,
+    DefaultAllocator: Allocator<R, C>,
     T: DualNum<T::Element> + SimdValue + Scalar,
     T::Element: DualNum<T::Element> + Scalar + Zero,
 {
@@ -539,11 +539,10 @@ where
     TSuper: DualNum<FSuper> + SupersetOf<T>,
     T: DualNum<F>,
     DefaultAllocator: Allocator<R, C>,
-    DefaultAllocator: Allocator<R, C>,
-    // DefaultAllocator: Allocator<TSuper, D>
-    //     + Allocator<TSuper, U1, D>
-    //     + Allocator<TSuper, D, U1>
-    //     + Allocator<TSuper, D, D>,
+    // DefaultAllocator: Allocator<D>
+    //     + Allocator<U1, D>
+    //     + Allocator<D, U1>
+    //     + Allocator<D, D>,
 {
     #[inline(always)]
     fn to_superset(&self) -> Derivative<TSuper, FSuper, R, C> {
