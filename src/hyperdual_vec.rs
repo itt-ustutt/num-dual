@@ -14,7 +14,7 @@ use std::ops::{
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct HyperDualVec<T: DualNum<F>, F, M: Dim, N: Dim>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     /// Real part of the hyper-dual number
     pub re: T,
@@ -43,7 +43,7 @@ pub type HyperDualDVec64 = HyperDualVec<f64, f64, Dyn, Dyn>;
 
 impl<T: DualNum<F>, F, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     /// Create a new hyper-dual number from its fields.
     #[inline]
@@ -65,7 +65,7 @@ where
 
 impl<T: DualNum<F>, F, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     /// Create a new hyper-dual number from the real part.
     #[inline]
@@ -107,12 +107,7 @@ where
         OVector<HyperDualVec<T, F, M, N>, M>,
         OVector<HyperDualVec<T, F, M, N>, N>,
     ) -> HyperDualVec<T, F, M, N>,
-    DefaultAllocator: Allocator<T, N>
-        + Allocator<T, M>
-        + Allocator<T, M, N>
-        + Allocator<T, U1, N>
-        + Allocator<HyperDualVec<T, F, M, N>, M>
-        + Allocator<HyperDualVec<T, F, M, N>, N>,
+    DefaultAllocator: Allocator<N> + Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     try_partial_hessian(|x, y| Ok::<_, Infallible>(g(x, y)), x, y).unwrap()
 }
@@ -129,12 +124,7 @@ where
         OVector<HyperDualVec<T, F, M, N>, M>,
         OVector<HyperDualVec<T, F, M, N>, N>,
     ) -> Result<HyperDualVec<T, F, M, N>, E>,
-    DefaultAllocator: Allocator<T, N>
-        + Allocator<T, M>
-        + Allocator<T, M, N>
-        + Allocator<T, U1, N>
-        + Allocator<HyperDualVec<T, F, M, N>, M>
-        + Allocator<HyperDualVec<T, F, M, N>, N>,
+    DefaultAllocator: Allocator<N> + Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     let mut x = x.map(HyperDualVec::from_re);
     let mut y = y.map(HyperDualVec::from_re);
@@ -159,7 +149,7 @@ where
 /* chain rule */
 impl<T: DualNum<F>, F: Float, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
@@ -176,7 +166,7 @@ where
 impl<'a, 'b, T: DualNum<F>, F: Float, M: Dim, N: Dim> Mul<&'a HyperDualVec<T, F, M, N>>
     for &'b HyperDualVec<T, F, M, N>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     type Output = HyperDualVec<T, F, M, N>;
     #[inline]
@@ -197,7 +187,7 @@ where
 impl<'a, 'b, T: DualNum<F>, F: Float, M: Dim, N: Dim> Div<&'a HyperDualVec<T, F, M, N>>
     for &'b HyperDualVec<T, F, M, N>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     type Output = HyperDualVec<T, F, M, N>;
     #[inline]
@@ -223,7 +213,7 @@ where
 /* string conversions */
 impl<T: DualNum<F>, F: fmt::Display, M: Dim, N: Dim> fmt::Display for HyperDualVec<T, F, M, N>
 where
-    DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.re)?;

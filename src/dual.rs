@@ -164,10 +164,7 @@ where
     type Element = Dual<T::Element, T::Element>;
     type SimdBool = T::SimdBool;
 
-    #[inline]
-    fn lanes() -> usize {
-        T::lanes()
-    }
+    const LANES: usize = T::LANES;
 
     #[inline]
     fn splat(val: Self::Element) -> Self {
@@ -383,6 +380,7 @@ where
     T: DualNum<T::Element> + SupersetOf<T> + AbsDiffEq<Epsilon = T> + Sync + Send,
     T::Element: DualNum<T::Element> + Scalar + DualNumFloat + Sync + Send,
     T: SupersetOf<T::Element>,
+    T: SupersetOf<f32>,
     T: SupersetOf<f64>,
     T: SimdPartialOrd + PartialOrd,
     T: SimdValue<Element = T, SimdBool = bool>,
@@ -638,6 +636,7 @@ where
     T: DualNum<T::Element> + SupersetOf<T> + Sync + Send,
     T::Element: DualNum<T::Element> + Scalar + DualNumFloat,
     T: SupersetOf<T::Element>,
+    T: SupersetOf<f32>,
     T: SupersetOf<f64>,
     T: SimdPartialOrd + PartialOrd,
     T: RelativeEq + AbsDiffEq<Epsilon = T>,

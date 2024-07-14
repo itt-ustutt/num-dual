@@ -14,7 +14,7 @@ use std::ops::{
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Dual2Vec<T: DualNum<F>, F, D: Dim>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     /// Real part of the second order dual number
     pub re: T,
@@ -36,7 +36,7 @@ pub type Dual2DVec64 = Dual2Vec<f64, f64, Dyn>;
 
 impl<T: DualNum<F>, F, D: Dim> Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     /// Create a new second order dual number from its fields.
     #[inline]
@@ -52,7 +52,7 @@ where
 
 impl<T: DualNum<F>, F, D: Dim> Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     /// Create a new second order dual number from the real part.
     #[inline]
@@ -83,10 +83,7 @@ pub fn hessian<G, T: DualNum<F>, F: DualNumFloat, D: Dim>(
 ) -> (T, OVector<T, D>, OMatrix<T, D, D>)
 where
     G: FnOnce(OVector<Dual2Vec<T, F, D>, D>) -> Dual2Vec<T, F, D>,
-    DefaultAllocator: Allocator<T, D>
-        + Allocator<T, U1, D>
-        + Allocator<T, D, D>
-        + Allocator<Dual2Vec<T, F, D>, D>,
+    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
 {
     try_hessian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
 }
@@ -99,10 +96,7 @@ pub fn try_hessian<G, T: DualNum<F>, F: DualNumFloat, E, D: Dim>(
 ) -> Result<(T, OVector<T, D>, OMatrix<T, D, D>), E>
 where
     G: FnOnce(OVector<Dual2Vec<T, F, D>, D>) -> Result<Dual2Vec<T, F, D>, E>,
-    DefaultAllocator: Allocator<T, D>
-        + Allocator<T, U1, D>
-        + Allocator<T, D, D>
-        + Allocator<Dual2Vec<T, F, D>, D>,
+    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
 {
     let mut x = x.map(Dual2Vec::from_re);
     let (r, c) = x.shape_generic();
@@ -121,7 +115,7 @@ where
 /* chain rule */
 impl<T: DualNum<F>, F: Float, D: Dim> Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
@@ -136,7 +130,7 @@ where
 /* product rule */
 impl<'a, 'b, T: DualNum<F>, F: Float, D: Dim> Mul<&'a Dual2Vec<T, F, D>> for &'b Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     type Output = Dual2Vec<T, F, D>;
     #[inline]
@@ -155,7 +149,7 @@ where
 /* quotient rule */
 impl<'a, 'b, T: DualNum<F>, F: Float, D: Dim> Div<&'a Dual2Vec<T, F, D>> for &'b Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     type Output = Dual2Vec<T, F, D>;
     #[inline]
@@ -179,7 +173,7 @@ where
 /* string conversions */
 impl<T: DualNum<F>, F: fmt::Display, D: Dim> fmt::Display for Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<T, U1, D> + Allocator<T, D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.re)?;
