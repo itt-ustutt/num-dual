@@ -146,7 +146,7 @@ where
 }
 
 /// Variant of [jacobian] for fallible functions.
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn try_jacobian<G, T: DualNum<F>, F: DualNumFloat, E, M: Dim, N: Dim>(
     g: G,
     x: OVector<T, N>,
