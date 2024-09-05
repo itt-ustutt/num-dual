@@ -3,6 +3,7 @@ name = "num-dual"
 version = "0.9.1"
 authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
            "Philipp Rehner <prehner@ethz.ch>"]
+rust-version = "1.81"
 edition = "2021"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
