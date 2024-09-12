@@ -140,7 +140,7 @@ where
 }
 
 impl<T: DualNum<F>, F> Derivative<T, F, U1, U1> {
-    #[allow(clippy::self_named_constructors)]
+    #[expect(clippy::self_named_constructors)]
     pub fn derivative() -> Self {
         Self::some(SVector::identity())
     }

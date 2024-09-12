@@ -89,7 +89,7 @@ where
 }
 
 /// Variant of [hessian] for fallible functions.
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn try_hessian<G, T: DualNum<F>, F: DualNumFloat, E, D: Dim>(
     g: G,
     x: OVector<T, D>,

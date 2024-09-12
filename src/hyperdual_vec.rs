@@ -96,7 +96,7 @@ where
 /// assert_relative_eq!(d2fdxdy[0], -0.032);
 /// assert_relative_eq!(d2fdxdy[1], -0.024);
 /// ```
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn partial_hessian<G, T: DualNum<F>, F: DualNumFloat, M: Dim, N: Dim>(
     g: G,
     x: OVector<T, M>,
@@ -113,7 +113,7 @@ where
 }
 
 /// Variant of [partial_hessian] for fallible functions.
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn try_partial_hessian<G, T: DualNum<F>, F: DualNumFloat, E, M: Dim, N: Dim>(
     g: G,
     x: OVector<T, M>,

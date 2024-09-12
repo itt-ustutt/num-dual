@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 pub struct PyHyperHyperDual64(HyperHyperDual64);
 
 #[pymethods]
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 impl PyHyperHyperDual64 {
     #[new]
     fn new(
@@ -77,7 +77,7 @@ impl_dual_num!(PyHyperHyperDual64, HyperHyperDual64, f64);
 /// second partial derivative w.r.t. x and z
 /// second partial derivative w.r.t. y and z
 /// third partial derivative
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn third_partial_derivative(
     f: &Bound<'_, PyAny>,
     x: f64,
@@ -128,7 +128,7 @@ pub fn third_partial_derivative(
 /// second partial derivative w.r.t. variables i and k
 /// second partial derivative w.r.t. variables j and k
 /// third partial derivative
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn third_partial_derivative_vec(
     f: &Bound<'_, PyAny>,
     x: Vec<f64>,

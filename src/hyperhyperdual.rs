@@ -38,7 +38,7 @@ pub type HyperHyperDual64 = HyperHyperDual<f64>;
 impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
     /// Create a new hyper-hyper-dual number from its fields.
     #[inline]
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     pub fn new(
         re: T,
         eps1: T,
@@ -133,7 +133,7 @@ where
 }
 
 /// Variant of [third_partial_derivative] for fallible functions.
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn try_third_partial_derivative<G, T: DualNum<F>, F, E>(
     g: G,
     x: T,
@@ -199,7 +199,7 @@ where
 }
 
 /// Variant of [third_partial_derivative_vec] for fallible functions.
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 pub fn try_third_partial_derivative_vec<G, T: DualNum<F>, F, E>(
     g: G,
     x: &[T],

@@ -161,7 +161,6 @@ macro_rules! impl_partial_hessian {
         /// Returns
         /// -------
         /// function value, gradient w.r.t. x, gradient w.r.t. y, and partial Hessian
-        #[allow(clippy::type_complexity)]
         pub fn partial_hessian(
             f: &Bound<'_, PyAny>,
             x: &Bound<'_, PyAny>,

@@ -40,7 +40,7 @@
 //! ```
 
 #![warn(clippy::all)]
-#![allow(clippy::needless_range_loop)]
+#![warn(clippy::allow_attributes)]
 
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::fmt;
