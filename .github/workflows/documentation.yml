@@ -35,3 +35,18 @@ jobs:
         with:
           name: documentation
           path: public
+
+  release-documentation:
+    needs: [build-documentation]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: documentation
+          path: public
+      - name: Deploy documentation to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
