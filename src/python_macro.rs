@@ -228,7 +228,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -236,14 +236,10 @@ macro_rules! impl_dual_num {
                         .bind(rhs.py())
                         .is_instance_of::<Self>()
                     {
-                        return Ok(PyArray::from_owned_object_array_bound(
-                            rhs.py(),
-                            r.as_array().mapv(|ri| {
-                                Py::new(rhs.py(), Self(self.0.clone() + ri.extract::<Self>(rhs.py()).unwrap().0))
-                                    .unwrap()
-                            }),
-                        )
-                        .into_any());
+                        r.as_array_mut().map_inplace(|ri| {
+                            *ri = Py::new(rhs.py(), Self(self.0.clone() + ri.extract::<Self>(rhs.py()).unwrap().0)).unwrap().into_any()
+                        });
+                        return Ok(r.as_any().clone());
                     } else {
                         return Err(PyErr::new::<PyTypeError, _>(format!(
                             "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
@@ -278,7 +274,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -286,14 +282,10 @@ macro_rules! impl_dual_num {
                         .bind(rhs.py())
                         .is_instance_of::<Self>()
                     {
-                        return Ok(PyArray::from_owned_object_array_bound(
-                            rhs.py(),
-                            r.as_array().mapv(|ri| {
-                                Py::new(rhs.py(), Self(self.0.clone() - ri.extract::<Self>(rhs.py()).unwrap().0))
-                                    .unwrap()
-                            }),
-                        )
-                        .into_any());
+                        r.as_array_mut().map_inplace(|ri| {
+                            *ri = Py::new(rhs.py(), Self(self.0.clone() - ri.extract::<Self>(rhs.py()).unwrap().0)).unwrap().into_any()
+                        });
+                        return Ok(r.as_any().clone());
                     } else {
                         return Err(PyErr::new::<PyTypeError, _>(format!(
                             "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
@@ -328,7 +320,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -336,14 +328,10 @@ macro_rules! impl_dual_num {
                         .bind(rhs.py())
                         .is_instance_of::<Self>()
                     {
-                        return Ok(PyArray::from_owned_object_array_bound(
-                            rhs.py(),
-                            r.as_array().mapv(|ri| {
-                                Py::new(rhs.py(), Self(self.0.clone() * ri.extract::<Self>(rhs.py()).unwrap().0))
-                                    .unwrap()
-                            }),
-                        )
-                        .into_any());
+                        r.as_array_mut().map_inplace(|ri| {
+                            *ri = Py::new(rhs.py(), Self(self.0.clone() * ri.extract::<Self>(rhs.py()).unwrap().0)).unwrap().into_any()
+                        });
+                        return Ok(r.as_any().clone());
                     } else {
                         return Err(PyErr::new::<PyTypeError, _>(format!(
                             "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
@@ -378,7 +366,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -386,14 +374,10 @@ macro_rules! impl_dual_num {
                         .bind(rhs.py())
                         .is_instance_of::<Self>()
                     {
-                        return Ok(PyArray::from_owned_object_array_bound(
-                            rhs.py(),
-                            r.as_array().mapv(|ri| {
-                                Py::new(rhs.py(), Self(self.0.clone() / ri.extract::<Self>(rhs.py()).unwrap().0))
-                                    .unwrap()
-                            }),
-                        )
-                        .into_any());
+                        r.as_array_mut().map_inplace(|ri| {
+                            *ri = Py::new(rhs.py(), Self(self.0.clone() / ri.extract::<Self>(rhs.py()).unwrap().0)).unwrap().into_any()
+                        });
+                        return Ok(r.as_any().clone());
                     } else {
                         return Err(PyErr::new::<PyTypeError, _>(format!(
                             "Operation with the provided object type is not implemented. Supported data types are 'float', 'int' and '{}'.",
