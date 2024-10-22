@@ -2,7 +2,7 @@
 
 [![crate](https://img.shields.io/crates/v/num-dual.svg)](https://crates.io/crates/num-dual)
 [![documentation](https://docs.rs/num-dual/badge.svg)](https://docs.rs/num-dual)
-[![minimum rustc 1.51](https://img.shields.io/badge/rustc-1.51+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![minimum rustc 1.81](https://img.shields.io/badge/rustc-1.81+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![documentation](https://img.shields.io/badge/docs-github--pages-blue)](https://itt-ustutt.github.io/num-dual/)
 [![PyPI version](https://badge.fury.io/py/num_dual.svg)](https://badge.fury.io/py/num_dual)
 
@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-dual = "0.7"
+num-dual = "0.10"
 ```
 
 ## Example

@@ -1,8 +1,10 @@
 [package]
 name = "num-dual"
-version = "0.9.1"
-authors = ["Gernot Bauer <bauer@itt.uni-stuttgart.de>",
-           "Philipp Rehner <prehner@ethz.ch>"]
+version = "0.10.0"
+authors = [
+    "Gernot Bauer <bauer@itt.uni-stuttgart.de>",
+    "Philipp Rehner <prehner@ethz.ch>",
+]
 rust-version = "1.81"
 edition = "2021"
 readme = "README.md"
@@ -20,12 +22,16 @@ name = "num_dual"
 [dependencies]
 num-traits = "0.2"
 nalgebra = "0.33"
-pyo3 = { version = "0.21", optional = true, features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py37"] }
-ndarray = { version = "0.15", optional = true }
-numpy = { version = "0.21", optional = true }
+ndarray = { version = "0.16", optional = true }
+numpy = { version = "0.22", optional = true }
 approx = "0.5"
 simba = "0.9"
 serde = { version = "1.0", features = ["derive"], optional = true }
+
+[dependencies.pyo3]
+version = "0.22"
+optional = true
+features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py37"]
 
 [profile.release]
 lto = true

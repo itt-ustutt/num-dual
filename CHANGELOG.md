@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2024-10-22
+### Packaging
+- Updated `nalgebra` dependency to 0.33. [#75](https://github.com/itt-ustutt/num-dual/pull/75)
+- Updated `simba` dependency to 0.9. [#75](https://github.com/itt-ustutt/num-dual/pull/75)
+- Updated `pyo3` and `numpy` dependencies to 0.22. [#80](https://github.com/itt-ustutt/num-dual/pull/80)
+- Updated `ndarray` dependency to 0.16. [#80](https://github.com/itt-ustutt/num-dual/pull/80)
+- Increased minimum supported Rust version to 1.81. [#77](https://github.com/itt-ustutt/num-dual/pull/77)
+
+## Removed
+- Due to limitations in the `numpy` dependency, Python wheels for 32-bit Windows are no longer supported. [#80](https://github.com/itt-ustutt/num-dual/pull/80)
+
 ## [0.9.1] - 2024-04-15
 ### Added
 - Added `serde` feature that enables serialization and deserialization of all scalar dual numbers. [#74](https://github.com/itt-ustutt/num-dual/pull/74)
