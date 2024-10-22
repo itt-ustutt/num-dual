@@ -385,9 +385,8 @@ where
     DefaultAllocator: Allocator<R, C>,
 {
     fn mul_assign(&mut self, rhs: T) {
-        match &mut self.0 {
-            Some(s) => *s *= rhs,
-            None => (),
+        if let Some(s) = &mut self.0 {
+            *s *= rhs
         }
     }
 }
@@ -397,9 +396,8 @@ where
     DefaultAllocator: Allocator<R, C>,
 {
     fn div_assign(&mut self, rhs: T) {
-        match &mut self.0 {
-            Some(s) => *s /= rhs,
-            None => (),
+        if let Some(s) = &mut self.0 {
+            *s /= rhs
         }
     }
 }
