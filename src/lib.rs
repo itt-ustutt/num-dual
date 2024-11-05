@@ -117,10 +117,16 @@ pub trait DualNum<F>:
     /// Highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
+    /// Type of the elements of this generalized (hyper) dual number
+    type Inner;
+
+    /// Construct a new generalized (hyper) dual number from its real part
+    fn from_inner(inner: Self::Inner) -> Self;
+
     /// Real part (0th derivative) of the number
     fn re(&self) -> F;
 
-    /// Reciprocal (inverse) of a number `1/x`.
+    /// Reciprocal (inverse) of a number `1/x`
     fn recip(&self) -> Self;
 
     /// Power with integer exponent `x^n`
@@ -242,6 +248,12 @@ macro_rules! impl_dual_num_float {
     ($float:ty) => {
         impl DualNum<$float> for $float {
             const NDERIV: usize = 0;
+
+            type Inner = $float;
+
+            fn from_inner(inner: Self::Inner) -> Self {
+                inner
+            }
 
             fn re(&self) -> $float {
                 *self
