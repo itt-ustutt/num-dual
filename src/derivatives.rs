@@ -7,6 +7,13 @@ macro_rules! impl_derivatives {
         {
             const NDERIV: usize = T::NDERIV + $nderiv;
 
+            type Inner = T;
+
+            #[inline]
+            fn from_inner(inner: Self::Inner) -> Self {
+                Self::from_re(inner)
+            }
+
             #[inline]
             fn re(&self) -> F {
                 self.re.re()

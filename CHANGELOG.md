@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2204-11-05
+## Added
+- Expose the inner type of a generalized (hyper) dual number in the `DualNum` trait. [#81](https://github.com/itt-ustutt/num-dual/pull/81)
+
 ## [0.10.0] - 2024-10-22
 ### Packaging
 - Updated `nalgebra` dependency to 0.33. [#75](https://github.com/itt-ustutt/num-dual/pull/75)
