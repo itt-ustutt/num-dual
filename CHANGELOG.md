@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.10.1] - 2204-11-05
+## [0.10.2] - 2024-11-06
+## Changed
+- Exposed macros for the implementation of the `DualNum` trait publicly. [#83](https://github.com/itt-ustutt/num-dual/pull/83)
+
+## [0.10.1] - 2024-11-05
 ## Added
 - Expose the inner type of a generalized (hyper) dual number in the `DualNum` trait. [#82](https://github.com/itt-ustutt/num-dual/pull/82)
 

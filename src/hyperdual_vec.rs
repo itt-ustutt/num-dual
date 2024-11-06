@@ -223,5 +223,5 @@ where
     }
 }
 
-impl_second_derivatives!(HyperDualVec, [eps1, eps2, eps1eps2], [M, N]);
-impl_dual!(HyperDualVec, [eps1, eps2, eps1eps2], [M, N]);
+impl_second_derivatives!(HyperDualVec, [eps1, eps2, eps1eps2], [M, N], [M, N]);
+impl_dual!(HyperDualVec, [eps1, eps2, eps1eps2], [M, N], [M, N]);
