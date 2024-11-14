@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.3] - 2024-11-14
+## Added
+- Added nalgebra compatibility for `Dual2` and `Dual2Vec`. [#81](https://github.com/itt-ustutt/num-dual/pull/81)
+- Added `atan2` to the `DualNum` trait. [#85](https://github.com/itt-ustutt/num-dual/pull/85)
+
 ## [0.10.2] - 2024-11-06
 ## Changed
 - Exposed macros for the implementation of the `DualNum` trait publicly. [#83](https://github.com/itt-ustutt/num-dual/pull/83)
