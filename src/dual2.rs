@@ -718,21 +718,7 @@ where
 
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        let re = self.re.atan2(other.re);
-        let den = self.re.powi(2) + other.re.powi(2);
-
-        let da = other.re / den;
-        let db = -self.re / den;
-        let v1 = self.v1 * da + other.v1 * db;
-
-        let daa = db * da * (T::one() + T::one());
-        let dab = db * db - da * da;
-        let dbb = -daa;
-        let ca = self.v1 * daa + other.v1 * dab;
-        let cb = self.v1 * dab + other.v1 * dbb;
-        let v2 = self.v2 * da + other.v2 * db + ca * self.v1 + cb * other.v1;
-
-        Self::new(re, v1, v2)
+        DualNum::atan2(&self, other)
     }
 
     #[inline]
@@ -860,21 +846,5 @@ where
     #[inline]
     fn max_value() -> Option<Self> {
         Some(Self::from_re(T::max_value()))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use approx::assert_relative_eq;
-
-    #[test]
-    fn test_atan2() {
-        let x = Dual2_64::from(2.0).derivative();
-        let y = Dual2_64::from(-3.0);
-        let z = x.atan2(y);
-        let z2 = (x / y).atan();
-        assert_relative_eq!(z.v1, z2.v1, epsilon = 1e-14);
-        assert_relative_eq!(z.v2, z2.v2, epsilon = 1e-14);
     }
 }

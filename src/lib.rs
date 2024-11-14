@@ -186,6 +186,9 @@ pub trait DualNum<F>:
     /// Arctangent
     fn atan(&self) -> Self;
 
+    /// Arctangent
+    fn atan2(&self, other: Self) -> Self;
+
     /// Hyperbolic sine
     fn sinh(&self) -> Self;
 
@@ -315,6 +318,9 @@ macro_rules! impl_dual_num_float {
             }
             fn atan(&self) -> Self {
                 <$float>::atan(*self)
+            }
+            fn atan2(&self, other: $float) -> Self {
+                <$float>::atan2(*self, other)
             }
             fn sin_cos(&self) -> (Self, Self) {
                 <$float>::sin_cos(*self)

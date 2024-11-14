@@ -655,10 +655,7 @@ where
 
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        let re = self.re.atan2(other.re);
-        let eps =
-            (self.eps * other.re - other.eps * self.re) / (self.re.powi(2) + other.re.powi(2));
-        Dual::new(re, eps)
+        DualNum::atan2(&self, other)
     }
 
     #[inline]
@@ -786,20 +783,5 @@ where
     #[inline]
     fn max_value() -> Option<Self> {
         Some(Self::from_re(T::max_value()))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use approx::assert_relative_eq;
-
-    #[test]
-    fn test_atan2() {
-        let x = Dual64::from(2.0).derivative();
-        let y = Dual64::from(-3.0);
-        let z = x.atan2(y);
-        let z2 = (x / y).atan();
-        assert_relative_eq!(z.eps, z2.eps, epsilon = 1e-14);
     }
 }

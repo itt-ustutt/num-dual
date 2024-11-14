@@ -222,6 +222,13 @@ macro_rules! impl_derivatives {
             }
 
             #[inline]
+            fn atan2(&self, other: Self) -> Self {
+                let mut res = (self / other.clone()).atan();
+                res.re = self.re.atan2(other.re);
+                res
+            }
+
+            #[inline]
             fn sinh(&self) -> Self {
                 let s = self.re.sinh();
                 let c = self.re.cosh();
