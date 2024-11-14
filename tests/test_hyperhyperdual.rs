@@ -523,6 +523,78 @@ fn test_hyperhyperdual_atan() {
 }
 
 #[test]
+fn test_hyperhyperdual_atan2_1() {
+    let res = HyperHyperDual64::from(0.2)
+        .derivative1()
+        .derivative2()
+        .derivative3()
+        .atan2((0.4).into());
+    assert!((res.re - 0.463647609000806).abs() < 1e-12);
+    assert!((res.eps1 - 2.00000000000000).abs() < 1e-12);
+    assert!((res.eps2 - 2.00000000000000).abs() < 1e-12);
+    assert!((res.eps3 - 2.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps3 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2eps3 - -4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperhyperdual_atan2_2() {
+    let res = HyperHyperDual64::from(-0.2)
+        .derivative1()
+        .derivative2()
+        .derivative3()
+        .atan2((0.4).into());
+    assert!((res.re - -0.463647609000806).abs() < 1e-12);
+    assert!((res.eps1 - 2.00000000000000).abs() < 1e-12);
+    assert!((res.eps2 - 2.00000000000000).abs() < 1e-12);
+    assert!((res.eps3 - 2.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps3 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2eps3 - -4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperhyperdual_atan2_3() {
+    let res = HyperHyperDual64::from(0.2)
+        .derivative1()
+        .derivative2()
+        .derivative3()
+        .atan2((-0.4).into());
+    assert!((res.re - 2.67794504458899).abs() < 1e-12);
+    assert!((res.eps1 - -2.00000000000000).abs() < 1e-12);
+    assert!((res.eps2 - -2.00000000000000).abs() < 1e-12);
+    assert!((res.eps3 - -2.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps3 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - 4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2eps3 - 4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperhyperdual_atan2_4() {
+    let res = HyperHyperDual64::from(-0.2)
+        .derivative1()
+        .derivative2()
+        .derivative3()
+        .atan2((-0.4).into());
+    assert!((res.re - -2.67794504458899).abs() < 1e-12);
+    assert!((res.eps1 - -2.00000000000000).abs() < 1e-12);
+    assert!((res.eps2 - -2.00000000000000).abs() < 1e-12);
+    assert!((res.eps3 - -2.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps3 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps2eps3 - -4.00000000000000).abs() < 1e-12);
+    assert!((res.eps1eps2eps3 - 4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
 fn test_hyperhyperdual_sinh() {
     let res = HyperHyperDual64::from(1.2)
         .derivative1()

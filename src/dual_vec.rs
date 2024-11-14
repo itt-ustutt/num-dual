@@ -780,10 +780,7 @@ where
 
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        let re = self.re.atan2(other.re);
-        let eps =
-            (self.eps * other.re - other.eps * self.re) / (self.re.powi(2) + other.re.powi(2));
-        DualVec::new(re, eps)
+        DualNum::atan2(&self, other)
     }
 
     #[inline]

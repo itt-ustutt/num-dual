@@ -263,6 +263,42 @@ fn test_dual_vec_atan() {
 }
 
 #[test]
+fn test_dual_vec_atan2_1() {
+    let res = DualSVec64::new(0.2, Derivative::some(Vector::from([1.0, 1.0]))).atan2((0.4).into());
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - 0.463647609000806).abs() < 1e-12);
+    assert!((eps[0] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps[1] - 2.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_atan2_2() {
+    let res = DualSVec64::new(-0.2, Derivative::some(Vector::from([1.0, 1.0]))).atan2((0.4).into());
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - -0.463647609000806).abs() < 1e-12);
+    assert!((eps[0] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps[1] - 2.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_atan2_3() {
+    let res = DualSVec64::new(0.2, Derivative::some(Vector::from([1.0, 1.0]))).atan2((-0.4).into());
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - 2.67794504458899).abs() < 1e-12);
+    assert!((eps[0] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps[1] - -2.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_atan2_4() {
+    let res = DualSVec64::new(-0.2, Derivative::some(Vector::from([1.0, 1.0]))).atan2((-0.4).into());
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - -2.67794504458899).abs() < 1e-12);
+    assert!((eps[0] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps[1] - -2.00000000000000).abs() < 1e-12);
+}
+
+#[test]
 fn test_dual_vec_sinh() {
     let res = DualSVec64::new(1.2, Derivative::some(Vector::from([1.0, 1.0]))).sinh();
     let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);

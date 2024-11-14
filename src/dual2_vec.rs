@@ -763,21 +763,7 @@ where
 
     #[inline]
     fn atan2(self, other: Self) -> Self {
-        let re = self.re.atan2(other.re);
-        let den = self.re.powi(2) + other.re.powi(2);
-
-        let da = other.re / den;
-        let db = -self.re / den;
-        let v1 = &self.v1 * da + &other.v1 * db;
-
-        let daa = db * da * (T::one() + T::one());
-        let dab = db * db - da * da;
-        let dbb = -daa;
-        let ca = &self.v1 * daa + &other.v1 * dab;
-        let cb = &self.v1 * dab + &other.v1 * dbb;
-        let v2 = self.v2 * da + other.v2 * db + ca.tr_mul(&self.v1) + cb.tr_mul(&other.v1);
-
-        Self::new(re, v1, v2)
+        DualNum::atan2(&self, other)
     }
 
     #[inline]

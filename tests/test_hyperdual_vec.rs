@@ -669,6 +669,98 @@ fn test_hyperdual_vec_atan() {
 }
 
 #[test]
+fn test_hyperdual_vec_atan2_1() {
+    let res = HyperDualVec64::new(
+        0.2,
+        Derivative::some(SVector::from([1.0, 1.0])),
+        Derivative::some(RowSVector::from([1.0, 1.0])),
+        Derivative::none(),
+    )
+    .atan2((0.4).into());
+    let eps1 = res.eps1.unwrap_generic(Const::<2>, Const::<1>);
+    let eps2 = res.eps2.unwrap_generic(Const::<1>, Const::<2>);
+    let eps1eps2 = res.eps1eps2.unwrap_generic(Const::<2>, Const::<2>);
+    assert!((res.re - 0.463647609000806).abs() < 1e-12);
+    assert!((eps1[0] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps1[1] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps2[0] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps2[1] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 0)] - -4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 1)] - -4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 0)] - -4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 1)] - -4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_vec_atan2_2() {
+    let res = HyperDualVec64::new(
+        -0.2,
+        Derivative::some(SVector::from([1.0, 1.0])),
+        Derivative::some(RowSVector::from([1.0, 1.0])),
+        Derivative::none(),
+    )
+    .atan2((0.4).into());
+    let eps1 = res.eps1.unwrap_generic(Const::<2>, Const::<1>);
+    let eps2 = res.eps2.unwrap_generic(Const::<1>, Const::<2>);
+    let eps1eps2 = res.eps1eps2.unwrap_generic(Const::<2>, Const::<2>);
+    assert!((res.re - -0.463647609000806).abs() < 1e-12);
+    assert!((eps1[0] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps1[1] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps2[0] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps2[1] - 2.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 0)] - 4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 1)] - 4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 0)] - 4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 1)] - 4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_vec_atan2_3() {
+    let res = HyperDualVec64::new(
+        0.2,
+        Derivative::some(SVector::from([1.0, 1.0])),
+        Derivative::some(RowSVector::from([1.0, 1.0])),
+        Derivative::none(),
+    )
+    .atan2((-0.4).into());
+    let eps1 = res.eps1.unwrap_generic(Const::<2>, Const::<1>);
+    let eps2 = res.eps2.unwrap_generic(Const::<1>, Const::<2>);
+    let eps1eps2 = res.eps1eps2.unwrap_generic(Const::<2>, Const::<2>);
+    assert!((res.re - 2.67794504458899).abs() < 1e-12);
+    assert!((eps1[0] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps1[1] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps2[0] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps2[1] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 0)] - 4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 1)] - 4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 0)] - 4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 1)] - 4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
+fn test_hyperdual_vec_atan2_4() {
+    let res = HyperDualVec64::new(
+        -0.2,
+        Derivative::some(SVector::from([1.0, 1.0])),
+        Derivative::some(RowSVector::from([1.0, 1.0])),
+        Derivative::none(),
+    )
+    .atan2((-0.4).into());
+    let eps1 = res.eps1.unwrap_generic(Const::<2>, Const::<1>);
+    let eps2 = res.eps2.unwrap_generic(Const::<1>, Const::<2>);
+    let eps1eps2 = res.eps1eps2.unwrap_generic(Const::<2>, Const::<2>);
+    assert!((res.re - -2.67794504458899).abs() < 1e-12);
+    assert!((eps1[0] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps1[1] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps2[0] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps2[1] - -2.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 0)] - -4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(0, 1)] - -4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 0)] - -4.00000000000000).abs() < 1e-12);
+    assert!((eps1eps2[(1, 1)] - -4.00000000000000).abs() < 1e-12);
+}
+
+#[test]
 fn test_hyperdual_vec_sinh() {
     let res = HyperDualVec64::new(
         1.2,
