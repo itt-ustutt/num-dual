@@ -21,6 +21,11 @@ macro_rules! impl_derivatives {
             }
 
             #[inline]
+            fn re_mut(&mut self) -> &mut F {
+                self.re.re_mut()
+            }
+
+            #[inline]
             fn recip(&self) -> Self {
                 let rec = self.re.recip();
                 let f0 = rec.clone();

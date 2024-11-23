@@ -126,6 +126,9 @@ pub trait DualNum<F>:
     /// Real part (0th derivative) of the number
     fn re(&self) -> F;
 
+    /// Mutable reference to real part (0th derivative) of the number
+    fn re_mut(&mut self) -> &mut F;
+
     /// Reciprocal (inverse) of a number `1/x`
     fn recip(&self) -> Self;
 
@@ -260,6 +263,10 @@ macro_rules! impl_dual_num_float {
 
             fn re(&self) -> $float {
                 *self
+            }
+
+            fn re_mut(&mut self) -> &mut $float {
+                self
             }
 
             fn mul_add(&self, a: Self, b: Self) -> Self {
