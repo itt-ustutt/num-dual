@@ -103,7 +103,7 @@ impl<T: DualNum<F>, F: Float> Dual3<T, F> {
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual3<T, F>> for &'b Dual3<T, F> {
+impl<T: DualNum<F>, F: Float> Mul<&Dual3<T, F>> for &Dual3<T, F> {
     type Output = Dual3<T, F>;
     #[inline]
     fn mul(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
@@ -120,7 +120,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual3<T, F>> for &'b Dual3<T, F> {
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a Dual3<T, F>> for &'b Dual3<T, F> {
+impl<T: DualNum<F>, F: Float> Div<&Dual3<T, F>> for &Dual3<T, F> {
     type Output = Dual3<T, F>;
     #[inline]
     fn div(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {

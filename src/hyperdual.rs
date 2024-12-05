@@ -114,7 +114,7 @@ impl<T: DualNum<F>, F: Float> HyperDual<T, F> {
 }
 
 /* product rule */
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+impl<T: DualNum<F>, F: Float> Mul<&HyperDual<T, F>> for &HyperDual<T, F> {
     type Output = HyperDual<T, F>;
     #[inline]
     fn mul(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
@@ -131,7 +131,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperDual<T, F>> for &'b HyperDual
 }
 
 /* quotient rule */
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperDual<T, F>> for &'b HyperDual<T, F> {
+impl<T: DualNum<F>, F: Float> Div<&HyperDual<T, F>> for &HyperDual<T, F> {
     type Output = HyperDual<T, F>;
     #[inline]
     fn div(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {

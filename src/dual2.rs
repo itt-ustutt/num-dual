@@ -129,7 +129,7 @@ impl<T: DualNum<F>, F: Float> Dual2<T, F> {
 }
 
 /* product rule */
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual2<T, F>> for &'b Dual2<T, F> {
+impl<T: DualNum<F>, F: Float> Mul<&Dual2<T, F>> for &Dual2<T, F> {
     type Output = Dual2<T, F>;
     #[inline]
     fn mul(self, other: &Dual2<T, F>) -> Dual2<T, F> {
@@ -145,7 +145,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a Dual2<T, F>> for &'b Dual2<T, F> {
 }
 
 /* quotient rule */
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a Dual2<T, F>> for &'b Dual2<T, F> {
+impl<T: DualNum<F>, F: Float> Div<&Dual2<T, F>> for &Dual2<T, F> {
     type Output = Dual2<T, F>;
     #[inline]
     fn div(self, other: &Dual2<T, F>) -> Dual2<T, F> {

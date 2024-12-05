@@ -167,7 +167,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Mul<T> for &'a Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Mul<T> for &Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
@@ -178,8 +178,8 @@ where
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F, R: Dim, C: Dim, R2: Dim, C2: Dim> Mul<&'b Derivative<T, F, R2, C2>>
-    for &'a Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim, R2: Dim, C2: Dim> Mul<&Derivative<T, F, R2, C2>>
+    for &Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C> + Allocator<R2, C2> + Allocator<R, C2>,
     ShapeConstraint: SameNumberOfRows<C, R2>,
@@ -202,7 +202,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Div<T> for &'a Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Div<T> for &Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
@@ -250,8 +250,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Add<&'a Derivative<T, F, R, C>>
-    for Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Add<&Derivative<T, F, R, C>> for Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
@@ -267,7 +266,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Add for &'a Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Add for &Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
@@ -299,8 +298,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Sub<&'a Derivative<T, F, R, C>>
-    for Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Sub<&Derivative<T, F, R, C>> for Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
@@ -316,7 +314,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Sub for &'a Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Sub for &Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
@@ -332,7 +330,7 @@ where
     }
 }
 
-impl<'a, T: DualNum<F>, F, R: Dim, C: Dim> Neg for &'a Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Neg for &Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {

@@ -251,7 +251,7 @@ impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperHyperDual<T, F>> for &'b HyperHyperDual<T, F> {
+impl<T: DualNum<F>, F: Float> Mul<&HyperHyperDual<T, F>> for &HyperHyperDual<T, F> {
     type Output = HyperHyperDual<T, F>;
     #[inline]
     fn mul(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
@@ -284,7 +284,7 @@ impl<'a, 'b, T: DualNum<F>, F: Float> Mul<&'a HyperHyperDual<T, F>> for &'b Hype
     }
 }
 
-impl<'a, 'b, T: DualNum<F>, F: Float> Div<&'a HyperHyperDual<T, F>> for &'b HyperHyperDual<T, F> {
+impl<T: DualNum<F>, F: Float> Div<&HyperHyperDual<T, F>> for &HyperHyperDual<T, F> {
     type Output = HyperHyperDual<T, F>;
     #[inline]
     fn div(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {

@@ -221,7 +221,7 @@ macro_rules! impl_dual_num {
                     return Ok(Bound::new(rhs.py(), Self(self.0.clone() + r.0))?.into_any());
                 };
                 if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                    return Ok(PyArray::from_owned_object_array_bound(
+                    return Ok(PyArray::from_owned_object_array(
                         rhs.py(),
                         r.as_array()
                             .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() + ri)).unwrap()),
@@ -267,7 +267,7 @@ macro_rules! impl_dual_num {
                     return Ok(Bound::new(rhs.py(), Self(self.0.clone() - r.0))?.into_any());
                 };
                 if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                    return Ok(PyArray::from_owned_object_array_bound(
+                    return Ok(PyArray::from_owned_object_array(
                         rhs.py(),
                         r.as_array()
                             .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() - ri)).unwrap()),
@@ -313,7 +313,7 @@ macro_rules! impl_dual_num {
                     return Ok(Bound::new(rhs.py(), Self(self.0.clone() * r.0))?.into_any());
                 };
                 if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                    return Ok(PyArray::from_owned_object_array_bound(
+                    return Ok(PyArray::from_owned_object_array(
                         rhs.py(),
                         r.as_array()
                             .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() * ri)).unwrap()),
@@ -359,7 +359,7 @@ macro_rules! impl_dual_num {
                     return Ok(Bound::new(rhs.py(), Self(self.0.clone() / r.0))?.into_any());
                 };
                 if let Ok(r) = rhs.extract::<PyReadonlyArrayDyn<f64>>() {
-                    return Ok(PyArray::from_owned_object_array_bound(
+                    return Ok(PyArray::from_owned_object_array(
                         rhs.py(),
                         r.as_array()
                             .mapv(|ri| Py::new(rhs.py(), Self(self.0.clone() / ri)).unwrap()),
