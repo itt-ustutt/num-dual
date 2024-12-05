@@ -163,8 +163,8 @@ where
 }
 
 /* product rule */
-impl<'a, 'b, T: DualNum<F>, F: Float, M: Dim, N: Dim> Mul<&'a HyperDualVec<T, F, M, N>>
-    for &'b HyperDualVec<T, F, M, N>
+impl<T: DualNum<F>, F: Float, M: Dim, N: Dim> Mul<&HyperDualVec<T, F, M, N>>
+    for &HyperDualVec<T, F, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
@@ -184,8 +184,8 @@ where
 }
 
 /* quotient rule */
-impl<'a, 'b, T: DualNum<F>, F: Float, M: Dim, N: Dim> Div<&'a HyperDualVec<T, F, M, N>>
-    for &'b HyperDualVec<T, F, M, N>
+impl<T: DualNum<F>, F: Float, M: Dim, N: Dim> Div<&HyperDualVec<T, F, M, N>>
+    for &HyperDualVec<T, F, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {

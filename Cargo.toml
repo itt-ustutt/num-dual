@@ -23,7 +23,7 @@ name = "num_dual"
 num-traits = "0.2"
 nalgebra = "0.33"
 ndarray = { version = "0.16", optional = true }
-numpy = { git = "https://github.com/PyO3/rust-numpy", optional = true }
+numpy = { version = "0.23", optional = true }
 approx = "0.5"
 simba = "0.9"
 serde = { version = "1.0", features = ["derive"], optional = true }

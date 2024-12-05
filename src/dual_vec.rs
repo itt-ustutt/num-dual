@@ -182,7 +182,7 @@ where
 }
 
 /* product rule */
-impl<'a, 'b, T: DualNum<F>, F: Float, D: Dim> Mul<&'a DualVec<T, F, D>> for &'b DualVec<T, F, D>
+impl<T: DualNum<F>, F: Float, D: Dim> Mul<&DualVec<T, F, D>> for &DualVec<T, F, D>
 where
     DefaultAllocator: Allocator<D>,
 {
@@ -197,7 +197,7 @@ where
 }
 
 /* quotient rule */
-impl<'a, 'b, T: DualNum<F>, F: Float, D: Dim> Div<&'a DualVec<T, F, D>> for &'b DualVec<T, F, D>
+impl<T: DualNum<F>, F: Float, D: Dim> Div<&DualVec<T, F, D>> for &DualVec<T, F, D>
 where
     DefaultAllocator: Allocator<D>,
 {
