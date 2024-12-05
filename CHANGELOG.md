@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2024-12-05
+## Packaging
+- Updated `pyo3` and `numpy` dependencies to 0.23. [#88](https://github.com/itt-ustutt/num-dual/pull/88)
+
 ## [0.10.3] - 2024-11-14
 ## Added
 - Added nalgebra compatibility for `Dual2` and `Dual2Vec`. [#81](https://github.com/itt-ustutt/num-dual/pull/81)
