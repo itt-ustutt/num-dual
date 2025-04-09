@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2025-04-09
+## Added
+- Added the functions `implicit_derivative`, `implicit_derivative_unary`, and `implicit_derivative_binary` for the convenient calculation of arbitrary derivatives of implicit functions. [#91](https://github.com/itt-ustutt/num-dual/pull/91)
+
 ## [0.11.0] - 2024-12-05
 ## Packaging
 - Updated `pyo3` and `numpy` dependencies to 0.23. [#88](https://github.com/itt-ustutt/num-dual/pull/88)
