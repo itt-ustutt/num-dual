@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; num_dual 0.11.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+  <title>Examples &mdash; num_dual 0.11.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+      <script src="_static/documentation_options.js?v=57cbeb03"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -84,7 +84,7 @@
 <h2>First, second and third derivatives<a class="headerlink" href="#first-second-and-third-derivatives" title="Link to this heading"></a></h2>
 <p>Let’s define a simple, scalar valued function for which we want to compute the first, second and third derivative.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># f(x) = x**3, f&#39;(x) = 3 * x**2, f&#39;&#39;(x) = 6 * x</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span>
 </pre></div>
 </div>
@@ -92,7 +92,7 @@
 Different from a regular python function though, we use (hyper-) dual numbers as arguments.
 For example, to compute the first derivative at x = 2, we need to call the function with a dual number as input, setting the dual part (ε)
 to 1.0.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">Dual64</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dual64</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Dual64</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
 <span class="go">2 + 1ε</span>
@@ -116,7 +116,7 @@ the resulting derivatives will be multiples of the chosen value and as such we s
 E.g., for the second partial derivative, the function argument has to be a hyperdual number. We therefore introduce
 helper functions that can be used to simply declare which derivative you want to compute.</p>
 <p>The same result as above can be created via</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">first_derivative</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">first_derivative</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">derivative</span><span class="p">)</span> <span class="o">=</span> <span class="n">first_derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">derivative</span>
 <span class="go">12.0</span>
@@ -124,7 +124,7 @@ helper functions that can be used to simply declare which derivative you want to
 </div>
 <p>Internally, the correct dual number is constructed and used to evaluate the function.</p>
 <p>Let’s compute the second and third derivatives!</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">third_derivative</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">third_derivative</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f0</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fxx</span><span class="p">,</span> <span class="n">fxxx</span><span class="p">)</span> <span class="o">=</span> <span class="n">third_derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f(x)   = </span><span class="si">{</span><span class="n">f0</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;(X)  = </span><span class="si">{</span><span class="n">fx</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;&#39;(x) = </span><span class="si">{</span><span class="n">fxx</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;&#39;&#39;(x)= </span><span class="si">{</span><span class="n">fxxx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="go">f(x)    = 8.0</span>
@@ -143,9 +143,9 @@ A function that is often used as benchmark in optimization problems is the Rosen
 \[f(x,y) = (a - b)^2 + b(y - x^2)^2 \,,\]</div>
 </div></blockquote>
 <p>The function and its derivatives are implemented in <cite>scipy</cite>. Let’s compute the partial derivatives of the Rosenbrock function.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">second_partial_derivative</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">rosen</span><span class="p">,</span> <span class="n">rosen_der</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">second_partial_derivative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">rosen</span><span class="p">,</span> <span class="n">rosen_der</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span>
 </pre></div>
 </div>
@@ -160,7 +160,7 @@ A function that is often used as benchmark in optimization problems is the Rosen
 </pre></div>
 </div>
 <p>For multivariate functions, the gradient can also be computed directly</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">gradient</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">gradient</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="o">=</span> <span class="n">gradient</span><span class="p">(</span><span class="n">rosen</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span>
 <span class="go">[-151.0, 150.0]</span>
@@ -173,15 +173,15 @@ A function that is often used as benchmark in optimization problems is the Rosen
 Such a function is, e.g., the helmholtz energy, denoted as <span class="math notranslate nohighlight">\(A\)</span>, a function important in statistical mechanics and thermodynamics.
 It is a function of the volume, <span class="math notranslate nohighlight">\(V\)</span>, the temperature, <span class="math notranslate nohighlight">\(T\)</span>, and the number of particles of possibly
 multiple components, <span class="math notranslate nohighlight">\(N\)</span>. Let’s define this function (for an ideal gas) and compute some interesting properties.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="mf">300.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="mf">20.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">39.948e-3</span><span class="p">,</span> <span class="mf">4e-3</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">helmholtz_energy</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">mw</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">helmholtz_energy</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">mw</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">H</span> <span class="o">=</span> <span class="mf">6.62607015e-34</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">NAV</span> <span class="o">=</span> <span class="mf">6.02214076e23</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">RGAS</span> <span class="o">=</span> <span class="mf">8.314</span>
@@ -211,7 +211,7 @@ multiple components, <span class="math notranslate nohighlight">\(N\)</span>. Le
 <h2>Compatibility with <cite>numpy</cite><a class="headerlink" href="#compatibility-with-numpy" title="Link to this heading"></a></h2>
 <p>The examples shown above contain very simple mathematical equations.
 We provide evaluations for a lot of useful mathematical expressions that are defined in <cite>numpy</cite>.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
 <span class="go">4.497780053946161</span>
@@ -219,7 +219,7 @@ We provide evaluations for a lot of useful mathematical expressions that are def
 </div>
 <p>Calling the same function with a hyper dual number and dual parts of 1
 yields the first and second derivatives. (ε1 and ε2 parts are identical)</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">num_dual</span> <span class="kn">import</span> <span class="n">HyperDual64</span> <span class="k">as</span> <span class="n">HD64</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">HyperDual64</span> <span class="k">as</span> <span class="n">HD64</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">HD64</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="go">4.497780053946162 + 4.053427893898621ε1 + 4.053427893898621ε2 + 9.463073681596605ε1ε2</span>
