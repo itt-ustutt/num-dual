@@ -61,6 +61,7 @@ mod dual_vec;
 mod hyperdual;
 mod hyperdual_vec;
 mod hyperhyperdual;
+mod implicit;
 pub use bessel::BesselDual;
 pub use derivative::Derivative;
 pub use dual::{first_derivative, try_first_derivative, Dual, Dual32, Dual64};
@@ -84,6 +85,9 @@ pub use hyperdual_vec::{
 pub use hyperhyperdual::{
     third_partial_derivative, third_partial_derivative_vec, try_third_partial_derivative,
     try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
+};
+pub use implicit::{
+    implicit_derivative, implicit_derivative_binary, implicit_derivative_unary, Lift,
 };
 
 #[cfg(feature = "linalg")]
@@ -109,6 +113,7 @@ pub trait DualNum<F>:
     + Product
     + FromPrimitive
     + From<F>
+    + Lift<Self, F>
     + fmt::Display
     + PartialEq
     + fmt::Debug

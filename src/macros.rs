@@ -654,6 +654,23 @@ macro_rules! impl_num {
 }
 
 #[macro_export]
+macro_rules! impl_lift {
+    ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
+        impl<T: DualNum<F>, F: Float$($(, $dim: Dim)*)?> $crate::Lift<Self,F> for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<$dim> + Allocator<U1, $dim> + Allocator<$dim, $dim>,)*)?
+            $($(DefaultAllocator: Allocator<$($ddim,)*>)?)?
+        {
+            type Lifted<D2: DualNum<F, Inner = Self>> = D2;
+            #[inline]
+            fn lift<D2: DualNum<F, Inner = Self>>(&self) -> Self::Lifted<D2> {
+                D2::from_inner(self.clone())
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! impl_dual {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
         impl_from_f!($struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
@@ -673,5 +690,6 @@ macro_rules! impl_dual {
         impl_signed!($struct$(, [$($dim),*]$(, [$($ddim),*])?)?);
         impl_num!($struct$(, [$($dim),*]$(, [$($ddim),*])?)?);
         impl_float_const!($struct$(, [$($dim),*]$(, [$($ddim),*])?)?);
+        impl_lift!($struct$(, [$($dim),*]$(, [$($ddim),*])?)?);
     };
 }
