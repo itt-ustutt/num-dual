@@ -243,8 +243,7 @@ where
     fn add(self, rhs: Self) -> Self::Output {
         Self::new(match (self.0, rhs.0) {
             (Some(s), Some(r)) => Some(s + r),
-            (Some(s), None) => Some(s),
-            (None, Some(r)) => Some(r),
+            (Some(m), None) | (None, Some(m)) => Some(m),
             (None, None) => None,
         })
     }
@@ -259,8 +258,7 @@ where
     fn add(self, rhs: &Self) -> Self::Output {
         Self::new(match (&self.0, &rhs.0) {
             (Some(s), Some(r)) => Some(s + r),
-            (Some(s), None) => Some(s.clone()),
-            (None, Some(r)) => Some(r.clone()),
+            (Some(m), None) | (None, Some(m)) => Some(m.clone()),
             (None, None) => None,
         })
     }
@@ -275,8 +273,7 @@ where
     fn add(self, rhs: Self) -> Self::Output {
         Derivative::new(match (&self.0, &rhs.0) {
             (Some(s), Some(r)) => Some(s + r),
-            (Some(s), None) => Some(s.clone()),
-            (None, Some(r)) => Some(r.clone()),
+            (Some(m), None) | (None, Some(m)) => Some(m.clone()),
             (None, None) => None,
         })
     }
