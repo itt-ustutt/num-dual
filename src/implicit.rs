@@ -129,16 +129,16 @@ impl<D, F> Lift<D, F> for () {
     fn lift<D2: DualNum<F, Inner = D>>(&self) {}
 }
 
-impl Lift<f32, f32> for f32 {
-    type Lifted<D: DualNum<f32, Inner = f32>> = D;
-    fn lift<D: DualNum<f32, Inner = f32>>(&self) -> D {
+impl Lift<Self, Self> for f32 {
+    type Lifted<D: DualNum<Self, Inner = Self>> = D;
+    fn lift<D: DualNum<Self, Inner = Self>>(&self) -> D {
         D::from_inner(*self)
     }
 }
 
-impl Lift<f64, f64> for f64 {
-    type Lifted<D: DualNum<f64, Inner = f64>> = D;
-    fn lift<D: DualNum<f64, Inner = f64>>(&self) -> D {
+impl Lift<Self, Self> for f64 {
+    type Lifted<D: DualNum<Self, Inner = Self>> = D;
+    fn lift<D: DualNum<Self, Inner = Self>>(&self) -> D {
         D::from_inner(*self)
     }
 }

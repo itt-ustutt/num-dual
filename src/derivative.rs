@@ -131,7 +131,7 @@ where
                     let x: Vec<_> = m.iter().map(T::to_string).collect();
                     write!(f, "[{}]", x.join(", "))?
                 }
-                (_, _) => write!(f, "{}", m)?,
+                (_, _) => write!(f, "{m}")?,
             };
             write!(f, "{symbol}")?;
         }
@@ -163,7 +163,7 @@ where
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
-        Derivative::new(self.0.map(|x| x * rhs))
+        Self::new(self.0.map(|x| x * rhs))
     }
 }
 
@@ -198,7 +198,7 @@ where
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
-        Derivative::new(self.0.map(|x| x / rhs))
+        Self::new(self.0.map(|x| x / rhs))
     }
 }
 
@@ -250,14 +250,14 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, R: Dim, C: Dim> Add<&Derivative<T, F, R, C>> for Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Add<&Self> for Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
-    type Output = Derivative<T, F, R, C>;
+    type Output = Self;
 
-    fn add(self, rhs: &Derivative<T, F, R, C>) -> Self::Output {
-        Derivative::new(match (&self.0, &rhs.0) {
+    fn add(self, rhs: &Self) -> Self::Output {
+        Self::new(match (&self.0, &rhs.0) {
             (Some(s), Some(r)) => Some(s + r),
             (Some(s), None) => Some(s.clone()),
             (None, Some(r)) => Some(r.clone()),
@@ -298,14 +298,14 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, R: Dim, C: Dim> Sub<&Derivative<T, F, R, C>> for Derivative<T, F, R, C>
+impl<T: DualNum<F>, F, R: Dim, C: Dim> Sub<&Self> for Derivative<T, F, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
-    type Output = Derivative<T, F, R, C>;
+    type Output = Self;
 
-    fn sub(self, rhs: &Derivative<T, F, R, C>) -> Self::Output {
-        Derivative::new(match (&self.0, &rhs.0) {
+    fn sub(self, rhs: &Self) -> Self::Output {
+        Self::new(match (&self.0, &rhs.0) {
             (Some(s), Some(r)) => Some(s - r),
             (Some(s), None) => Some(s.clone()),
             (None, Some(r)) => Some(-r.clone()),
@@ -348,7 +348,7 @@ where
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Derivative::new(self.0.map(|x| -x))
+        Self::new(self.0.map(|x| -x))
     }
 }
 
