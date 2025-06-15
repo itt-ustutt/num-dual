@@ -87,7 +87,8 @@ pub use hyperhyperdual::{
     try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
 };
 pub use implicit::{
-    implicit_derivative, implicit_derivative_binary, implicit_derivative_unary, Lift,
+    implicit_derivative, implicit_derivative_binary, implicit_derivative_unary,
+    ImplicitBinaryFunction, ImplicitFunction, ImplicitUnaryFunction, Lift,
 };
 
 #[cfg(feature = "linalg")]

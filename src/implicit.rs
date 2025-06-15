@@ -119,6 +119,63 @@ where
     x
 }
 
+pub trait ImplicitUnaryFunction<D: DualNum<F>, F: DualNumFloat> {
+    fn residual(&self, x: Dual<D, F>) -> Dual<D, F>;
+
+    fn implicit_derivative(&self, x: F) -> D {
+        let mut x = D::from(x);
+        for _ in 0..D::NDERIV {
+            let (f, df) = first_derivative(|x| self.residual(x), x.clone());
+            x -= f / df;
+        }
+        x
+    }
+}
+
+pub trait ImplicitBinaryFunction<D: DualNum<F>, F: DualNumFloat> {
+    fn residual(
+        &self,
+        x: DualVec<D, F, Const<2>>,
+        y: DualVec<D, F, Const<2>>,
+    ) -> [DualVec<D, F, Const<2>>; 2];
+
+    fn implicit_derivative(&self, x: F, y: F) -> (D, D) {
+        let mut x = D::from(x);
+        let mut y = D::from(y);
+        for _ in 0..D::NDERIV {
+            let (f, jac) = jacobian(
+                |x| {
+                    let [[x, y]] = x.data.0;
+                    SVector::from(self.residual(x, y))
+                },
+                SVector::from([x.clone(), y.clone()]),
+            );
+            let [[f0, f1]] = f.data.0;
+            let [[j00, j01], [j10, j11]] = jac.data.0;
+            let det = (j00.clone() * &j11 - j01.clone() * &j10).recip();
+            x -= (j11 * &f0 - j01 * &f1) * &det;
+            y -= (j00 * &f1 - j10 * &f0) * &det;
+        }
+        (x, y)
+    }
+}
+
+pub trait ImplicitFunction<D: DualNum<F> + Copy, F: DualNumFloat, N: Dim>
+where
+    DefaultAllocator: Allocator<N> + Allocator<N, N> + Allocator<U1, N>,
+{
+    fn residual(&self, x: OVector<DualVec<D, F, N>, N>) -> OVector<DualVec<D, F, N>, N>;
+
+    fn implicit_derivative(&self, x: OVector<F, N>) -> OVector<D, N> {
+        let mut x = x.map(D::from);
+        for _ in 0..D::NDERIV {
+            let (f, jac) = jacobian(|x| self.residual(x), x.clone());
+            x -= LU::new(jac).unwrap().solve(&f);
+        }
+        x
+    }
+}
+
 pub trait Lift<D, F> {
     type Lifted<D2: DualNum<F, Inner = D>>;
     fn lift<D2: DualNum<F, Inner = D>>(&self) -> Self::Lifted<D2>;
