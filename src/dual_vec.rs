@@ -26,6 +26,7 @@ where
 
 impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for DualVec<T, F, Const<N>> {}
 
+pub type DualSVec<D, F, const N: usize> = DualVec<D, F, Const<N>>;
 pub type DualVec32<D> = DualVec<f32, f32, D>;
 pub type DualVec64<D> = DualVec<f64, f64, D>;
 pub type DualSVec32<const N: usize> = DualVec<f32, f32, Const<N>>;
@@ -139,8 +140,7 @@ pub fn jacobian<G, T: DualNum<F>, F: DualNumFloat, M: Dim, N: Dim>(
 ) -> (OVector<T, M>, OMatrix<T, M, N>)
 where
     G: FnOnce(OVector<DualVec<T, F, N>, N>) -> OVector<DualVec<T, F, N>, M>,
-    DefaultAllocator:
-        Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<nalgebra::Const<1>, N>,
+    DefaultAllocator: Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<U1, N>,
 {
     try_jacobian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
 }
@@ -153,8 +153,7 @@ pub fn try_jacobian<G, T: DualNum<F>, F: DualNumFloat, E, M: Dim, N: Dim>(
 ) -> Result<(OVector<T, M>, OMatrix<T, M, N>), E>
 where
     G: FnOnce(OVector<DualVec<T, F, N>, N>) -> Result<OVector<DualVec<T, F, N>, M>, E>,
-    DefaultAllocator:
-        Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<nalgebra::Const<1>, N>,
+    DefaultAllocator: Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<U1, N>,
 {
     let mut x = x.map(DualVec::from_re);
     let (r, c) = x.shape_generic();

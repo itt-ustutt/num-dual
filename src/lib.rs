@@ -72,8 +72,8 @@ pub use dual2_vec::{
 };
 pub use dual3::{third_derivative, try_third_derivative, Dual3, Dual3_32, Dual3_64};
 pub use dual_vec::{
-    gradient, jacobian, try_gradient, try_jacobian, DualDVec32, DualDVec64, DualSVec32, DualSVec64,
-    DualVec, DualVec32, DualVec64,
+    gradient, jacobian, try_gradient, try_jacobian, DualDVec32, DualDVec64, DualSVec, DualSVec32,
+    DualSVec64, DualVec, DualVec32, DualVec64,
 };
 pub use hyperdual::{
     second_partial_derivative, try_second_partial_derivative, HyperDual, HyperDual32, HyperDual64,
@@ -87,7 +87,8 @@ pub use hyperhyperdual::{
     try_third_partial_derivative_vec, HyperHyperDual, HyperHyperDual32, HyperHyperDual64,
 };
 pub use implicit::{
-    implicit_derivative, implicit_derivative_binary, implicit_derivative_unary, Lift,
+    implicit_derivative, implicit_derivative_binary, implicit_derivative_vec, DualStruct,
+    ImplicitDerivative, ImplicitFunction,
 };
 
 #[cfg(feature = "linalg")]
@@ -113,7 +114,7 @@ pub trait DualNum<F>:
     + Product
     + FromPrimitive
     + From<F>
-    + Lift<Self, F>
+    + DualStruct<Self, F, Real = F>
     + fmt::Display
     + PartialEq
     + fmt::Debug
