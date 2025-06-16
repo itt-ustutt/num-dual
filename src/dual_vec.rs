@@ -26,6 +26,7 @@ where
 
 impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for DualVec<T, F, Const<N>> {}
 
+pub type DualSVec<D, F, const N: usize> = DualVec<D, F, Const<N>>;
 pub type DualVec32<D> = DualVec<f32, f32, D>;
 pub type DualVec64<D> = DualVec<f64, f64, D>;
 pub type DualSVec32<const N: usize> = DualVec<f32, f32, Const<N>>;
