@@ -43,7 +43,7 @@ python = ["pyo3", "numpy", "ndarray", "python_macro"]
 linalg = ["ndarray"]
 
 [dev-dependencies]
-criterion = "0.5"
+criterion = "0.6"
 serde_json = "1.0"
 
 [[bench]]

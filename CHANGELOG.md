@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Packaging
+- Updated `pyo3` and `numpy` dependencies to 0.25. [#93](https://github.com/itt-ustutt/num-dual/pull/93)
+- Updated `criterion` dev-dependency to 0.6.0.
 
 ## [0.11.2] - 2025-06-24
 ### Changed
