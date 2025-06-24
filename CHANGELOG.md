@@ -6,25 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2025-06-24
+### Changed
+- Changed the implicit function interface to deal more straightforwardly with complex function arguments. [#94](https://github.com/itt-ustutt/num-dual/pull/94)
+
 ## [0.11.1] - 2025-04-09
-## Added
+### Added
 - Added the functions `implicit_derivative`, `implicit_derivative_unary`, and `implicit_derivative_binary` for the convenient calculation of arbitrary derivatives of implicit functions. [#91](https://github.com/itt-ustutt/num-dual/pull/91)
 
 ## [0.11.0] - 2024-12-05
-## Packaging
+### Packaging
 - Updated `pyo3` and `numpy` dependencies to 0.23. [#88](https://github.com/itt-ustutt/num-dual/pull/88)
 
 ## [0.10.3] - 2024-11-14
-## Added
+### Added
 - Added nalgebra compatibility for `Dual2` and `Dual2Vec`. [#81](https://github.com/itt-ustutt/num-dual/pull/81)
 - Added `atan2` to the `DualNum` trait. [#85](https://github.com/itt-ustutt/num-dual/pull/85)
 
 ## [0.10.2] - 2024-11-06
-## Changed
+### Changed
 - Exposed macros for the implementation of the `DualNum` trait publicly. [#83](https://github.com/itt-ustutt/num-dual/pull/83)
 
 ## [0.10.1] - 2024-11-05
-## Added
+### Added
 - Expose the inner type of a generalized (hyper) dual number in the `DualNum` trait. [#82](https://github.com/itt-ustutt/num-dual/pull/82)
 
 ## [0.10.0] - 2024-10-22
