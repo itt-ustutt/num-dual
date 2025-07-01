@@ -131,7 +131,7 @@ where
                     let x: Vec<_> = m.iter().map(T::to_string).collect();
                     write!(f, "[{}]", x.join(", "))?
                 }
-                (_, _) => write!(f, "{}", m)?,
+                (_, _) => write!(f, "{m}")?,
             };
             write!(f, "{symbol}")?;
         }

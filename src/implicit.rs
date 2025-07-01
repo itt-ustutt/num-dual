@@ -569,7 +569,7 @@ mod test {
         let xa = (b + (a * 2.0 - b * b).sqrt()) * 0.5;
         let ya = (b - (a * 2.0 - b * b).sqrt()) * 0.5;
         println!("{x}, {y}");
-        println!("{}, {}", xa, ya);
+        println!("{xa}, {ya}");
         assert_eq!(x, xa);
         assert_eq!(y, ya);
 
