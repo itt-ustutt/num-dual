@@ -40,7 +40,6 @@ lto = true
 default = []
 python_macro = []
 python = ["pyo3", "numpy", "ndarray", "python_macro"]
-linalg = ["ndarray"]
 
 [dev-dependencies]
 criterion = "0.6"

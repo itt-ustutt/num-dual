@@ -91,7 +91,6 @@ pub use implicit::{
     ImplicitDerivative, ImplicitFunction,
 };
 
-#[cfg(feature = "linalg")]
 pub mod linalg;
 
 #[cfg(feature = "python")]

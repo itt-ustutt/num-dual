@@ -1,11 +1,9 @@
+use crate::linalg::LU;
 use crate::{first_derivative, jacobian, Dual, DualNum, DualNumFloat, DualSVec, DualVec};
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, OMatrix, OVector, SVector, Scalar, U1, U2};
-use num_traits::Float;
 use std::collections::HashMap;
-use std::fmt;
 use std::hash::Hash;
-use std::marker::PhantomData;
 
 /// Calculate the derivative of the unary implicit function
 ///         g(x, args) = 0
@@ -387,107 +385,6 @@ where
     }
     fn lift<D2: DualNum<F, Inner = D>>(&self) -> Self::Lifted<D2> {
         self.map(|x| D2::from_inner(x))
-    }
-}
-
-// TODO: Later, replace the LU in linalg with this
-
-#[derive(Debug)]
-struct LinAlgError();
-
-impl fmt::Display for LinAlgError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "The matrix appears to be singular.")
-    }
-}
-
-struct LU<T: DualNum<F>, F, D: Dim>
-where
-    DefaultAllocator: Allocator<D, D> + Allocator<D>,
-{
-    a: OMatrix<T, D, D>,
-    p: OVector<usize, D>,
-    f: PhantomData<F>,
-}
-
-impl<T: DualNum<F> + Copy, F: Float, D: Dim> LU<T, F, D>
-where
-    DefaultAllocator: Allocator<D, D> + Allocator<D>,
-{
-    fn new(mut a: OMatrix<T, D, D>) -> Result<Self, LinAlgError> {
-        let (n, _) = a.shape_generic();
-        let mut p = OVector::zeros_generic(n, U1);
-        let n = n.value();
-
-        for i in 0..n {
-            p[i] = i;
-        }
-
-        for i in 0..n {
-            let mut max_a = F::zero();
-            let mut imax = i;
-
-            for k in i..n {
-                let abs_a = a[(k, i)].abs();
-                if abs_a.re() > max_a {
-                    max_a = abs_a.re();
-                    imax = k;
-                }
-            }
-
-            if max_a.is_zero() {
-                return Err(LinAlgError());
-            }
-
-            if imax != i {
-                let j = p[i];
-                p[i] = p[imax];
-                p[imax] = j;
-
-                for j in 0..n {
-                    let ptr = a[(i, j)];
-                    a[(i, j)] = a[(imax, j)];
-                    a[(imax, j)] = ptr;
-                }
-            }
-
-            for j in i + 1..n {
-                a[(j, i)] = a[(j, i)] / a[(i, i)];
-
-                for k in i + 1..n {
-                    a[(j, k)] = a[(j, k)] - a[(j, i)] * a[(i, k)];
-                }
-            }
-        }
-        Ok(Self {
-            a,
-            p,
-            f: PhantomData,
-        })
-    }
-
-    fn solve(&self, b: &OVector<T, D>) -> OVector<T, D> {
-        let (n, _) = b.shape_generic();
-        let mut x = OVector::zeros_generic(n, U1);
-        let n = n.value();
-
-        for i in 0..n {
-            x[i] = b[self.p[i]];
-
-            for k in 0..i {
-                x[i] = x[i] - self.a[(i, k)] * x[k];
-            }
-        }
-
-        for i in (0..n).rev() {
-            for k in i + 1..n {
-                x[i] = x[i] - self.a[(i, k)] * x[k];
-            }
-
-            x[i] /= self.a[(i, i)];
-        }
-
-        x
     }
 }
 
