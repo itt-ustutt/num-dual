@@ -56,6 +56,7 @@ print(f'd2f/dx2 = {d2f}')
 This example defines a generic function that can be called using any (hyper) dual number and automatically calculates derivatives.
 ```rust
 use num_dual::*;
+use nalgebra::SMatrix;
 
 fn f<D: DualNum<f64>>(x: D, y: D) -> D {
     x.powi(3) * y.powi(2)
@@ -73,11 +74,11 @@ fn main() {
     println!("{df}"); // 1200
 
     // Calculate a gradient
-    let (value, grad) = gradient(|v| f(v[0], v[1]), SMatrix::from([x, y]));
+    let (value, grad) = gradient(|v| f(v[0], v[1]), &SMatrix::from([x, y]));
     println!("{value} {grad}"); // 2000 [1200, 1000]
 
     // Calculate a Hessian
-    let (_, _, hess) = hessian(|v| f(v[0], v[1]), SMatrix::from([x, y]));
+    let (_, _, hess) = hessian(|v| f(v[0], v[1]), &SMatrix::from([x, y]));
     println!("{hess}"); // [[480, 600], [600, 250]]
 
     // for x=cos(t) and y=sin(t) calculate the third derivative w.r.t. t

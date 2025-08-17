@@ -103,7 +103,7 @@ pub fn first_derivative(f: &Bound<'_, PyAny>, x: f64) -> PyResult<(f64, f64)> {
             ))
         }
     };
-    try_first_derivative(g, x)
+    crate::first_derivative(g, x)
 }
 
 macro_rules! impl_gradient_and_jacobian {
@@ -136,7 +136,7 @@ macro_rules! impl_gradient_and_jacobian {
                             ))
                         }
                     };
-                    try_gradient(g, SVector::from(x)).map(|(re, eps)| (re, eps.data.0[0].to_vec()))
+                    crate::gradient(g, &SVector::from(x)).map(|(re, eps)| (re, eps.data.0[0].to_vec()))
                 } else
             )+
             if let Ok(x) = x.extract::<Vec<f64>>() {
@@ -152,7 +152,7 @@ macro_rules! impl_gradient_and_jacobian {
                         ))
                     }
                 };
-                try_gradient(g, DVector::from(x)).map(|(re, eps)| (re, eps.data.as_vec().clone()))
+                crate::gradient(g, &DVector::from(x)).map(|(re, eps)| (re, eps.data.as_vec().clone()))
             } else {
                 Err(PyErr::new::<PyTypeError, _>(
                         "argument 'x': must be a list. For univariate functions use 'first_derivative' instead.".to_string(),
@@ -189,7 +189,7 @@ macro_rules! impl_gradient_and_jacobian {
                             ))
                         }
                     };
-                    try_jacobian(g, SVector::from(x)).map(|(re, eps)| {
+                    crate::jacobian(g, SVector::from(x)).map(|(re, eps)| {
                         let eps: Vec<_> = eps
                             .row_iter()
                             .map(|r| r.iter().copied().collect::<Vec<_>>())

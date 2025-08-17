@@ -1,9 +1,8 @@
-use crate::{Derivative, DualNum, DualNumFloat};
+use crate::{Derivative, DualNum, DualNumFloat, DualStruct};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use nalgebra::allocator::Allocator;
 use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
-use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -60,57 +59,6 @@ where
     pub fn from_re(re: T) -> Self {
         Self::new(re, Derivative::none(), Derivative::none())
     }
-}
-
-/// Calculate the Hessian of a scalar function.
-/// ```
-/// # use approx::assert_relative_eq;
-/// # use num_dual::{hessian, DualNum, Dual2SVec64};
-/// # use nalgebra::SVector;
-/// let v = SVector::from([4.0, 3.0]);
-/// let fun = |v: SVector<Dual2SVec64<2>, 2>| (v[0].powi(2) + v[1].powi(2)).sqrt();
-/// let (f, g, h) = hessian(fun, v);
-/// assert_eq!(f, 5.0);
-/// assert_relative_eq!(g[0], 0.8);
-/// assert_relative_eq!(g[1], 0.6);
-/// assert_relative_eq!(h[(0,0)], 0.072);
-/// assert_relative_eq!(h[(0,1)], -0.096);
-/// assert_relative_eq!(h[(1,0)], -0.096);
-/// assert_relative_eq!(h[(1,1)], 0.128);
-/// ```
-pub fn hessian<G, T: DualNum<F>, F: DualNumFloat, D: Dim>(
-    g: G,
-    x: OVector<T, D>,
-) -> (T, OVector<T, D>, OMatrix<T, D, D>)
-where
-    G: FnOnce(OVector<Dual2Vec<T, F, D>, D>) -> Dual2Vec<T, F, D>,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
-{
-    try_hessian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
-}
-
-/// Variant of [hessian] for fallible functions.
-#[expect(clippy::type_complexity)]
-pub fn try_hessian<G, T: DualNum<F>, F: DualNumFloat, E, D: Dim>(
-    g: G,
-    x: OVector<T, D>,
-) -> Result<(T, OVector<T, D>, OMatrix<T, D, D>), E>
-where
-    G: FnOnce(OVector<Dual2Vec<T, F, D>, D>) -> Result<Dual2Vec<T, F, D>, E>,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
-{
-    let mut x = x.map(Dual2Vec::from_re);
-    let (r, c) = x.shape_generic();
-    for (i, xi) in x.iter_mut().enumerate() {
-        xi.v1 = Derivative::derivative_generic(c, r, i)
-    }
-    g(x).map(|res| {
-        (
-            res.re,
-            res.v1.unwrap_generic(c, r).transpose(),
-            res.v2.unwrap_generic(r, r),
-        )
-    })
 }
 
 /* chain rule */
@@ -183,8 +131,8 @@ where
     }
 }
 
-impl_second_derivatives!(Dual2Vec, [v1, v2], [D]);
-impl_dual!(Dual2Vec, [v1, v2], [D]);
+impl_second_derivatives!(Dual2Vec, [v1, v2], [D], [U1, D], [D, D]);
+impl_dual!(Dual2Vec, [v1, v2], [D], [U1, D], [D, D]);
 
 /**
  * The SimdValue trait is for rearranging data into a form more suitable for Simd,
@@ -206,7 +154,7 @@ impl_dual!(Dual2Vec, [v1, v2], [D]);
  */
 impl<T, D: Dim> nalgebra::SimdValue for Dual2Vec<T, T::Element, D>
 where
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
     T: DualNum<T::Element> + SimdValue + Scalar,
     T::Element: DualNum<T::Element> + Scalar,
 {
@@ -287,7 +235,7 @@ where
 /// same execution path as real-valued code would.
 impl<T: DualNum<F> + PartialEq, F: Float, D: Dim> PartialEq for Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -298,7 +246,7 @@ where
 /// same execution path as real-valued code would.
 impl<T: DualNum<F> + PartialOrd, F: Float, D: Dim> PartialOrd for Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -310,7 +258,7 @@ where
 impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F: Float, D: Dim> approx::AbsDiffEq
     for Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     type Epsilon = Self;
     #[inline]
@@ -328,7 +276,7 @@ where
 impl<T: DualNum<F> + approx::RelativeEq<Epsilon = T>, F: Float, D: Dim> approx::RelativeEq
     for Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     #[inline]
     fn default_max_relative() -> Self::Epsilon {
@@ -347,7 +295,7 @@ where
 }
 impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float, D: Dim> UlpsEq for Dual2Vec<T, F, D>
 where
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     #[inline]
     fn default_max_ulps() -> u32 {
@@ -364,7 +312,7 @@ impl<T, D: Dim> nalgebra::Field for Dual2Vec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SimdValue,
     T::Element: DualNum<T::Element> + Scalar + Float,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
 }
 
@@ -374,7 +322,7 @@ impl<TSuper, FSuper, T, F, D: Dim> SubsetOf<Dual2Vec<TSuper, FSuper, D>> for Dua
 where
     TSuper: DualNum<FSuper> + SupersetOf<T>,
     T: DualNum<F>,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
     #[inline(always)]
     fn to_superset(&self) -> Dual2Vec<TSuper, FSuper, D> {
@@ -417,7 +365,7 @@ where
 impl<TSuper, FSuper, D: Dim> SupersetOf<f32> for Dual2Vec<TSuper, FSuper, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<f32>,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
     #[inline(always)]
     fn is_in_subset(&self) -> bool {
@@ -442,7 +390,7 @@ where
 impl<TSuper, FSuper, D: Dim> SupersetOf<f64> for Dual2Vec<TSuper, FSuper, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<f64>,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
     #[inline(always)]
     fn is_in_subset(&self) -> bool {
@@ -483,7 +431,7 @@ where
     T: SimdPartialOrd + PartialOrd,
     T: SimdValue<Element = T, SimdBool = bool>,
     T: RelativeEq + UlpsEq + AbsDiffEq,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
     <DefaultAllocator as Allocator<D>>::Buffer<T>: Sync + Send,
     <DefaultAllocator as Allocator<U1, D>>::Buffer<T>: Sync + Send,
     <DefaultAllocator as Allocator<D, U1>>::Buffer<T>: Sync + Send,
@@ -746,7 +694,7 @@ where
     T: SimdValue<Element = T, SimdBool = bool>,
     T: UlpsEq,
     T: AbsDiffEq,
-    DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
     <DefaultAllocator as Allocator<D>>::Buffer<T>: Sync + Send,
     <DefaultAllocator as Allocator<U1, D>>::Buffer<T>: Sync + Send,
     <DefaultAllocator as Allocator<D, U1>>::Buffer<T>: Sync + Send,

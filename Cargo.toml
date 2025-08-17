@@ -22,7 +22,6 @@ name = "num_dual"
 [dependencies]
 num-traits = "0.2"
 nalgebra = "0.33"
-ndarray = { version = "0.16", optional = true }
 numpy = { version = "0.25", optional = true }
 approx = "0.5"
 simba = "0.9"
@@ -39,10 +38,10 @@ lto = true
 [features]
 default = []
 python_macro = []
-python = ["pyo3", "numpy", "ndarray", "python_macro"]
+python = ["pyo3", "numpy", "python_macro"]
 
 [dev-dependencies]
-criterion = "0.6"
+criterion = "0.7"
 serde_json = "1.0"
 
 [[bench]]

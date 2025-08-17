@@ -1,8 +1,7 @@
-use crate::{DualNum, DualNumFloat};
+use crate::{DualNum, DualNumFloat, DualStruct};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -67,39 +66,6 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
     }
 }
 
-/// Calculate second partial derivatives with respect to scalars.
-/// ```
-/// # use approx::assert_relative_eq;
-/// # use num_dual::{second_partial_derivative, DualNum, HyperDual64};
-/// # use nalgebra::SVector;
-/// let fun = |x: HyperDual64, y: HyperDual64| (x.powi(2) + y.powi(2)).sqrt();
-/// let (f, dfdx, dfdy, d2fdxdy) = second_partial_derivative(fun, 4.0, 3.0);
-/// assert_eq!(f, 5.0);
-/// assert_relative_eq!(dfdx, 0.8);
-/// assert_relative_eq!(dfdy, 0.6);
-/// assert_relative_eq!(d2fdxdy, -0.096);
-/// ```
-pub fn second_partial_derivative<G, T: DualNum<F>, F>(g: G, x: T, y: T) -> (T, T, T, T)
-where
-    G: FnOnce(HyperDual<T, F>, HyperDual<T, F>) -> HyperDual<T, F>,
-{
-    try_second_partial_derivative(|x, y| Ok::<_, Infallible>(g(x, y)), x, y).unwrap()
-}
-
-/// Variant of [second_partial_derivative] for fallible functions.
-pub fn try_second_partial_derivative<G, T: DualNum<F>, F, E>(
-    g: G,
-    x: T,
-    y: T,
-) -> Result<(T, T, T, T), E>
-where
-    G: FnOnce(HyperDual<T, F>, HyperDual<T, F>) -> Result<HyperDual<T, F>, E>,
-{
-    let x = HyperDual::from_re(x).derivative1();
-    let y = HyperDual::from_re(y).derivative2();
-    g(x, y).map(|r| (r.re, r.eps1, r.eps2, r.eps1eps2))
-}
-
 /* chain rule */
 impl<T: DualNum<F>, F: Float> HyperDual<T, F> {
     #[inline]
@@ -158,11 +124,14 @@ impl<T: DualNum<F>, F: Float> Div<&HyperDual<T, F>> for &HyperDual<T, F> {
 /* string conversions */
 impl<T: DualNum<F>, F: fmt::Display> fmt::Display for HyperDual<T, F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} + {}ε1 + {}ε2 + {}ε1ε2",
-            self.re, self.eps1, self.eps2, self.eps1eps2
-        )
+        fmt::Display::fmt(&self.re, f)?;
+        write!(f, " + ")?;
+        fmt::Display::fmt(&self.eps1, f)?;
+        write!(f, "ε1 + ")?;
+        fmt::Display::fmt(&self.eps2, f)?;
+        write!(f, "ε2 + ")?;
+        fmt::Display::fmt(&self.eps1eps2, f)?;
+        write!(f, "ε1ε2")
     }
 }
 

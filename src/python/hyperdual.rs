@@ -131,7 +131,7 @@ pub fn second_partial_derivative(
     x: f64,
     y: f64,
 ) -> PyResult<(f64, f64, f64, f64)> {
-    let g = |x, y| {
+    let g = |(x, y)| {
         let res = f.call1((PyHyperDual64::from(x), PyHyperDual64::from(y)))?;
         if let Ok(res) = res.extract::<PyHyperDual64>() {
             Ok(res.0)
@@ -141,7 +141,7 @@ pub fn second_partial_derivative(
             ))
         }
     };
-    try_second_partial_derivative(g, x, y)
+    crate::second_partial_derivative(g, (x, y))
 }
 
 macro_rules! impl_partial_hessian {
@@ -168,7 +168,7 @@ macro_rules! impl_partial_hessian {
         ) -> PyResult<(f64, Vec<f64>, Vec<f64>, Vec<Vec<f64>>)> {
             $(
                 if let (Ok(x), Ok(y)) = (x.extract::<[f64; $m]>(), y.extract::<[f64; $n]>()) {
-                    let g = |x: SVector<HyperDualSVec64<$m, $n>, $m>, y: SVector<HyperDualSVec64<$m, $n>, $n>| {
+                    let g = |(x, y): (SVector<HyperDualSVec64<$m, $n>, $m>, SVector<HyperDualSVec64<$m, $n>, $n>)| {
                         let x: Vec<_> = x.into_iter().map(|&x| $py_type_name::from(x)).collect();
                         let y: Vec<_> = y.into_iter().map(|&y| $py_type_name::from(y)).collect();
                         let res = f.call1((x, y))?;
@@ -180,7 +180,7 @@ macro_rules! impl_partial_hessian {
                             ))
                         }
                     };
-                    try_partial_hessian(g, SVector::from(x), SVector::from(y)).map(|(f, f_x, f_y, f_xy)| {
+                    crate::partial_hessian(g, (&SVector::from(x), &SVector::from(y))).map(|(f, f_x, f_y, f_xy)| {
                         let f_xy = f_xy
                             .row_iter()
                             .map(|r| r.iter().copied().collect())
@@ -190,7 +190,7 @@ macro_rules! impl_partial_hessian {
                 } else
             )+
             if let (Ok(x), Ok(y)) = (x.extract::<Vec<f64>>(), y.extract::<Vec<f64>>()) {
-                let g = |x: DVector<HyperDualDVec64>, y: DVector<HyperDualDVec64>| {
+                let g = |(x, y): (DVector<HyperDualDVec64>, DVector<HyperDualDVec64>)| {
                     let x: Vec<_> = x.into_iter().map(|x| PyHyperDual64Dyn::from(x.clone())).collect();
                     let y: Vec<_> = y.into_iter().map(|y| PyHyperDual64Dyn::from(y.clone())).collect();
                     let res = f.call1((x, y))?;
@@ -202,7 +202,7 @@ macro_rules! impl_partial_hessian {
                         ))
                     }
                 };
-                try_partial_hessian(g, DVector::from(x), DVector::from(y)).map(|(f, f_x, f_y, f_xy)| {
+                crate::partial_hessian(g, (&DVector::from(x), &DVector::from(y))).map(|(f, f_x, f_y, f_xy)| {
                     let f_xy = f_xy
                         .row_iter()
                         .map(|r| r.iter().copied().collect())

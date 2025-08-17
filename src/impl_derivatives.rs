@@ -1,24 +1,12 @@
 #[macro_export]
 macro_rules! impl_derivatives {
-    ($deriv:ident, $nderiv:expr, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
+    ($deriv:ident, $nderiv:expr, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> DualNum<F> for $struct<T, F$($(, $dim)*)?>
         where
-        $($(DefaultAllocator: Allocator<$dim> + Allocator<U1, $dim> + Allocator<$dim, $dim>,)*)?
-        $($(DefaultAllocator: Allocator<$($ddim,)*>)?)?
+        // $($(DefaultAllocator: Allocator<$dim> + Allocator<U1, $dim> + Allocator<$dim, $dim>,)*)?
+        $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
             const NDERIV: usize = T::NDERIV + $nderiv;
-
-            type Inner = T;
-
-            #[inline]
-            fn from_inner(inner: Self::Inner) -> Self {
-                Self::from_re(inner)
-            }
-
-            #[inline]
-            fn re(&self) -> F {
-                self.re.re()
-            }
 
             #[inline]
             fn recip(&self) -> Self {
@@ -346,21 +334,21 @@ macro_rules! chain_rule {
 
 #[macro_export]
 macro_rules! impl_first_derivatives {
-    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
-        impl_derivatives!(first, 1, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(first, 1, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }
 
 #[macro_export]
 macro_rules! impl_second_derivatives {
-    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
-        impl_derivatives!(second, 2, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(second, 2, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }
 
 #[macro_export]
 macro_rules! impl_third_derivatives {
-    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
-        impl_derivatives!(third, 3, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(third, 3, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }

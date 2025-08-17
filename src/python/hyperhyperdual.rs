@@ -84,7 +84,7 @@ pub fn third_partial_derivative(
     y: f64,
     z: f64,
 ) -> PyResult<(f64, f64, f64, f64, f64, f64, f64, f64)> {
-    let g = |x, y, z| {
+    let g = |(x, y, z)| {
         let res = f.call1((
             PyHyperHyperDual64::from(x),
             PyHyperHyperDual64::from(y),
@@ -98,7 +98,7 @@ pub fn third_partial_derivative(
             ))
         }
     };
-    try_third_partial_derivative(g, x, y, z)
+    crate::third_partial_derivative(g, (x, y, z))
 }
 
 #[pyfunction]
@@ -147,5 +147,5 @@ pub fn third_partial_derivative_vec(
             ))
         }
     };
-    try_third_partial_derivative_vec(g, &x, i, j, k)
+    crate::third_partial_derivative_vec(g, &x, i, j, k)
 }

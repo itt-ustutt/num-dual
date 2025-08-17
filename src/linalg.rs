@@ -1,4 +1,4 @@
-#![allow(clippy::assign_op_pattern)]
+//! Basic linear algebra functionalities (linear solve and eigenvalues) for matrices containing dual numbers.
 use crate::DualNum;
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, OMatrix, OVector, U1};
@@ -7,6 +7,7 @@ use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
+/// Error type for fallible linear algebra operations.
 #[derive(Debug)]
 pub struct LinAlgError();
 
@@ -18,6 +19,7 @@ impl fmt::Display for LinAlgError {
 
 impl std::error::Error for LinAlgError {}
 
+/// LU decomposition for symmetric matrices with dual numbers as elements.
 pub struct LU<T: DualNum<F>, F, D: Dim>
 where
     DefaultAllocator: Allocator<D, D> + Allocator<D>,
@@ -106,7 +108,7 @@ where
                 x[i] = x[i] - self.a[(i, k)] * x[k];
             }
 
-            x[i] = x[i] / self.a[(i, i)];
+            x[i] /= self.a[(i, i)];
         }
 
         x
@@ -144,7 +146,7 @@ where
                 for k in i + 1..n {
                     ia[(i, j)] = ia[(i, j)] - self.a[(i, k)] * ia[(k, j)];
                 }
-                ia[(i, j)] = ia[(i, j)] / self.a[(i, i)];
+                ia[(i, j)] /= self.a[(i, i)];
             }
         }
 
@@ -152,16 +154,32 @@ where
     }
 }
 
+/// Smallest eigenvalue and corresponding eigenvector calculated using the full Jacobi
+/// eigenvalue algorithm ([`jacobi_eigenvalue`]).
 pub fn smallest_ev<T: DualNum<F> + Copy, F: Float, D: Dim>(
     a: OMatrix<T, D, D>,
 ) -> (T, OVector<T, D>)
 where
     DefaultAllocator: Allocator<D, D> + Allocator<D>,
 {
-    let (e, vecs) = jacobi_eigenvalue(a, 200);
-    (e[0], vecs.column(0).into_owned())
+    let (r, _) = a.shape_generic();
+    let n = r.value();
+    if n == 1 {
+        (a[(0, 0)], OVector::from_element_generic(r, U1, T::one()))
+    } else if n == 2 {
+        let (a, b, c) = (a[(0, 0)], a[(0, 1)], a[(1, 1)]);
+        let l = (a + c - ((a - c).powi(2) + b * b * F::from(4.0).unwrap()).sqrt())
+            * F::from(0.5).unwrap();
+        let u = OVector::from_fn_generic(r, U1, |i, _| [b, l - a][i]);
+        let u = u / (b * b + (l - a) * (l - a)).sqrt();
+        (l, u)
+    } else {
+        let (e, vecs) = jacobi_eigenvalue(a, 200);
+        (e[0], vecs.column(0).into_owned())
+    }
 }
 
+/// Eigenvalues and corresponding eigenvectors of a symmetric matrix.
 pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float, D: Dim>(
     mut a: OMatrix<T, D, D>,
     max_iter: usize,
@@ -321,12 +339,17 @@ mod tests {
     fn test_eig_f64_2() {
         let a = dmatrix![2.0, 2.0; 2.0, 5.0];
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
+        let (l1, v1) = smallest_ev(a.clone());
         let av = a * &v;
         println!("{l} {v}");
+        println!("{l1} {v1}");
         assert_abs_diff_eq!(av[(0, 0)], (l[0] * v[(0, 0)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 0)], (l[0] * v[(1, 0)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)], (l[1] * v[(0, 1)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 1)], (l[1] * v[(1, 1)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0], l1, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)], v1[0], epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)], v1[1], epsilon = 1e-14);
     }
 
     #[test]
@@ -349,8 +372,10 @@ mod tests {
             Dual64::new(2.0, 2.0), Dual64::new(5.0, 3.0)
         ];
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
+        let (l1, v1) = smallest_ev(a.clone());
         let av = a * &v;
         println!("{l} {v}");
+        println!("{l1} {v1}");
         assert_abs_diff_eq!(av[(0, 0)].re, (l[0] * v[(0, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 0)].re, (l[0] * v[(1, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)].re, (l[1] * v[(0, 1)]).re, epsilon = 1e-14);
@@ -359,6 +384,12 @@ mod tests {
         assert_abs_diff_eq!(av[(1, 0)].eps, (l[0] * v[(1, 0)]).eps, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)].eps, (l[1] * v[(0, 1)]).eps, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 1)].eps, (l[1] * v[(1, 1)]).eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0].re, l1.re, epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0].eps, l1.eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)].re, v1[0].re, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)].eps, v1[0].eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)].re, v1[1].re, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)].eps, v1[1].eps, epsilon = 1e-14);
     }
 
     #[test]
