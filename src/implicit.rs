@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::linalg::LU;
 use crate::{
     first_derivative, jacobian, partial, Dual, DualNum, DualNumFloat, DualSVec, DualStruct, DualVec,
@@ -122,36 +124,31 @@ where
 
 /// An implicit function g(x, args) = 0 for which derivatives of x can be
 /// calculated with the [ImplicitDerivative] struct.
-pub trait ImplicitFunction<F, const N: usize> {
+pub trait ImplicitFunction<F> {
     /// data type of the parameter struct, needs to implement [DualStruct].
     type Parameters<D>;
 
+    /// data type of the variable `x`, needs to be either `D`, `[D; 2]`, or `SVector<D, N>`.
+    type Variable<D>;
+
     /// implementation of the residual function g(x, args) = 0.
     fn residual<D: DualNum<F> + Copy>(
-        x: SVector<D, N>,
+        x: Self::Variable<D>,
         parameters: &Self::Parameters<D>,
-    ) -> SVector<D, N>;
+    ) -> Self::Variable<D>;
 }
 
 /// Helper struct that stores parameters in dual and real form and provides functions
 /// for evaluating real residuals (for external solvers) and implicit derivatives for
 /// arbitrary dual numbers.
-pub struct ImplicitDerivative<
-    G: ImplicitFunction<F, N>,
-    D: DualNum<F> + Copy,
-    F: DualNumFloat,
-    const N: usize,
-> {
+pub struct ImplicitDerivative<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNumFloat, V> {
     base: G::Parameters<D::Real>,
     derivative: G::Parameters<D>,
+    phantom: PhantomData<V>,
 }
 
-impl<
-        G: ImplicitFunction<F, N>,
-        D: DualNum<F> + Copy,
-        F: DualNum<F> + DualNumFloat,
-        const N: usize,
-    > ImplicitDerivative<G, D, F, N>
+impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat>
+    ImplicitDerivative<G, D, F, G::Variable<f64>>
 where
     G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
 {
@@ -159,26 +156,82 @@ where
         Self {
             base: parameters.re(),
             derivative: parameters,
+            phantom: PhantomData,
         }
     }
 
     /// Evaluate the (real) residual for a scalar function.
-    pub fn residual<X: Into<SVector<F, N>>>(&self, x: X) -> SVector<F, N> {
-        G::residual(x.into(), &self.base)
+    pub fn residual(&self, x: G::Variable<F>) -> G::Variable<F> {
+        G::residual(x, &self.base)
     }
+}
 
+impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat>
+    ImplicitDerivative<G, D, F, F>
+where
+    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+{
     /// Evaluate the implicit derivative for a scalar function.
-    pub fn implicit_derivative<
-        X: Into<SVector<F, N>>,
-        A: DualStruct<DualSVec<D, F, N>, F, Inner = G::Parameters<D>>,
-    >(
+    pub fn implicit_derivative<A: DualStruct<Dual<D, F>, F, Inner = G::Parameters<D>>>(
         &self,
-        x: X,
+        x: F,
+    ) -> D
+    where
+        G: ImplicitFunction<F, Variable<Dual<D, F>> = Dual<D, F>, Parameters<Dual<D, F>> = A>,
+    {
+        implicit_derivative(G::residual::<Dual<D, F>>, x, &self.derivative)
+    }
+}
+
+impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat>
+    ImplicitDerivative<G, D, F, [F; 2]>
+where
+    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+{
+    /// Evaluate the implicit derivative for a bivariate function.
+    pub fn implicit_derivative<A: DualStruct<DualVec<D, F, U2>, F, Inner = G::Parameters<D>>>(
+        &self,
+        x: F,
+        y: F,
+    ) -> [D; 2]
+    where
+        G: ImplicitFunction<
+            F,
+            Variable<DualVec<D, F, U2>> = [DualVec<D, F, U2>; 2],
+            Parameters<DualVec<D, F, U2>> = A,
+        >,
+    {
+        implicit_derivative_binary(
+            |x, y, args: &A| G::residual::<DualVec<D, F, U2>>([x, y], args),
+            x,
+            y,
+            &self.derivative,
+        )
+    }
+}
+
+impl<
+        G: ImplicitFunction<F>,
+        D: DualNum<F> + Copy,
+        F: DualNum<F> + DualNumFloat,
+        const N: usize,
+    > ImplicitDerivative<G, D, F, SVector<F, N>>
+where
+    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+{
+    /// Evaluate the implicit derivative for a multivariate function.
+    pub fn implicit_derivative<A: DualStruct<DualSVec<D, F, N>, F, Inner = G::Parameters<D>>>(
+        &self,
+        x: SVector<F, N>,
     ) -> SVector<D, N>
     where
-        G: ImplicitFunction<F, N, Parameters<DualSVec<D, F, N>> = A>,
+        G: ImplicitFunction<
+            F,
+            Variable<DualSVec<D, F, N>> = SVector<DualSVec<D, F, N>, N>,
+            Parameters<DualSVec<D, F, N>> = A,
+        >,
     {
-        implicit_derivative_vec(G::residual::<DualSVec<D, F, N>>, x.into(), &self.derivative)
+        implicit_derivative_vec(G::residual::<DualSVec<D, F, N>>, x, &self.derivative)
     }
 }
 
@@ -188,31 +241,29 @@ mod test {
     use nalgebra::SVector;
 
     struct TestFunction;
-    impl ImplicitFunction<f64, 1> for TestFunction {
+    impl ImplicitFunction<f64> for TestFunction {
         type Parameters<D> = D;
+        type Variable<D> = D;
 
-        fn residual<D: DualNum<f64> + Copy>(x: SVector<D, 1>, square: &D) -> SVector<D, 1> {
-            let [[x]] = x.data.0;
-            SVector::from([*square - x * x])
+        fn residual<D: DualNum<f64> + Copy>(x: D, square: &D) -> D {
+            *square - x * x
         }
     }
 
     struct TestFunction2;
-    impl ImplicitFunction<f64, 2> for TestFunction2 {
+    impl ImplicitFunction<f64> for TestFunction2 {
         type Parameters<D> = (D, D);
+        type Variable<D> = [D; 2];
 
-        fn residual<D: DualNum<f64> + Copy>(
-            x: SVector<D, 2>,
-            (square_sum, sum): &(D, D),
-        ) -> SVector<D, 2> {
-            let [[x, y]] = x.data.0;
-            SVector::from([*square_sum - x * x - y * y, *sum - x - y])
+        fn residual<D: DualNum<f64> + Copy>([x, y]: [D; 2], (square_sum, sum): &(D, D)) -> [D; 2] {
+            [*square_sum - x * x - y * y, *sum - x - y]
         }
     }
 
     struct TestFunction3<const N: usize>;
-    impl<const N: usize> ImplicitFunction<f64, N> for TestFunction3<N> {
+    impl<const N: usize> ImplicitFunction<f64> for TestFunction3<N> {
         type Parameters<D> = D;
+        type Variable<D> = SVector<D, N>;
 
         fn residual<D: DualNum<f64> + Copy>(x: SVector<D, N>, &square_sum: &D) -> SVector<D, N> {
             let mut res = x;
@@ -228,16 +279,16 @@ mod test {
     fn test() {
         let f: crate::Dual64 = Dual::from(25.0).derivative();
         let func = ImplicitDerivative::new(TestFunction, f);
-        println!("{}", func.residual([5.0]));
-        println!("{}", func.implicit_derivative([5.0]));
+        println!("{}", func.residual(5.0));
+        println!("{}", func.implicit_derivative(5.0));
         println!("{}", f.sqrt());
-        assert_eq!(f.sqrt(), func.implicit_derivative([5.0])[0]);
+        assert_eq!(f.sqrt(), func.implicit_derivative(5.0));
 
         let a: crate::Dual64 = Dual::from(25.0).derivative();
         let b: crate::Dual64 = Dual::from(7.0);
         let func = ImplicitDerivative::new(TestFunction2, (a, b));
         println!("\n{:?}", func.residual([4.0, 3.0]));
-        let [[x, y]] = func.implicit_derivative([4.0, 3.0]).data.0;
+        let [x, y] = func.implicit_derivative(4.0, 3.0);
         let xa = (b + (a * 2.0 - b * b).sqrt()) * 0.5;
         let ya = (b - (a * 2.0 - b * b).sqrt()) * 0.5;
         println!("{x}, {y}");
@@ -247,8 +298,8 @@ mod test {
 
         let s: crate::Dual64 = Dual::from(30.0).derivative();
         let func = ImplicitDerivative::new(TestFunction3, s);
-        println!("\n{:?}", func.residual([1.0, 2.0, 3.0, 4.0]));
-        let x = func.implicit_derivative([1.0, 2.0, 3.0, 4.0]);
+        println!("\n{:?}", func.residual(SVector::from([1.0, 2.0, 3.0, 4.0])));
+        let x = func.implicit_derivative(SVector::from([1.0, 2.0, 3.0, 4.0]));
         let x0 = ((s - 5.0).sqrt() - 5.0) * 0.5;
         println!("{}, {}, {}, {}", x[0], x[1], x[2], x[3]);
         println!("{}, {}, {}, {}", x0 + 1.0, x0 + 2.0, x0 + 3.0, x0 + 4.0);
