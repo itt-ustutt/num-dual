@@ -21,7 +21,7 @@ name = "num_dual"
 
 [dependencies]
 num-traits = "0.2"
-nalgebra = "0.33"
+nalgebra = "0.34"
 numpy = { version = "0.25", optional = true }
 approx = "0.5"
 simba = "0.9"
