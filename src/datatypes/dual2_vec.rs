@@ -27,6 +27,12 @@ where
 
 impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for Dual2Vec<T, F, Const<N>> {}
 
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for Dual2Vec<T, F, D> where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>
+{
+}
+
 pub type Dual2Vec32<D> = Dual2Vec<f32, f32, D>;
 pub type Dual2Vec64<D> = Dual2Vec<f64, f64, D>;
 pub type Dual2SVec32<const N: usize> = Dual2Vec<f32, f32, Const<N>>;

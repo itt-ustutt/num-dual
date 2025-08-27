@@ -23,6 +23,12 @@ where
     f: PhantomData<F>,
 }
 
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for DualVec<T, F, D> where
+    DefaultAllocator: Allocator<D>
+{
+}
+
 impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for DualVec<T, F, Const<N>> {}
 
 pub type DualSVec<D, F, const N: usize> = DualVec<D, F, Const<N>>;

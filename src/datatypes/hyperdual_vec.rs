@@ -31,6 +31,14 @@ impl<T: DualNum<F> + Copy, F: Copy, const M: usize, const N: usize> Copy
 {
 }
 
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat, M: Dim, N: Dim> ndarray::ScalarOperand
+    for HyperDualVec<T, F, M, N>
+where
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
+{
+}
+
 pub type HyperDualVec32<M, N> = HyperDualVec<f32, f32, M, N>;
 pub type HyperDualVec64<M, N> = HyperDualVec<f64, f64, M, N>;
 pub type HyperDualSVec32<const M: usize, const N: usize> =

@@ -220,6 +220,8 @@
 
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, OMatrix, Scalar};
+#[cfg(feature = "ndarray")]
+use ndarray::ScalarOperand;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
 use std::collections::HashMap;
 use std::fmt;
@@ -271,6 +273,7 @@ pub mod python;
 mod python_macro;
 
 /// A generalized (hyper) dual number.
+#[cfg(feature = "ndarray")]
 pub trait DualNum<F>:
     NumOps
     + for<'r> NumOps<&'r Self>
@@ -289,6 +292,136 @@ pub trait DualNum<F>:
     + fmt::Display
     + PartialEq
     + fmt::Debug
+    + ScalarOperand
+    + 'static
+{
+    /// Highest derivative that can be calculated with this struct
+    const NDERIV: usize;
+
+    /// Reciprocal (inverse) of a number `1/x`
+    fn recip(&self) -> Self;
+
+    /// Power with integer exponent `x^n`
+    fn powi(&self, n: i32) -> Self;
+
+    /// Power with real exponent `x^n`
+    fn powf(&self, n: F) -> Self;
+
+    /// Square root
+    fn sqrt(&self) -> Self;
+
+    /// Cubic root
+    fn cbrt(&self) -> Self;
+
+    /// Exponential `e^x`
+    fn exp(&self) -> Self;
+
+    /// Exponential with base 2 `2^x`
+    fn exp2(&self) -> Self;
+
+    /// Exponential minus 1 `e^x-1`
+    fn exp_m1(&self) -> Self;
+
+    /// Natural logarithm
+    fn ln(&self) -> Self;
+
+    /// Logarithm with arbitrary base
+    fn log(&self, base: F) -> Self;
+
+    /// Logarithm with base 2
+    fn log2(&self) -> Self;
+
+    /// Logarithm with base 10
+    fn log10(&self) -> Self;
+
+    /// Logarithm on x plus one `ln(1+x)`
+    fn ln_1p(&self) -> Self;
+
+    /// Sine
+    fn sin(&self) -> Self;
+
+    /// Cosine
+    fn cos(&self) -> Self;
+
+    /// Tangent
+    fn tan(&self) -> Self;
+
+    /// Calculate sine and cosine simultaneously
+    fn sin_cos(&self) -> (Self, Self);
+
+    /// Arcsine
+    fn asin(&self) -> Self;
+
+    /// Arccosine
+    fn acos(&self) -> Self;
+
+    /// Arctangent
+    fn atan(&self) -> Self;
+
+    /// Arctangent
+    fn atan2(&self, other: Self) -> Self;
+
+    /// Hyperbolic sine
+    fn sinh(&self) -> Self;
+
+    /// Hyperbolic cosine
+    fn cosh(&self) -> Self;
+
+    /// Hyperbolic tangent
+    fn tanh(&self) -> Self;
+
+    /// Area hyperbolic sine
+    fn asinh(&self) -> Self;
+
+    /// Area hyperbolic cosine
+    fn acosh(&self) -> Self;
+
+    /// Area hyperbolic tangent
+    fn atanh(&self) -> Self;
+
+    /// 0th order spherical Bessel function of the first kind
+    fn sph_j0(&self) -> Self;
+
+    /// 1st order spherical Bessel function of the first kind
+    fn sph_j1(&self) -> Self;
+
+    /// 2nd order spherical Bessel function of the first kind
+    fn sph_j2(&self) -> Self;
+
+    /// Fused multiply-add
+    #[inline]
+    fn mul_add(&self, a: Self, b: Self) -> Self {
+        self.clone() * a + b
+    }
+
+    /// Power with dual exponent `x^n`
+    #[inline]
+    fn powd(&self, exp: Self) -> Self {
+        (self.ln() * exp).exp()
+    }
+}
+
+/// A generalized (hyper) dual number.
+#[cfg(not(feature = "ndarray"))]
+pub trait DualNum<F>:
+    NumOps
+    + for<'r> NumOps<&'r Self>
+    + Signed
+    + NumOps<F>
+    + NumAssignOps
+    + NumAssignOps<F>
+    + Clone
+    + Inv<Output = Self>
+    + Sum
+    + Product
+    + FromPrimitive
+    + From<F>
+    + DualStruct<Self, F, Real = F>
+    + Mappable<Self>
+    + fmt::Display
+    + PartialEq
+    + fmt::Debug
+    + ScalarOperand
     + 'static
 {
     /// Highest derivative that can be calculated with this struct

@@ -26,6 +26,7 @@ numpy = { version = "0.25", optional = true }
 approx = "0.5"
 simba = "0.9"
 serde = { version = "1.0", features = ["derive"], optional = true }
+ndarray = { version = "0.16", optional = true }
 
 [dependencies.pyo3]
 version = "0.25"

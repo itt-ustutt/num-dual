@@ -23,6 +23,9 @@ pub struct Dual<T: DualNum<F>, F> {
     f: PhantomData<F>,
 }
 
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for Dual<T, F> {}
+
 pub type Dual32 = Dual<f32, f32>;
 pub type Dual64 = Dual<f64, f64>;
 

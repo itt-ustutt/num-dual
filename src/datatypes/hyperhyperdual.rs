@@ -31,6 +31,9 @@ pub struct HyperHyperDual<T, F = T> {
     f: PhantomData<F>,
 }
 
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for HyperHyperDual<T, F> {}
+
 pub type HyperHyperDual32 = HyperHyperDual<f32>;
 pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
