@@ -421,7 +421,6 @@ pub trait DualNum<F>:
     + fmt::Display
     + PartialEq
     + fmt::Debug
-    + ScalarOperand
     + 'static
 {
     /// Highest derivative that can be calculated with this struct
