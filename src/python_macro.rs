@@ -228,7 +228,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<Py<PyAny>>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -274,7 +274,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<Py<PyAny>>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -320,7 +320,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<Py<PyAny>>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)
@@ -366,7 +366,7 @@ macro_rules! impl_dual_num {
                     )
                     .into_any());
                 }
-                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<PyObject>>() {
+                if let Ok(mut r) = rhs.extract::<PyReadwriteArrayDyn<Py<PyAny>>>() {
                     // check data type of first element
                     if r.as_array()
                         .get(0)

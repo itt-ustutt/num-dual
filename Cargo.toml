@@ -22,14 +22,14 @@ name = "num_dual"
 [dependencies]
 num-traits = "0.2"
 nalgebra = "0.34"
-numpy = { version = "0.25", optional = true }
+numpy = { version = "0.26", optional = true }
 approx = "0.5"
 simba = "0.9"
 serde = { version = "1.0", features = ["derive"], optional = true }
 ndarray = { version = "0.16", optional = true }
 
 [dependencies.pyo3]
-version = "0.25"
+version = "0.26"
 optional = true
 features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py39"]
 
