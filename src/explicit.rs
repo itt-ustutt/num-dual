@@ -31,6 +31,26 @@ pub fn partial2<
     move |x| g(x, &args1, &args2)
 }
 
+/// Calculate the zeroth derivative of a scalar function.
+///
+/// Only useful for specific generic cases in which the trait bound
+/// `Real<T, F>: DualNum<F, Inner=T>` is required.
+/// ```
+/// # use num_dual::{zeroth_derivative, DualNum};
+/// let f = zeroth_derivative(|x| x.powi(2), 5.0);
+/// assert_eq!(f, 25.0);
+/// ```
+pub fn zeroth_derivative<G, T: DualNum<F>, F: DualNumFloat, O: Mappable<Real<T, F>>>(
+    g: G,
+    x: T,
+) -> O::Output<T>
+where
+    G: Fn(Real<T, F>) -> O,
+{
+    let x = Real::from_re(x);
+    g(x).map_dual(|r| r.re)
+}
+
 /// Calculate the first derivative of a scalar function.
 /// ```
 /// # use num_dual::{first_derivative, DualNum};

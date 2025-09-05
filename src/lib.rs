@@ -254,10 +254,11 @@ pub use datatypes::hyperdual_vec::{
     HyperDualVec32, HyperDualVec64,
 };
 pub use datatypes::hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
+pub use datatypes::real::Real;
 pub use explicit::{
     first_derivative, gradient, hessian, jacobian, partial, partial2, partial_hessian,
     second_derivative, second_partial_derivative, third_derivative, third_partial_derivative,
-    third_partial_derivative_vec, Gradients,
+    third_partial_derivative_vec, zeroth_derivative, Gradients,
 };
 pub use implicit::{
     implicit_derivative, implicit_derivative_binary, implicit_derivative_vec, ImplicitDerivative,

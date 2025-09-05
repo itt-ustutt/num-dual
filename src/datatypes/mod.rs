@@ -7,3 +7,4 @@ pub mod dual_vec;
 pub mod hyperdual;
 pub mod hyperdual_vec;
 pub mod hyperhyperdual;
+pub mod real;
