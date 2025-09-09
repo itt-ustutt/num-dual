@@ -366,7 +366,7 @@ macro_rules! chain_rule {
 #[macro_export]
 macro_rules! impl_zeroth_derivatives {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
-        impl_derivatives!(zeroth, 1, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
+        impl_derivatives!(zeroth, 0, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }
 
