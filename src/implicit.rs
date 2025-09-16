@@ -70,7 +70,7 @@ where
                 let [[x, y]] = x.data.0;
                 SVector::from(g(x, y, &args))
             },
-            SVector::from([x.clone(), y.clone()]),
+            &SVector::from([x.clone(), y.clone()]),
         );
         let [[f0, f1]] = f.data.0;
         let [[j00, j10], [j01, j11]] = jac.data.0;
@@ -116,7 +116,7 @@ where
     let mut x = x.map(D::from);
     let args = A::from_inner(args);
     for _ in 0..D::NDERIV {
-        let (f, jac) = jacobian(|x| g(x, &args), x.clone());
+        let (f, jac) = jacobian(|x| g(x, &args), &x);
         x -= LU::new(jac).unwrap().solve(&f);
     }
     x

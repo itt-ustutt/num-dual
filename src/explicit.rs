@@ -1,5 +1,5 @@
 use crate::*;
-use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1};
+use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1, U3};
 
 /// Evaluate the function `g` with extra arguments `args` that are automatically adjusted to the correct
 /// dual number type.
@@ -121,7 +121,7 @@ where
 ///                      xy[0] * xy[1].powi(3) * xy[2],
 ///                      xy[0].powi(2) * xy[1] * xy[2].powi(2)
 ///                     ]);
-/// let (f, jac) = jacobian(fun, xy);
+/// let (f, jac) = jacobian(fun, &xy);
 /// assert_eq!(f[0], 270.0);          // xy³z
 /// assert_eq!(f[1], 300.0);          // x²yz²
 /// assert_eq!(jac[(0,0)], 54.0);     // y³z
@@ -141,7 +141,7 @@ pub fn jacobian<
     O: Mappable<OVector<DualVec<T, F, N>, M>>,
 >(
     g: G,
-    x: OVector<T, N>,
+    x: &OVector<T, N>,
 ) -> O::Output<(OVector<T, M>, OMatrix<T, M, N>)>
 where
     G: FnOnce(OVector<DualVec<T, F, N>, N>) -> O,
@@ -478,6 +478,15 @@ where
             Self::HyperDual<T, F>,
             &A,
         ) -> Self::HyperDual<T, F>;
+
+    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+        g: G,
+        x: &OVector<T, Self>,
+        args: &A::Inner,
+    ) -> (OVector<T, Self>, OMatrix<T, Self, Self>)
+    where
+        G: Fn(OVector<Self::Dual<T, F>, Self>, &A) -> OVector<Self::Dual<T, F>, Self>,
+        DefaultAllocator: Allocator<Self, Self>;
 }
 
 impl<const N: usize> Gradients for Const<N> {
@@ -534,6 +543,17 @@ impl<const N: usize> Gradients for Const<N> {
         );
         let [[c]] = c.data.0;
         (a, b, c, d)
+    }
+
+    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+        g: G,
+        x: &OVector<T, Self>,
+        args: &A::Inner,
+    ) -> (OVector<T, Self>, OMatrix<T, Self, Self>)
+    where
+        G: Fn(OVector<DualVec<T, F, Self>, Self>, &A) -> OVector<DualVec<T, F, Self>, Self>,
+    {
+        jacobian(partial(g, args), x)
     }
 }
 
@@ -618,5 +638,30 @@ impl Gradients for Dyn {
             res.eps1eps2
         });
         (re, grad_x, grad_y, hessian)
+    }
+
+    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+        g: G,
+        x: &OVector<T, Self>,
+        args: &A::Inner,
+    ) -> (OVector<T, Self>, OMatrix<T, Self, Self>)
+    where
+        G: Fn(OVector<Dual<T, F>, Self>, &A) -> OVector<Dual<T, F>, Self>,
+        DefaultAllocator: Allocator<Self, Self>,
+    {
+        let n = x.len();
+        let args = A::from_inner(args);
+        let mut f = DVector::zeros(n);
+        let columns: Vec<_> = (0..n)
+            .map(|i| {
+                let mut x = x.map(Dual::from_re);
+                x[i].eps = T::one();
+                let res = g(x, &args);
+                f = res.map(|r| r.re);
+                res.map(|r| r.eps)
+            })
+            .collect();
+        let jac = DMatrix::from_columns(&columns);
+        (f, jac)
     }
 }
