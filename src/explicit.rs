@@ -1,5 +1,5 @@
 use crate::*;
-use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1, U3};
+use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1};
 
 /// Evaluate the function `g` with extra arguments `args` that are automatically adjusted to the correct
 /// dual number type.

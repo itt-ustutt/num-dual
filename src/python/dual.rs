@@ -189,7 +189,7 @@ macro_rules! impl_gradient_and_jacobian {
                             ))
                         }
                     };
-                    crate::jacobian(g, SVector::from(x)).map(|(re, eps)| {
+                    crate::jacobian(g, &SVector::from(x)).map(|(re, eps)| {
                         let eps: Vec<_> = eps
                             .row_iter()
                             .map(|r| r.iter().copied().collect::<Vec<_>>())
