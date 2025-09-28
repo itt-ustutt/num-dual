@@ -181,8 +181,8 @@ where
 
     #[inline]
     unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
-        let re = self.re.extract_unchecked(i);
-        let eps = self.eps.extract_unchecked(i);
+        let re = unsafe { self.re.extract_unchecked(i) };
+        let eps = unsafe { self.eps.extract_unchecked(i) };
         Self::Element {
             re,
             eps,
@@ -198,8 +198,8 @@ where
 
     #[inline]
     unsafe fn replace_unchecked(&mut self, i: usize, val: Self::Element) {
-        self.re.replace_unchecked(i, val.re);
-        self.eps.replace_unchecked(i, val.eps);
+        unsafe { self.re.replace_unchecked(i, val.re) };
+        unsafe { self.eps.replace_unchecked(i, val.eps) };
     }
 
     #[inline]
@@ -766,21 +766,13 @@ where
     /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn max(self, other: Self) -> Self {
-        if other > self {
-            other
-        } else {
-            self
-        }
+        if other > self { other } else { self }
     }
 
     /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn min(self, other: Self) -> Self {
-        if other < self {
-            other
-        } else {
-            self
-        }
+        if other < self { other } else { self }
     }
 
     /// If the min/max values are constants and the clamping has an effect, you lose your gradients.

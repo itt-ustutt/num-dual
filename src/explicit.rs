@@ -153,14 +153,13 @@ where
         xi.eps = Derivative::derivative_generic(r, c, i);
     }
     let res = g(x);
-    let res = res.map_dual(|res| {
+    res.map_dual(|res| {
         let eps = OMatrix::from_rows(
             res.map(|res| res.eps.unwrap_generic(r, c).transpose())
                 .as_slice(),
         );
         (res.map(|r| r.re), eps)
-    });
-    res
+    })
 }
 
 /// Calculate the second derivative of a univariate function.

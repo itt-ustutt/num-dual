@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-dual = "0.11"
+num-dual = "0.12"
 ```
 
 ## Example
@@ -67,7 +67,7 @@ fn main() {
     // Calculate a simple derivative using dual numbers
     let x_dual = Dual64::from(x).derivative();
     let y_dual = Dual64::from(y);
-    println!("{}", f(x_dual, y_dual)); // 2000 + [1200]ε
+    println!("{}", f(x_dual, y_dual)); // 2000 + 1200ε
 
     // or use the provided function instead
     let (_, df) = first_derivative(|x| f(x, y.into()), x);

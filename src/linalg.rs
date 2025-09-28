@@ -121,7 +121,7 @@ where
         let n = self.p.len();
         let det = (0..n).map(|i| self.a[(i, i)]).product();
 
-        if (self.p_count - n) % 2 == 0 {
+        if (self.p_count - n).is_multiple_of(2) {
             det
         } else {
             -det

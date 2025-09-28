@@ -22,7 +22,7 @@
 //!
 //!     // Manually construct the dual number
 //!     let x = Dual64::new(5.0, 1.0);
-//!     println!("{}", foo(x));                     // 125 + [75]ε
+//!     println!("{}", foo(x));                     // 125 + 75ε
 //!
 //!     // Calculate a gradient
 //!     let (f, g) = gradient(bar, &SVector::from([4.0, 3.0]));
@@ -80,7 +80,7 @@
 //! All dual number types can contain other dual numbers as inner types. Therefore, it is also possible to
 //! use the different derivative functions inside of each other.
 //!
-//! ## extra arguments
+//! ## Extra arguments
 //! The [`partial`] and [`partial2`] functions are used to pass additional arguments to the function, e.g.:
 //! ```no_run
 //! # use num_dual::{DualNum, first_derivative, partial};
@@ -110,9 +110,9 @@
 //! }
 //! ```
 //!
-//! ## the [`Gradients`] trait
-//! The functions [`gradient`], [`hessian`], and [`partial_hessian`] are generic over the dimensionality of the
-//! variable vector. However, to use the functions in a generic context requires not using the [`Copy`] trait
+//! ## The [`Gradients`] trait
+//! The functions [`gradient`], [`hessian`], [`partial_hessian`] and [`jacobian`] are generic over the dimensionality
+//! of the variable vector. However, to use the functions in a generic context requires not using the [`Copy`] trait
 //! bound on the dual number type, because the dynamically sized dual numbers can by construction not implement
 //! [`Copy`]. Also, due to frequent heap allocations, the performance of the automatic differentiation could
 //! suffer significantly for dynamically sized dual numbers compared to statically sized dual numbers. The
@@ -141,7 +141,7 @@
 //! by iteratively evaluating scalar derivatives. For functions that do not rely on the [`Copy`] trait bound,
 //! only benchmarking can reveal Whether the increased performance through the avoidance of heap allocations
 //! can overcome the overhead of repeated function evaluations, i.e., if [`Gradients`] outperforms directly
-//! calling [`gradient`], [`hessian`], or [`partial_hessian`].
+//! calling [`gradient`], [`hessian`], [`partial_hessian`] or [`jacobian`].
 //!
 //! # Derivatives of implicit functions
 //! Implicit differentiation is used to determine the derivative `dy/dx` where the output `y` is only related
@@ -173,10 +173,11 @@
 //! }
 //! ```
 //! The `implicit_sqrt` or any likewise defined function is generic over the dual type `D`
-//! and can, therefore, be used anywhere as a part of an arbitrary complex computation. The functions [`implicit_derivative_binary`] and [`implicit_derivative_vec`] can be used for implicit functions
+//! and can, therefore, be used anywhere as a part of an arbitrary complex computation. The functions
+//! [`implicit_derivative_binary`] and [`implicit_derivative_vec`] can be used for implicit functions
 //! with more than one variable.
 //!
-//! For implicit functions that contain complex models any a large number of parameters, the [`ImplicitDerivative`]
+//! For implicit functions that contain complex models and a large number of parameters, the [`ImplicitDerivative`]
 //! interface might come in handy. The idea is to define the implicit function using the [`ImplicitFunction`] trait
 //! and feeding it into the [`ImplicitDerivative`] struct, which internally stores the parameters as dual numbers
 //! and their real parts. The [`ImplicitDerivative`] then provides methods for the evaluation of the real part
