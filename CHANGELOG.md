@@ -5,9 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.12.0] - 2025-09-28
+### Added
+- Added `Real` datatype which can be useful to calculate zeroth derivatives in certain generic cases. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+- Added an interface for implicit differentiation of univariate, bivariate and multivariate functions. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+- Added `partial` and `partial2` functions to pass additional arguments to explicit derivatives. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+- Added the `Gradients` trait that is used to generalize over static and dynamic array types. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+
+### Changed
+- The methods in the linalg module are now based on datastructures from `nalgebra`. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+- The `ndarray` dependency is now optional and includes the `ScalarOperand` trait as supertrait for `DualNum` if activated. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+- The functions for explicit derivatives are more generic regarding the return types. This renders the `try_` versions obsolete. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
+
 ### Packaging
-- Updated `pyo3` and `numpy` dependencies to 0.25. [#93](https://github.com/itt-ustutt/num-dual/pull/93)
-- Updated `criterion` dev-dependency to 0.6.0.
+- Updated `pyo3` and `numpy` dependencies to 0.26.
+- Updated `criterion` dev-dependency to 0.7.
+- Updated Rust edition to 2024.
+- updated `nalgebra` dependency to 0.34. 
 
 ## [0.11.2] - 2025-06-24
 ### Changed
