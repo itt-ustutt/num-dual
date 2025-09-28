@@ -1,30 +1,18 @@
 #[macro_export]
 macro_rules! impl_derivatives {
-    ($deriv:ident, $nderiv:expr, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
+    ($deriv:ident, $nderiv:expr, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> DualNum<F> for $struct<T, F$($(, $dim)*)?>
         where
-        $($(DefaultAllocator: Allocator<$dim> + Allocator<U1, $dim> + Allocator<$dim, $dim>,)*)?
-        $($(DefaultAllocator: Allocator<$($ddim,)*>)?)?
+        // $($(DefaultAllocator: Allocator<$dim> + Allocator<U1, $dim> + Allocator<$dim, $dim>,)*)?
+        $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
             const NDERIV: usize = T::NDERIV + $nderiv;
-
-            type Inner = T;
-
-            #[inline]
-            fn from_inner(inner: Self::Inner) -> Self {
-                Self::from_re(inner)
-            }
-
-            #[inline]
-            fn re(&self) -> F {
-                self.re.re()
-            }
 
             #[inline]
             fn recip(&self) -> Self {
                 let rec = self.re.recip();
                 let f0 = rec.clone();
-                let f1 = -f0.clone() * &rec;
+                first!($deriv, let f1 = -f0.clone() * &rec;);
                 second!($deriv, let f2 = f1.clone() * &rec * F::from(-2.0).unwrap(););
                 third!($deriv, let f3 = f2.clone() * rec * F::from(-3.0).unwrap(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -39,7 +27,7 @@ macro_rules! impl_derivatives {
                     _ => {
                         let pow3 = self.re.powi(exp - 3);
                         let f0 = pow3.clone() * &self.re * &self.re * &self.re;
-                        let f1 = pow3.clone() * &self.re * &self.re * F::from(exp).unwrap();
+                        first!($deriv, let f1 = pow3.clone() * &self.re * &self.re * F::from(exp).unwrap(););
                         second!($deriv, let f2 = pow3.clone() * &self.re * F::from(exp * (exp - 1)).unwrap(););
                         third!($deriv, let f3 = pow3 * F::from(exp * (exp - 1) * (exp - 2)).unwrap(););
                         chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -61,7 +49,7 @@ macro_rules! impl_derivatives {
                     let n3 = n2 - F::one();
                     let pow3 = self.re.powf(n3);
                     let f0 = pow3.clone() * &self.re * &self.re * &self.re;
-                    let f1 = pow3.clone() * &self.re * &self.re * n;
+                    first!($deriv, let f1 = pow3.clone() * &self.re * &self.re * n;);
                     second!($deriv, let f2 = pow3.clone() * &self.re * n * n1;);
                     third!($deriv, let f3 = pow3 * n * n1 * n2;);
                     chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -70,10 +58,10 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn sqrt(&self) -> Self {
-                let rec = self.re.recip();
-                let half = F::from(0.5).unwrap();
+                first!($deriv, let rec = self.re.recip(););
+                first!($deriv, let half = F::from(0.5).unwrap(););
                 let f0 = self.re.sqrt();
-                let f1 = f0.clone() * &rec * half;
+                first!($deriv, let f1 = f0.clone() * &rec * half;);
                 second!($deriv, let f2 = -f1.clone() * &rec * half;);
                 third!($deriv, let f3 = f2.clone() * rec * (-F::one() - half););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -81,10 +69,10 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn cbrt(&self) -> Self {
-                let rec = self.re.recip();
-                let third = F::from(1.0 / 3.0).unwrap();
+                first!($deriv, let rec = self.re.recip(););
+                first!($deriv, let third = F::from(1.0 / 3.0).unwrap(););
                 let f0 = self.re.cbrt();
-                let f1 = f0.clone() * &rec * third;
+                first!($deriv, let f1 = f0.clone() * &rec * third;);
                 second!($deriv, let f2 = f1.clone() * &rec * (third - F::one()););
                 third!($deriv, let f3 = f2.clone() * rec * (third - F::one() - F::one()););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -99,9 +87,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn exp2(&self) -> Self {
-                let ln2 = F::from(2.0).unwrap().ln();
+                first!($deriv, let ln2 = F::from(2.0).unwrap().ln(););
                 let f0 = self.re.exp2();
-                let f1 = f0.clone() * ln2;
+                first!($deriv, let f1 = f0.clone() * ln2;);
                 second!($deriv, let f2 = f1.clone() * ln2;);
                 third!($deriv, let f3 = f2.clone() * ln2;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -110,15 +98,15 @@ macro_rules! impl_derivatives {
             #[inline]
             fn exp_m1(&self) -> Self {
                 let f0 = self.re.exp_m1();
-                let f1 = self.re.exp();
+                first!($deriv, let f1 = self.re.exp(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1.clone(), f1.clone(), f1))
             }
 
             #[inline]
             fn ln(&self) -> Self {
-                let rec = self.re.recip();
+                first!($deriv, let rec = self.re.recip(););
                 let f0 = self.re.ln();
-                let f1 = rec.clone();
+                first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
                 third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -126,9 +114,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn log(&self, base: F) -> Self {
-                let rec = self.re.recip();
+                first!($deriv, let rec = self.re.recip(););
                 let f0 = self.re.log(base);
-                let f1 = rec.clone() / base.ln();
+                first!($deriv, let f1 = rec.clone() / base.ln(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
                 third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -136,9 +124,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn log2(&self) -> Self {
-                let rec = self.re.recip();
+                first!($deriv, let rec = self.re.recip(););
                 let f0 = self.re.log2();
-                let f1 = rec.clone() / (F::one() + F::one()).ln();
+                first!($deriv, let f1 = rec.clone() / (F::one() + F::one()).ln(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
                 third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -146,9 +134,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn log10(&self) -> Self {
-                let rec = self.re.recip();
+                first!($deriv, let rec = self.re.recip(););
                 let f0 = self.re.log10();
-                let f1 = rec.clone() / F::from(10.0).unwrap().ln();
+                first!($deriv, let f1 = rec.clone() / F::from(10.0).unwrap().ln(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
                 third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -156,9 +144,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn ln_1p(&self) -> Self {
-                let rec = (self.re.clone() + F::one()).recip();
+                first!($deriv, let rec = (self.re.clone() + F::one()).recip(););
                 let f0 = self.re.ln_1p();
-                let f1 = rec.clone();
+                first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
                 third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -166,13 +154,15 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn sin(&self) -> Self {
-                let (s, c) = self.re.sin_cos();
+                zeroth!($deriv, let s = self.re.sin(););
+                first!($deriv, let (s, c) = self.re.sin_cos(););
                 chain_rule!($deriv, Self::chain_rule(self, s.clone(), c.clone(), -s, -c))
             }
 
             #[inline]
             fn cos(&self) -> Self {
-                let (s, c) = self.re.sin_cos();
+                zeroth!($deriv, let c = self.re.cos(););
+                first!($deriv, let (s, c) = self.re.sin_cos(););
                 chain_rule!($deriv, Self::chain_rule(self, c.clone(), -s.clone(), -c, s))
             }
 
@@ -192,9 +182,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn asin(&self) -> Self {
-                let rec = (T::one() - self.re.clone() * &self.re).recip();
+                first!($deriv, let rec = (T::one() - self.re.clone() * &self.re).recip(););
                 let f0 = self.re.asin();
-                let f1 = rec.sqrt();
+                first!($deriv, let f1 = rec.sqrt(););
                 second!($deriv, let f2 = self.re.clone() * &f1 * &rec;);
                 third!($deriv, let f3 = (self.re.clone() * &self.re * (F::one() + F::one()) + F::one()) * &f1 * &rec * rec;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -202,9 +192,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn acos(&self) -> Self {
-                let rec = (T::one() - self.re.clone() * &self.re).recip();
+                first!($deriv, let rec = (T::one() - self.re.clone() * &self.re).recip(););
                 let f0 = self.re.acos();
-                let f1 = -rec.sqrt();
+                first!($deriv, let f1 = -rec.sqrt(););
                 second!($deriv, let f2 = self.re.clone() * &f1 * &rec;);
                 third!($deriv, let f3 = (self.re.clone() * &self.re * (F::one() + F::one()) + F::one()) * &f1 * &rec * rec;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -212,9 +202,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn atan(&self) -> Self {
-                let rec = (T::one() + self.re.clone() * &self.re).recip();
+                first!($deriv, let rec = (T::one() + self.re.clone() * &self.re).recip(););
                 let f0 = self.re.atan();
-                let f1 = rec.clone();
+                first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let two = F::one() + F::one(););
                 second!($deriv, let f2 = -self.re.clone() * &f1 * &rec * two;);
                 third!($deriv, let f3 = (self.re.clone() * &self.re * F::from(6.0).unwrap() - two) * &f1 * &rec * rec;);
@@ -231,13 +221,13 @@ macro_rules! impl_derivatives {
             #[inline]
             fn sinh(&self) -> Self {
                 let s = self.re.sinh();
-                let c = self.re.cosh();
+                first!($deriv, let c = self.re.cosh(););
                 chain_rule!($deriv, Self::chain_rule(self, s.clone(), c.clone(), s, c))
             }
 
             #[inline]
             fn cosh(&self) -> Self {
-                let s = self.re.sinh();
+                first!($deriv, let s = self.re.sinh(););
                 let c = self.re.cosh();
                 chain_rule!($deriv, Self::chain_rule(self, c.clone(), s.clone(), c, s))
             }
@@ -249,9 +239,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn asinh(&self) -> Self {
-                let rec = (T::one() + self.re.clone() * &self.re).recip();
+                first!($deriv, let rec = (T::one() + self.re.clone() * &self.re).recip(););
                 let f0 = self.re.asinh();
-                let f1 = rec.sqrt();
+                first!($deriv, let f1 = rec.sqrt(););
                 second!($deriv, let f2 = -self.re.clone() * &f1 * &rec;);
                 third!($deriv, let f3 = (self.re.clone() * &self.re * (F::one() + F::one()) - F::one()) * &f1 * &rec * rec;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -259,9 +249,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn acosh(&self) -> Self {
-                let rec = (self.re.clone() * &self.re - F::one()).recip();
+                first!($deriv, let rec = (self.re.clone() * &self.re - F::one()).recip(););
                 let f0 = self.re.acosh();
-                let f1 = rec.sqrt();
+                first!($deriv, let f1 = rec.sqrt(););
                 second!($deriv, let f2 = -self.re.clone() * &f1 * &rec;);
                 third!($deriv, let f3 = (self.re.clone() * &self.re * (F::one() + F::one()) + F::one()) * &f1 * &rec * rec;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
@@ -269,9 +259,9 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn atanh(&self) -> Self {
-                let rec = (T::one() - self.re.clone() * &self.re).recip();
+                first!($deriv, let rec = (T::one() - self.re.clone() * &self.re).recip(););
                 let f0 = self.re.atanh();
-                let f1 = rec.clone();
+                first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let two = F::one() + F::one(););
                 second!($deriv, let f2 = self.re.clone() * &f1 * &rec * two;);
                 third!($deriv, let f3 = (self.re.clone() * &self.re * F::from(6.0).unwrap() + two) * &f1 * &rec * rec;);
@@ -312,7 +302,32 @@ macro_rules! impl_derivatives {
 }
 
 #[macro_export]
+macro_rules! zeroth {
+    (zeroth, $($code:tt)*) => {
+        $($code)*
+    };
+    (first, $($code:tt)*) => {};
+    (second, $($code:tt)*) => {};
+    (third, $($code:tt)*) => {};
+}
+
+#[macro_export]
+macro_rules! first {
+    (zeroth, $($code:tt)*) => {};
+    (first, $($code:tt)*) => {
+         $($code)*
+    };
+    (second, $($code:tt)*) => {
+        $($code)*
+    };
+    (third, $($code:tt)*) => {
+        $($code)*
+    };
+}
+
+#[macro_export]
 macro_rules! second {
+    (zeroth, $($code:tt)*) => {};
     (first, $($code:tt)*) => {};
     (second, $($code:tt)*) => {
         $($code)*
@@ -324,6 +339,7 @@ macro_rules! second {
 
 #[macro_export]
 macro_rules! third {
+    (zeroth, $($code:tt)*) => {};
     (first, $($code:tt)*) => {};
     (second, $($code:tt)*) => {};
     (third, $($code:tt)*) => {
@@ -333,6 +349,9 @@ macro_rules! third {
 
 #[macro_export]
 macro_rules! chain_rule {
+    (zeroth, Self::chain_rule($self:ident, $f0:expr, $f1:expr, $f2:expr, $f3:expr)) => {
+        Self::chain_rule($self, $f0)
+    };
     (first, Self::chain_rule($self:ident, $f0:expr, $f1:expr, $f2:expr, $f3:expr)) => {
         Self::chain_rule($self, $f0, $f1)
     };
@@ -345,22 +364,29 @@ macro_rules! chain_rule {
 }
 
 #[macro_export]
+macro_rules! impl_zeroth_derivatives {
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(zeroth, 0, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
+    };
+}
+
+#[macro_export]
 macro_rules! impl_first_derivatives {
-    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
-        impl_derivatives!(first, 1, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(first, 1, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }
 
 #[macro_export]
 macro_rules! impl_second_derivatives {
-    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
-        impl_derivatives!(second, 2, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(second, 2, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }
 
 #[macro_export]
 macro_rules! impl_third_derivatives {
-    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])?)?) => {
-        impl_derivatives!(third, 3, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])?)?);
+    ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
+        impl_derivatives!(third, 3, $struct, [$($im),*]$(, [$($dim),*]$(, [$($ddim),*])*)?);
     };
 }

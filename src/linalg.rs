@@ -1,33 +1,13 @@
-#![allow(clippy::assign_op_pattern)]
-use crate::{
-    Dual, Dual2, Dual2Vec, Dual3, DualNum, DualVec, HyperDual, HyperDualVec, HyperHyperDual,
-};
+//! Basic linear algebra functionalities (linear solve and eigenvalues) for matrices containing dual numbers.
+use crate::DualNum;
 use nalgebra::allocator::Allocator;
-use nalgebra::{DefaultAllocator, Dim, U1};
-use ndarray::{Array1, Array2, ScalarOperand};
+use nalgebra::{DefaultAllocator, Dim, OMatrix, OVector, U1};
 use num_traits::Float;
 use std::fmt;
 use std::iter::Product;
 use std::marker::PhantomData;
 
-impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual<T, F> {}
-impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for DualVec<T, F, N> where
-    DefaultAllocator: Allocator<N>
-{
-}
-impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual2<T, F> {}
-impl<T: DualNum<F>, F: Clone + 'static, N: Dim> ScalarOperand for Dual2Vec<T, F, N> where
-    DefaultAllocator: Allocator<U1, N> + Allocator<N, N>
-{
-}
-impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for Dual3<T, F> {}
-impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperHyperDual<T, F> {}
-impl<T: DualNum<F>, F: Clone + 'static> ScalarOperand for HyperDual<T, F> {}
-impl<T: DualNum<F>, F: Clone + 'static, M: Dim, N: Dim> ScalarOperand for HyperDualVec<T, F, M, N> where
-    DefaultAllocator: Allocator<M> + Allocator<U1, N> + Allocator<M, N>
-{
-}
-
+/// Error type for fallible linear algebra operations.
 #[derive(Debug)]
 pub struct LinAlgError();
 
@@ -39,17 +19,25 @@ impl fmt::Display for LinAlgError {
 
 impl std::error::Error for LinAlgError {}
 
-pub struct LU<T, F> {
-    a: Array2<T>,
-    p: Array1<usize>,
+/// LU decomposition for symmetric matrices with dual numbers as elements.
+pub struct LU<T: DualNum<F>, F, D: Dim>
+where
+    DefaultAllocator: Allocator<D, D> + Allocator<D>,
+{
+    a: OMatrix<T, D, D>,
+    p: OVector<usize, D>,
     p_count: usize,
     f: PhantomData<F>,
 }
 
-impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
-    pub fn new(mut a: Array2<T>) -> Result<Self, LinAlgError> {
-        let n = a.shape()[0];
-        let mut p = Array1::zeros(n);
+impl<T: DualNum<F> + Copy, F: Float, D: Dim> LU<T, F, D>
+where
+    DefaultAllocator: Allocator<D, D> + Allocator<D>,
+{
+    pub fn new(mut a: OMatrix<T, D, D>) -> Result<Self, LinAlgError> {
+        let (n, _) = a.shape_generic();
+        let mut p = OVector::zeros_generic(n, U1);
+        let n = n.value();
         let mut p_count = n;
 
         for i in 0..n {
@@ -102,9 +90,10 @@ impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
         })
     }
 
-    pub fn solve(&self, b: &Array1<T>) -> Array1<T> {
-        let n = b.len();
-        let mut x = Array1::zeros(n);
+    pub fn solve(&self, b: &OVector<T, D>) -> OVector<T, D> {
+        let (n, _) = b.shape_generic();
+        let mut x = OVector::zeros_generic(n, U1);
+        let n = n.value();
 
         for i in 0..n {
             x[i] = b[self.p[i]];
@@ -119,7 +108,7 @@ impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
                 x[i] = x[i] - self.a[(i, k)] * x[k];
             }
 
-            x[i] = x[i] / self.a[(i, i)];
+            x[i] /= self.a[(i, i)];
         }
 
         x
@@ -132,16 +121,17 @@ impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
         let n = self.p.len();
         let det = (0..n).map(|i| self.a[(i, i)]).product();
 
-        if (self.p_count - n) % 2 == 0 {
+        if (self.p_count - n).is_multiple_of(2) {
             det
         } else {
             -det
         }
     }
 
-    pub fn inverse(&self) -> Array2<T> {
+    pub fn inverse(&self) -> OMatrix<T, D, D> {
+        let (r, c) = self.a.shape_generic();
         let n = self.p.len();
-        let mut ia = Array2::zeros((n, n));
+        let mut ia = OMatrix::zeros_generic(r, c);
 
         for j in 0..n {
             for i in 0..n {
@@ -156,7 +146,7 @@ impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
                 for k in i + 1..n {
                     ia[(i, j)] = ia[(i, j)] - self.a[(i, k)] * ia[(k, j)];
                 }
-                ia[(i, j)] = ia[(i, j)] / self.a[(i, i)];
+                ia[(i, j)] /= self.a[(i, i)];
             }
         }
 
@@ -164,26 +154,47 @@ impl<T: DualNum<F> + Copy, F: Float> LU<T, F> {
     }
 }
 
-pub fn norm<T: DualNum<F> + Copy, F: Float>(x: &Array1<T>) -> T {
-    x.iter().fold(T::zero(), |acc, &x| acc + x * x).sqrt()
+/// Smallest eigenvalue and corresponding eigenvector calculated using the full Jacobi
+/// eigenvalue algorithm ([`jacobi_eigenvalue`]).
+pub fn smallest_ev<T: DualNum<F> + Copy, F: Float, D: Dim>(
+    a: OMatrix<T, D, D>,
+) -> (T, OVector<T, D>)
+where
+    DefaultAllocator: Allocator<D, D> + Allocator<D>,
+{
+    let (r, _) = a.shape_generic();
+    let n = r.value();
+    if n == 1 {
+        (a[(0, 0)], OVector::from_element_generic(r, U1, T::one()))
+    } else if n == 2 {
+        let (a, b, c) = (a[(0, 0)], a[(0, 1)], a[(1, 1)]);
+        let l = (a + c - ((a - c).powi(2) + b * b * F::from(4.0).unwrap()).sqrt())
+            * F::from(0.5).unwrap();
+        let u = OVector::from_fn_generic(r, U1, |i, _| [b, l - a][i]);
+        let u = u / (b * b + (l - a) * (l - a)).sqrt();
+        (l, u)
+    } else {
+        let (e, vecs) = jacobi_eigenvalue(a, 200);
+        (e[0], vecs.column(0).into_owned())
+    }
 }
 
-pub fn smallest_ev<T: DualNum<F> + Copy, F: Float>(a: Array2<T>) -> (T, Array1<T>) {
-    let (e, vecs) = jacobi_eigenvalue(a, 200);
-    (e[0], vecs.column(0).to_owned())
-}
-
-pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float>(
-    mut a: Array2<T>,
+/// Eigenvalues and corresponding eigenvectors of a symmetric matrix.
+pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float, D: Dim>(
+    mut a: OMatrix<T, D, D>,
     max_iter: usize,
-) -> (Array1<T>, Array2<T>) {
-    let n = a.shape()[0];
+) -> (OVector<T, D>, OMatrix<T, D, D>)
+where
+    DefaultAllocator: Allocator<D, D> + Allocator<D>,
+{
+    let (r, c) = a.shape_generic();
+    let n = r.value();
 
-    let mut v = Array2::eye(n);
-    let mut d = a.diag().to_owned();
+    let mut v = OMatrix::identity_generic(r, c);
+    let mut d = a.diagonal().to_owned();
 
     let mut bw = d.clone();
-    let mut zw = Array1::zeros(n);
+    let mut zw = OVector::zeros_generic(r, U1);
 
     for it_num in 0..max_iter {
         let mut thresh = F::zero();
@@ -265,7 +276,7 @@ pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float>(
         }
 
         bw += &zw;
-        d.assign(&bw);
+        d = bw.clone();
         zw.fill(T::zero());
     }
 
@@ -279,7 +290,7 @@ pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float>(
         }
 
         if m != k {
-            d.swap(m, k);
+            d.swap_rows(m, k);
 
             for l in 0..n {
                 v.swap((l, m), (l, k));
@@ -295,28 +306,28 @@ mod tests {
     use super::*;
     use crate::Dual64;
     use approx::assert_abs_diff_eq;
-    use ndarray::{arr1, arr2};
+    use nalgebra::{dmatrix, dvector};
 
     #[test]
     fn test_solve_f64() {
-        let a = arr2(&[[4.0, 3.0], [6.0, 3.0]]);
-        let b = arr1(&[10.0, 12.0]);
+        let a = dmatrix![4.0, 3.0; 6.0, 3.0];
+        let b = dvector![10.0, 12.0];
         let lu = LU::new(a).unwrap();
         assert_eq!(lu.determinant(), -6.0);
-        assert_eq!(lu.solve(&b), arr1(&[1.0, 2.0]));
+        assert_eq!(lu.solve(&b), dvector![1.0, 2.0]);
         assert_eq!(
             lu.inverse() * lu.determinant(),
-            arr2(&[[3.0, -3.0], [-6.0, 4.0]])
+            dmatrix![3.0, -3.0; -6.0, 4.0]
         );
     }
 
     #[test]
     fn test_solve_dual64() {
-        let a = arr2(&[
-            [Dual64::new(4.0, 3.0), Dual64::new(3.0, 3.0)],
-            [Dual64::new(6.0, 1.0), Dual64::new(3.0, 2.0)],
-        ]);
-        let b = arr1(&[Dual64::new(10.0, 20.0), Dual64::new(12.0, 20.0)]);
+        let a = dmatrix![
+            Dual64::new(4.0, 3.0), Dual64::new(3.0, 3.0);
+            Dual64::new(6.0, 1.0), Dual64::new(3.0, 2.0)
+        ];
+        let b = dvector![Dual64::new(10.0, 20.0), Dual64::new(12.0, 20.0)];
         let lu = LU::new(a).unwrap();
         let det = lu.determinant();
         assert_eq!((det.re, det.eps), (-6.0, -4.0));
@@ -326,21 +337,26 @@ mod tests {
 
     #[test]
     fn test_eig_f64_2() {
-        let a = arr2(&[[2.0, 2.0], [2.0, 5.0]]);
+        let a = dmatrix![2.0, 2.0; 2.0, 5.0];
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
-        let av = a.dot(&v);
+        let (l1, v1) = smallest_ev(a.clone());
+        let av = a * &v;
         println!("{l} {v}");
+        println!("{l1} {v1}");
         assert_abs_diff_eq!(av[(0, 0)], (l[0] * v[(0, 0)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 0)], (l[0] * v[(1, 0)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)], (l[1] * v[(0, 1)]), epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 1)], (l[1] * v[(1, 1)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0], l1, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)], v1[0], epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)], v1[1], epsilon = 1e-14);
     }
 
     #[test]
     fn test_eig_f64_3() {
-        let a = arr2(&[[2.0, 2.0, 7.0], [2.0, 5.0, 9.0], [7.0, 9.0, 2.0]]);
+        let a = dmatrix![2.0, 2.0, 7.0; 2.0, 5.0, 9.0; 7.0, 9.0, 2.0];
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
-        let av = a.dot(&v);
+        let av = a * &v;
         println!("{l} {v}");
         for i in 0..3 {
             for j in 0..3 {
@@ -351,13 +367,15 @@ mod tests {
 
     #[test]
     fn test_eig_dual64() {
-        let a = arr2(&[
-            [Dual64::new(2.0, 1.0), Dual64::new(2.0, 2.0)],
-            [Dual64::new(2.0, 2.0), Dual64::new(5.0, 3.0)],
-        ]);
+        let a = dmatrix![
+            Dual64::new(2.0, 1.0), Dual64::new(2.0, 2.0);
+            Dual64::new(2.0, 2.0), Dual64::new(5.0, 3.0)
+        ];
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
-        let av = a.dot(&v);
+        let (l1, v1) = smallest_ev(a.clone());
+        let av = a * &v;
         println!("{l} {v}");
+        println!("{l1} {v1}");
         assert_abs_diff_eq!(av[(0, 0)].re, (l[0] * v[(0, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 0)].re, (l[0] * v[(1, 0)]).re, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)].re, (l[1] * v[(0, 1)]).re, epsilon = 1e-14);
@@ -366,19 +384,25 @@ mod tests {
         assert_abs_diff_eq!(av[(1, 0)].eps, (l[0] * v[(1, 0)]).eps, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(0, 1)].eps, (l[1] * v[(0, 1)]).eps, epsilon = 1e-14);
         assert_abs_diff_eq!(av[(1, 1)].eps, (l[1] * v[(1, 1)]).eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0].re, l1.re, epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0].eps, l1.eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)].re, v1[0].re, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)].eps, v1[0].eps, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)].re, v1[1].re, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)].eps, v1[1].eps, epsilon = 1e-14);
     }
 
     #[test]
     fn test_norm_f64() {
-        let v = arr1(&[3.0, 4.0]);
-        assert_eq!(norm(&v), 5.0);
+        let v = dvector![3.0, 4.0];
+        assert_eq!(v.norm(), 5.0);
     }
 
     #[test]
     fn test_norm_dual64() {
-        let v = arr1(&[Dual64::new(3.0, 1.0), Dual64::new(4.0, 3.0)]);
-        println!("{}", norm(&v));
-        assert_eq!(norm(&v).re, 5.0);
-        assert_eq!(norm(&v).eps, 3.0);
+        let v = dvector![Dual64::new(3.0, 1.0), Dual64::new(4.0, 3.0)];
+        println!("{}", v.norm());
+        assert_eq!(v.norm().re, 5.0);
+        assert_eq!(v.norm().eps, 3.0);
     }
 }

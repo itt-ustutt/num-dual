@@ -425,7 +425,7 @@ where
     #[inline]
     unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
         let opt = self
-            .map_borrowed(|e| T::extract_unchecked(e, i))
+            .map_borrowed(|e| unsafe { T::extract_unchecked(e, i) })
             .0
             // Now check it's all zeros.
             // Unfortunately there is no way to use the vectorized version of `is_zero`, which is
@@ -466,20 +466,20 @@ where
     unsafe fn replace_unchecked(&mut self, i: usize, val: Self::Element) {
         match (&mut self.0, val.0) {
             (Some(ours), Some(theirs)) => {
-                ours.zip_apply(&theirs, |e, replacement| {
+                ours.zip_apply(&theirs, |e, replacement| unsafe {
                     e.replace_unchecked(i, replacement)
                 });
             }
             (ours @ None, Some(theirs)) => {
                 let (r, c) = theirs.shape_generic();
                 let mut init: OMatrix<T, R, C> = OMatrix::zeros_generic(r, c);
-                init.zip_apply(&theirs, |e, replacement| {
+                init.zip_apply(&theirs, |e, replacement| unsafe {
                     e.replace_unchecked(i, replacement)
                 });
                 *ours = Some(init);
             }
             (Some(ours), None) => {
-                ours.apply(|e| e.replace_unchecked(i, T::Element::zero()));
+                ours.apply(|e| unsafe { e.replace_unchecked(i, T::Element::zero()) });
             }
             _ => {}
         }
@@ -554,8 +554,9 @@ where
     }
     #[inline(always)]
     fn is_in_subset(element: &Derivative<TSuper, FSuper, R, C>) -> bool {
-        element.0.as_ref().map_or(true, |matrix| {
-            matrix.iter().all(|elem| TSuper::is_in_subset(elem))
-        })
+        element
+            .0
+            .as_ref()
+            .is_none_or(|matrix| matrix.iter().all(|elem| TSuper::is_in_subset(elem)))
     }
 }

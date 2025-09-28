@@ -88,5 +88,5 @@ pub fn third_derivative(f: &Bound<'_, PyAny>, x: f64) -> PyResult<(f64, f64, f64
             ))
         }
     };
-    try_third_derivative(g, x)
+    crate::third_derivative(g, x)
 }

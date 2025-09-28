@@ -1,8 +1,7 @@
-use crate::{DualNum, DualNumFloat};
+use crate::{DualNum, DualNumFloat, DualStruct};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -23,6 +22,9 @@ pub struct Dual3<T, F = T> {
     #[cfg_attr(feature = "serde", serde(skip))]
     f: PhantomData<F>,
 }
+
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for Dual3<T, F> {}
 
 pub type Dual3_32 = Dual3<f32>;
 pub type Dual3_64 = Dual3<f64>;
@@ -62,32 +64,6 @@ impl<T: DualNum<F>, F> Dual3<T, F> {
         self.v1 = T::one();
         self
     }
-}
-
-/// Calculate the third derivative of a univariate function.
-/// ```
-/// # use num_dual::{third_derivative, DualNum};
-/// let (f, df, d2f, d3f) = third_derivative(|x| x.powi(3), 5.0);
-/// assert_eq!(f, 125.0);      // x³
-/// assert_eq!(df, 75.0);      // 3x²
-/// assert_eq!(d2f, 30.0);     // 6x
-/// assert_eq!(d3f, 6.0);      // 6
-/// ```
-pub fn third_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T, T, T)
-where
-    G: FnOnce(Dual3<T, F>) -> Dual3<T, F>,
-{
-    try_third_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
-}
-
-/// Variant of [third_derivative] for fallible functions.
-pub fn try_third_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T, T, T), E>
-where
-    G: FnOnce(Dual3<T, F>) -> Result<Dual3<T, F>, E>,
-{
-    let mut x = Dual3::from_re(x);
-    x.v1 = T::one();
-    g(x).map(|r| (r.re, r.v1, r.v2, r.v3))
 }
 
 impl<T: DualNum<F>, F: Float> Dual3<T, F> {

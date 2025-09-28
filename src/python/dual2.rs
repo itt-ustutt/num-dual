@@ -133,7 +133,7 @@ pub fn second_derivative(f: &Bound<'_, PyAny>, x: f64) -> PyResult<(f64, f64, f6
             ))
         }
     };
-    try_second_derivative(g, x)
+    crate::second_derivative(g, x)
 }
 
 macro_rules! impl_hessian {
@@ -166,7 +166,7 @@ macro_rules! impl_hessian {
                             ))
                         }
                     };
-                    try_hessian(g, SVector::from(x)).map(|(f, g, h)| {
+                    crate::hessian(g, &SVector::from(x)).map(|(f, g, h)| {
                         let h = h.row_iter().map(|r| r.iter().copied().collect()).collect();
                         (f, g.data.0[0].to_vec(), h)
                     })
@@ -185,7 +185,7 @@ macro_rules! impl_hessian {
                         ))
                     }
                 };
-                try_hessian(g, DVector::from(x)).map(|(f, g, h)| {
+                crate::hessian(g, &DVector::from(x)).map(|(f, g, h)| {
                     let h = h.row_iter().map(|r| r.iter().copied().collect()).collect();
                     (f, g.data.as_vec().clone(), h)
                 })

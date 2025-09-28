@@ -1,9 +1,8 @@
-use crate::{Derivative, DualNum, DualNumFloat};
+use crate::{Derivative, DualNum, DualNumFloat, DualStruct};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use nalgebra::allocator::Allocator;
 use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
-use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -22,6 +21,12 @@ where
     /// Derivative part of the dual number
     pub eps: Derivative<T, F, D, U1>,
     f: PhantomData<F>,
+}
+
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for DualVec<T, F, D> where
+    DefaultAllocator: Allocator<D>
+{
 }
 
 impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for DualVec<T, F, Const<N>> {}
@@ -58,115 +63,6 @@ where
     pub fn from_re(re: T) -> Self {
         Self::new(re, Derivative::none())
     }
-}
-
-/// Calculate the gradient of a scalar function
-/// ```
-/// # use approx::assert_relative_eq;
-/// # use num_dual::{gradient, DualNum, DualSVec64};
-/// # use nalgebra::SVector;
-/// let v = SVector::from([4.0, 3.0]);
-/// let fun = |v: SVector<DualSVec64<2>, 2>| (v[0].powi(2) + v[1].powi(2)).sqrt();
-/// let (f, g) = gradient(fun, v);
-/// assert_eq!(f, 5.0);
-/// assert_relative_eq!(g[0], 0.8);
-/// assert_relative_eq!(g[1], 0.6);
-/// ```
-///
-/// The variable vector can also be dynamically sized
-/// ```
-/// # use approx::assert_relative_eq;
-/// # use num_dual::{gradient, DualNum, DualDVec64};
-/// # use nalgebra::DVector;
-/// let v = DVector::repeat(4, 2.0);
-/// let fun = |v: DVector<DualDVec64>| v.iter().map(|v| v * v).sum::<DualDVec64>().sqrt();
-/// let (f, g) = gradient(fun, v);
-/// assert_eq!(f, 4.0);
-/// assert_relative_eq!(g[0], 0.5);
-/// assert_relative_eq!(g[1], 0.5);
-/// assert_relative_eq!(g[2], 0.5);
-/// assert_relative_eq!(g[3], 0.5);
-/// ```
-pub fn gradient<G, T: DualNum<F>, F: DualNumFloat, D: Dim>(
-    g: G,
-    x: OVector<T, D>,
-) -> (T, OVector<T, D>)
-where
-    G: FnOnce(OVector<DualVec<T, F, D>, D>) -> DualVec<T, F, D>,
-    DefaultAllocator: Allocator<D>,
-{
-    try_gradient(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
-}
-
-/// Variant of [gradient] for fallible functions.
-pub fn try_gradient<G, T: DualNum<F>, F: DualNumFloat, E, D: Dim>(
-    g: G,
-    x: OVector<T, D>,
-) -> Result<(T, OVector<T, D>), E>
-where
-    G: FnOnce(OVector<DualVec<T, F, D>, D>) -> Result<DualVec<T, F, D>, E>,
-    DefaultAllocator: Allocator<D>,
-{
-    let mut x = x.map(DualVec::from_re);
-    let (r, c) = x.shape_generic();
-    for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps = Derivative::derivative_generic(r, c, i);
-    }
-    g(x).map(|res| (res.re, res.eps.unwrap_generic(r, c)))
-}
-
-/// Calculate the Jacobian of a vector function.
-/// ```
-/// # use num_dual::{jacobian, DualSVec64, DualNum};
-/// # use nalgebra::SVector;
-/// let xy = SVector::from([5.0, 3.0, 2.0]);
-/// let fun = |xy: SVector<DualSVec64<3>, 3>| SVector::from([
-///                      xy[0] * xy[1].powi(3) * xy[2],
-///                      xy[0].powi(2) * xy[1] * xy[2].powi(2)
-///                     ]);
-/// let (f, jac) = jacobian(fun, xy);
-/// assert_eq!(f[0], 270.0);          // xy³z
-/// assert_eq!(f[1], 300.0);          // x²yz²
-/// assert_eq!(jac[(0,0)], 54.0);     // y³z
-/// assert_eq!(jac[(0,1)], 270.0);    // 3xy²z
-/// assert_eq!(jac[(0,2)], 135.0);    // xy³
-/// assert_eq!(jac[(1,0)], 120.0);    // 2xyz²
-/// assert_eq!(jac[(1,1)], 100.0);    // x²z²
-/// assert_eq!(jac[(1,2)], 300.0);     // 2x²yz
-/// ```
-pub fn jacobian<G, T: DualNum<F>, F: DualNumFloat, M: Dim, N: Dim>(
-    g: G,
-    x: OVector<T, N>,
-) -> (OVector<T, M>, OMatrix<T, M, N>)
-where
-    G: FnOnce(OVector<DualVec<T, F, N>, N>) -> OVector<DualVec<T, F, N>, M>,
-    DefaultAllocator: Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<U1, N>,
-{
-    try_jacobian(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
-}
-
-/// Variant of [jacobian] for fallible functions.
-#[expect(clippy::type_complexity)]
-pub fn try_jacobian<G, T: DualNum<F>, F: DualNumFloat, E, M: Dim, N: Dim>(
-    g: G,
-    x: OVector<T, N>,
-) -> Result<(OVector<T, M>, OMatrix<T, M, N>), E>
-where
-    G: FnOnce(OVector<DualVec<T, F, N>, N>) -> Result<OVector<DualVec<T, F, N>, M>, E>,
-    DefaultAllocator: Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<U1, N>,
-{
-    let mut x = x.map(DualVec::from_re);
-    let (r, c) = x.shape_generic();
-    for (i, xi) in x.iter_mut().enumerate() {
-        xi.eps = Derivative::derivative_generic(r, c, i);
-    }
-    g(x).map(|res| {
-        let eps = OMatrix::from_rows(
-            res.map(|res| res.eps.unwrap_generic(r, c).transpose())
-                .as_slice(),
-        );
-        (res.map(|r| r.re), eps)
-    })
 }
 
 /* chain rule */
@@ -222,8 +118,8 @@ where
     }
 }
 
-impl_first_derivatives!(DualVec, [eps], [D]);
-impl_dual!(DualVec, [eps], [D]);
+impl_first_derivatives!(DualVec, [eps], [D], [D]);
+impl_dual!(DualVec, [eps], [D], [D]);
 
 /**
  * The SimdValue trait is for rearranging data into a form more suitable for Simd,
@@ -285,8 +181,8 @@ where
 
     #[inline]
     unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
-        let re = self.re.extract_unchecked(i);
-        let eps = self.eps.extract_unchecked(i);
+        let re = unsafe { self.re.extract_unchecked(i) };
+        let eps = unsafe { self.eps.extract_unchecked(i) };
         Self::Element {
             re,
             eps,
@@ -302,8 +198,8 @@ where
 
     #[inline]
     unsafe fn replace_unchecked(&mut self, i: usize, val: Self::Element) {
-        self.re.replace_unchecked(i, val.re);
-        self.eps.replace_unchecked(i, val.eps);
+        unsafe { self.re.replace_unchecked(i, val.re) };
+        unsafe { self.eps.replace_unchecked(i, val.eps) };
     }
 
     #[inline]
@@ -870,21 +766,13 @@ where
     /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn max(self, other: Self) -> Self {
-        if other > self {
-            other
-        } else {
-            self
-        }
+        if other > self { other } else { self }
     }
 
     /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn min(self, other: Self) -> Self {
-        if other < self {
-            other
-        } else {
-            self
-        }
+        if other < self { other } else { self }
     }
 
     /// If the min/max values are constants and the clamping has an effect, you lose your gradients.

@@ -1,10 +1,8 @@
-use crate::{DualNum, DualNumFloat};
+use crate::{Derivative, DualNum, DualNumFloat, DualStruct};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use nalgebra::allocator::Allocator;
 use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::marker::PhantomData;
@@ -12,123 +10,135 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-/// A scalar dual number for the calculations of first derivatives.
-#[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Dual<T: DualNum<F>, F> {
-    /// Real part of the dual number
+/// A vector second order dual number for the calculation of Hessians.
+#[derive(Clone, Debug)]
+pub struct Dual2Vec<T: DualNum<F>, F, D: Dim>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
+    /// Real part of the second order dual number
     pub re: T,
-    /// Derivative part of the dual number
-    pub eps: T,
-    #[cfg_attr(feature = "serde", serde(skip))]
+    /// Gradient part of the second order dual number
+    pub v1: Derivative<T, F, U1, D>,
+    /// Hessian part of the second order dual number
+    pub v2: Derivative<T, F, D, D>,
     f: PhantomData<F>,
 }
 
-pub type Dual32 = Dual<f32, f32>;
-pub type Dual64 = Dual<f64, f64>;
+impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for Dual2Vec<T, F, Const<N>> {}
 
-impl<T: DualNum<F>, F> Dual<T, F> {
-    /// Create a new dual number from its fields.
+#[cfg(feature = "ndarray")]
+impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for Dual2Vec<T, F, D> where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>
+{
+}
+
+pub type Dual2Vec32<D> = Dual2Vec<f32, f32, D>;
+pub type Dual2Vec64<D> = Dual2Vec<f64, f64, D>;
+pub type Dual2SVec32<const N: usize> = Dual2Vec<f32, f32, Const<N>>;
+pub type Dual2SVec64<const N: usize> = Dual2Vec<f64, f64, Const<N>>;
+pub type Dual2DVec32 = Dual2Vec<f32, f32, Dyn>;
+pub type Dual2DVec64 = Dual2Vec<f64, f64, Dyn>;
+
+impl<T: DualNum<F>, F, D: Dim> Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
+    /// Create a new second order dual number from its fields.
     #[inline]
-    pub fn new(re: T, eps: T) -> Self {
+    pub fn new(re: T, v1: Derivative<T, F, U1, D>, v2: Derivative<T, F, D, D>) -> Self {
         Self {
             re,
-            eps,
+            v1,
+            v2,
             f: PhantomData,
         }
     }
 }
 
-impl<T: DualNum<F> + Zero, F> Dual<T, F> {
-    /// Create a new dual number from the real part.
+impl<T: DualNum<F>, F, D: Dim> Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
+    /// Create a new second order dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
-        Self::new(re, T::zero())
+        Self::new(re, Derivative::none(), Derivative::none())
     }
-}
-
-impl<T: DualNum<F> + One, F> Dual<T, F> {
-    /// Set the derivative part to 1.
-    /// ```
-    /// # use num_dual::{Dual64, DualNum};
-    /// let x = Dual64::from_re(5.0).derivative().powi(2);
-    /// assert_eq!(x.re, 25.0);
-    /// assert_eq!(x.eps, 10.0);
-    /// ```
-    #[inline]
-    pub fn derivative(mut self) -> Self {
-        self.eps = T::one();
-        self
-    }
-}
-
-/// Calculate the first derivative of a scalar function.
-/// ```
-/// # use num_dual::{first_derivative, DualNum};
-/// let (f, df) = first_derivative(|x| x.powi(2), 5.0);
-/// assert_eq!(f, 25.0);
-/// assert_eq!(df, 10.0);
-/// ```
-pub fn first_derivative<G, T: DualNum<F>, F>(g: G, x: T) -> (T, T)
-where
-    G: FnOnce(Dual<T, F>) -> Dual<T, F>,
-{
-    try_first_derivative(|x| Ok::<_, Infallible>(g(x)), x).unwrap()
-}
-
-/// Variant of [first_derivative] for fallible functions.
-pub fn try_first_derivative<G, T: DualNum<F>, F, E>(g: G, x: T) -> Result<(T, T), E>
-where
-    G: FnOnce(Dual<T, F>) -> Result<Dual<T, F>, E>,
-{
-    let x = Dual::from_re(x).derivative();
-    g(x).map(|r| (r.re, r.eps))
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float> Dual<T, F> {
+impl<T: DualNum<F>, F: Float, D: Dim> Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     #[inline]
-    fn chain_rule(&self, f0: T, f1: T) -> Self {
-        Self::new(f0, self.eps.clone() * f1)
+    fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
+        Self::new(
+            f0,
+            &self.v1 * f1.clone(),
+            &self.v2 * f1 + self.v1.tr_mul(&self.v1) * f2,
+        )
     }
 }
 
 /* product rule */
-impl<T: DualNum<F>, F: Float> Mul<&Dual<T, F>> for &Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<T: DualNum<F>, F: Float, D: Dim> Mul<&Dual2Vec<T, F, D>> for &Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
+    type Output = Dual2Vec<T, F, D>;
     #[inline]
-    fn mul(self, other: &Dual<T, F>) -> Self::Output {
-        Dual::new(
+    fn mul(self, other: &Dual2Vec<T, F, D>) -> Dual2Vec<T, F, D> {
+        Dual2Vec::new(
             self.re.clone() * other.re.clone(),
-            self.eps.clone() * other.re.clone() + other.eps.clone() * self.re.clone(),
+            &other.v1 * self.re.clone() + &self.v1 * other.re.clone(),
+            &other.v2 * self.re.clone()
+                + self.v1.tr_mul(&other.v1)
+                + other.v1.tr_mul(&self.v1)
+                + &self.v2 * other.re.clone(),
         )
     }
 }
 
 /* quotient rule */
-impl<T: DualNum<F>, F: Float> Div<&Dual<T, F>> for &Dual<T, F> {
-    type Output = Dual<T, F>;
+impl<T: DualNum<F>, F: Float, D: Dim> Div<&Dual2Vec<T, F, D>> for &Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
+    type Output = Dual2Vec<T, F, D>;
     #[inline]
-    fn div(self, other: &Dual<T, F>) -> Dual<T, F> {
+    fn div(self, other: &Dual2Vec<T, F, D>) -> Dual2Vec<T, F, D> {
         let inv = other.re.recip();
-        Dual::new(
+        let inv2 = inv.clone() * inv.clone();
+        Dual2Vec::new(
             self.re.clone() * inv.clone(),
-            (self.eps.clone() * other.re.clone() - other.eps.clone() * self.re.clone())
-                * inv.clone()
-                * inv,
+            (&self.v1 * other.re.clone() - &other.v1 * self.re.clone()) * inv2.clone(),
+            &self.v2 * inv.clone()
+                - (&other.v2 * self.re.clone()
+                    + self.v1.tr_mul(&other.v1)
+                    + other.v1.tr_mul(&self.v1))
+                    * inv2.clone()
+                + other.v1.tr_mul(&other.v1)
+                    * ((T::one() + T::one()) * self.re.clone() * inv2 * inv),
         )
     }
 }
 
 /* string conversions */
-impl<T: DualNum<F>, F> fmt::Display for Dual<T, F> {
+impl<T: DualNum<F>, F: fmt::Display, D: Dim> fmt::Display for Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} + {}ε", self.re, self.eps)
+        write!(f, "{}", self.re)?;
+        self.v1.fmt(f, "ε1")?;
+        self.v2.fmt(f, "ε1²")
     }
 }
 
-impl_first_derivatives!(Dual, [eps]);
-impl_dual!(Dual, [eps]);
+impl_second_derivatives!(Dual2Vec, [v1, v2], [D], [U1, D], [D, D]);
+impl_dual!(Dual2Vec, [v1, v2], [D], [U1, D], [D, D]);
 
 /**
  * The SimdValue trait is for rearranging data into a form more suitable for Simd,
@@ -136,11 +146,11 @@ impl_dual!(Dual, [eps]);
  *
  * The primary job of this SimdValue impl is to allow people to use `simba::simd::f32x4` etc,
  * instead of f32/f64. Those types implement nalgebra::SimdRealField/ComplexField, so they
- * behave like scalars. When we use them, we would have `Dual<f32x4, f32, N>` etc, with our
+ * behave like scalars. When we use them, we would have `DualVec<f32x4, f32, N>` etc, with our
  * F parameter set to `<T as SimdValue>::Element`. We will need to be able to split up that type
- * into four of Dual in order to get out of simd-land. That's what the SimdValue trait is for.
+ * into four of DualVec in order to get out of simd-land. That's what the SimdValue trait is for.
  *
- * Ultimately, someone will have to to implement SimdRealField on Dual and call the
+ * Ultimately, someone will have to to implement SimdRealField on DualVec and call the
  * simd_ functions of `<T as SimdRealField>`. That's future work for someone who finds
  * num_dual is not fast enough.
  *
@@ -148,20 +158,21 @@ impl_dual!(Dual, [eps]);
  * <https://github.com/dimforge/simba/issues/44>.
  *
  */
-impl<T> nalgebra::SimdValue for Dual<T, T::Element>
+impl<T, D: Dim> nalgebra::SimdValue for Dual2Vec<T, T::Element, D>
 where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
     T: DualNum<T::Element> + SimdValue + Scalar,
     T::Element: DualNum<T::Element> + Scalar,
 {
     // Say T = simba::f32x4. T::Element is f32. T::SimdBool is AutoSimd<[bool; 4]>.
     // AutoSimd<[f32; 4]> stores an actual [f32; 4], i.e. four floats in one slot.
-    // So our Dual<AutoSimd<[f32; 4], f32, N> has 4 * (1+N) floats in it, stored in blocks of
+    // So our DualVec<AutoSimd<[f32; 4], f32, N> has 4 * (1+N) floats in it, stored in blocks of
     // four. When we want to do any math on it but ignore its f32x4 storage mode, we need to break
-    // that type into FOUR of Dual<f32, f32, N>; then we do math on it, then we bring it back
+    // that type into FOUR of DualVec<f32, f32, N>; then we do math on it, then we bring it back
     // together.
     //
     // Hence this definition of Element:
-    type Element = Dual<T::Element, T::Element>;
+    type Element = Dual2Vec<T::Element, T::Element, D>;
     type SimdBool = T::SimdBool;
 
     const LANES: usize = T::LANES;
@@ -172,28 +183,33 @@ where
         // - the real part
         // - each of the N epsilon parts
         let re = T::splat(val.re);
-        let eps = T::splat(val.eps);
-        Self::new(re, eps)
+        let v1 = Derivative::splat(val.v1);
+        let v2 = Derivative::splat(val.v2);
+        Self::new(re, v1, v2)
     }
 
     #[inline]
     fn extract(&self, i: usize) -> Self::Element {
         let re = self.re.extract(i);
-        let eps = self.eps.extract(i);
+        let v1 = self.v1.extract(i);
+        let v2 = self.v2.extract(i);
         Self::Element {
             re,
-            eps,
+            v1,
+            v2,
             f: PhantomData,
         }
     }
 
     #[inline]
     unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
-        let re = self.re.extract_unchecked(i);
-        let eps = self.eps.extract_unchecked(i);
+        let re = unsafe { self.re.extract_unchecked(i) };
+        let v1 = unsafe { self.v1.extract_unchecked(i) };
+        let v2 = unsafe { self.v2.extract_unchecked(i) };
         Self::Element {
             re,
-            eps,
+            v1,
+            v2,
             f: PhantomData,
         }
     }
@@ -201,26 +217,32 @@ where
     #[inline]
     fn replace(&mut self, i: usize, val: Self::Element) {
         self.re.replace(i, val.re);
-        self.eps.replace(i, val.eps);
+        self.v1.replace(i, val.v1);
+        self.v2.replace(i, val.v2);
     }
 
     #[inline]
     unsafe fn replace_unchecked(&mut self, i: usize, val: Self::Element) {
-        self.re.replace_unchecked(i, val.re);
-        self.eps.replace_unchecked(i, val.eps);
+        unsafe { self.re.replace_unchecked(i, val.re) };
+        unsafe { self.v1.replace_unchecked(i, val.v1) };
+        unsafe { self.v2.replace_unchecked(i, val.v2) };
     }
 
     #[inline]
     fn select(self, cond: Self::SimdBool, other: Self) -> Self {
         let re = self.re.select(cond, other.re);
-        let eps = self.eps.select(cond, other.eps);
-        Self::new(re, eps)
+        let v1 = self.v1.select(cond, other.v1);
+        let v2 = self.v2.select(cond, other.v2);
+        Self::new(re, v1, v2)
     }
 }
 
 /// Comparisons are only made based on the real part. This allows the code to follow the
 /// same execution path as real-valued code would.
-impl<T: DualNum<F> + PartialEq, F: Float> PartialEq for Dual<T, F> {
+impl<T: DualNum<F> + PartialEq, F: Float, D: Dim> PartialEq for Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.re.eq(&other.re)
@@ -228,7 +250,10 @@ impl<T: DualNum<F> + PartialEq, F: Float> PartialEq for Dual<T, F> {
 }
 /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
 /// same execution path as real-valued code would.
-impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd for Dual<T, F> {
+impl<T: DualNum<F> + PartialOrd, F: Float, D: Dim> PartialOrd for Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.re.partial_cmp(&other.re)
@@ -236,7 +261,11 @@ impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd for Dual<T, F> {
 }
 /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
 /// same execution path as real-valued code would.
-impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F: Float> approx::AbsDiffEq for Dual<T, F> {
+impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F: Float, D: Dim> approx::AbsDiffEq
+    for Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     type Epsilon = Self;
     #[inline]
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -250,7 +279,11 @@ impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F: Float> approx::AbsDiffEq
 }
 /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
 /// same execution path as real-valued code would.
-impl<T: DualNum<F> + approx::RelativeEq<Epsilon = T>, F: Float> approx::RelativeEq for Dual<T, F> {
+impl<T: DualNum<F> + approx::RelativeEq<Epsilon = T>, F: Float, D: Dim> approx::RelativeEq
+    for Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     #[inline]
     fn default_max_relative() -> Self::Epsilon {
         Self::from_re(T::default_max_relative())
@@ -266,7 +299,10 @@ impl<T: DualNum<F> + approx::RelativeEq<Epsilon = T>, F: Float> approx::Relative
         self.re.relative_eq(&other.re, epsilon.re, max_relative.re)
     }
 }
-impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float> UlpsEq for Dual<T, F> {
+impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float, D: Dim> UlpsEq for Dual2Vec<T, F, D>
+where
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
+{
     #[inline]
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
@@ -278,51 +314,64 @@ impl<T: DualNum<F> + UlpsEq<Epsilon = T>, F: Float> UlpsEq for Dual<T, F> {
     }
 }
 
-impl<T> nalgebra::Field for Dual<T, T::Element>
+impl<T, D: Dim> nalgebra::Field for Dual2Vec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SimdValue,
     T::Element: DualNum<T::Element> + Scalar + Float,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
 }
 
 use simba::scalar::{SubsetOf, SupersetOf};
 
-impl<TSuper, FSuper, T, F> SubsetOf<Dual<TSuper, FSuper>> for Dual<T, F>
+impl<TSuper, FSuper, T, F, D: Dim> SubsetOf<Dual2Vec<TSuper, FSuper, D>> for Dual2Vec<T, F, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<T>,
     T: DualNum<F>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
     #[inline(always)]
-    fn to_superset(&self) -> Dual<TSuper, FSuper> {
+    fn to_superset(&self) -> Dual2Vec<TSuper, FSuper, D> {
         let re = TSuper::from_subset(&self.re);
-        let eps = TSuper::from_subset(&self.eps);
-        Dual {
+        let v1 = Derivative::from_subset(&self.v1);
+        let v2 = Derivative::from_subset(&self.v2);
+        Dual2Vec {
             re,
-            eps,
+            v1,
+            v2,
             f: PhantomData,
         }
     }
     #[inline(always)]
-    fn from_superset(element: &Dual<TSuper, FSuper>) -> Option<Self> {
+    fn from_superset(element: &Dual2Vec<TSuper, FSuper, D>) -> Option<Self> {
         let re = TSuper::to_subset(&element.re)?;
-        let eps = TSuper::to_subset(&element.eps)?;
-        Some(Self::new(re, eps))
+        let v1 = Derivative::to_subset(&element.v1)?;
+        let v2 = Derivative::to_subset(&element.v2)?;
+        Some(Self::new(re, v1, v2))
     }
     #[inline(always)]
-    fn from_superset_unchecked(element: &Dual<TSuper, FSuper>) -> Self {
+    fn from_superset_unchecked(element: &Dual2Vec<TSuper, FSuper, D>) -> Self {
         let re = TSuper::to_subset_unchecked(&element.re);
-        let eps = TSuper::to_subset_unchecked(&element.eps);
-        Self::new(re, eps)
+        let v1 = Derivative::to_subset_unchecked(&element.v1);
+        let v2 = Derivative::to_subset_unchecked(&element.v2);
+        Self::new(re, v1, v2)
     }
     #[inline(always)]
-    fn is_in_subset(element: &Dual<TSuper, FSuper>) -> bool {
-        TSuper::is_in_subset(&element.re) && TSuper::is_in_subset(&element.eps)
+    fn is_in_subset(element: &Dual2Vec<TSuper, FSuper, D>) -> bool {
+        TSuper::is_in_subset(&element.re)
+            && <Derivative<_, _, _, _> as SupersetOf<Derivative<_, _, _, _>>>::is_in_subset(
+                &element.v1,
+            )
+            && <Derivative<_, _, _, _> as SupersetOf<Derivative<_, _, _, _>>>::is_in_subset(
+                &element.v2,
+            )
     }
 }
 
-impl<TSuper, FSuper> SupersetOf<f32> for Dual<TSuper, FSuper>
+impl<TSuper, FSuper, D: Dim> SupersetOf<f32> for Dual2Vec<TSuper, FSuper, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<f32>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
     #[inline(always)]
     fn is_in_subset(&self) -> bool {
@@ -338,14 +387,16 @@ where
     fn from_subset(element: &f32) -> Self {
         // Interpret as a purely real number
         let re = TSuper::from_subset(element);
-        let eps = TSuper::zero();
-        Self::new(re, eps)
+        let v1 = Derivative::none();
+        let v2 = Derivative::none();
+        Self::new(re, v1, v2)
     }
 }
 
-impl<TSuper, FSuper> SupersetOf<f64> for Dual<TSuper, FSuper>
+impl<TSuper, FSuper, D: Dim> SupersetOf<f64> for Dual2Vec<TSuper, FSuper, D>
 where
     TSuper: DualNum<FSuper> + SupersetOf<f64>,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
 {
     #[inline(always)]
     fn is_in_subset(&self) -> bool {
@@ -361,8 +412,9 @@ where
     fn from_subset(element: &f64) -> Self {
         // Interpret as a purely real number
         let re = TSuper::from_subset(element);
-        let eps = TSuper::zero();
-        Self::new(re, eps)
+        let v1 = Derivative::none();
+        let v2 = Derivative::none();
+        Self::new(re, v1, v2)
     }
 }
 
@@ -375,7 +427,7 @@ where
 
 use nalgebra::{ComplexField, RealField};
 // This impl is modelled on `impl ComplexField for f32`. The imaginary part is nothing.
-impl<T> ComplexField for Dual<T, T::Element>
+impl<T, D: Dim> ComplexField for Dual2Vec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SupersetOf<T> + AbsDiffEq<Epsilon = T> + Sync + Send,
     T::Element: DualNum<T::Element> + Scalar + DualNumFloat + Sync + Send,
@@ -385,6 +437,11 @@ where
     T: SimdPartialOrd + PartialOrd,
     T: SimdValue<Element = T, SimdBool = bool>,
     T: RelativeEq + UlpsEq + AbsDiffEq,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    <DefaultAllocator as Allocator<D>>::Buffer<T>: Sync + Send,
+    <DefaultAllocator as Allocator<U1, D>>::Buffer<T>: Sync + Send,
+    <DefaultAllocator as Allocator<D, U1>>::Buffer<T>: Sync + Send,
+    <DefaultAllocator as Allocator<D, D>>::Buffer<T>: Sync + Send,
 {
     type RealField = Self;
 
@@ -410,7 +467,7 @@ where
 
     #[inline]
     fn modulus_squared(self) -> Self::RealField {
-        self * self
+        &self * &self
     }
 
     #[inline]
@@ -631,7 +688,7 @@ where
     }
 }
 
-impl<T> RealField for Dual<T, T::Element>
+impl<T, D: Dim> RealField for Dual2Vec<T, T::Element, D>
 where
     T: DualNum<T::Element> + SupersetOf<T> + Sync + Send,
     T::Element: DualNum<T::Element> + Scalar + DualNumFloat,
@@ -643,6 +700,11 @@ where
     T: SimdValue<Element = T, SimdBool = bool>,
     T: UlpsEq,
     T: AbsDiffEq,
+    DefaultAllocator: Allocator<U1, D> + Allocator<D, U1> + Allocator<D, D>,
+    <DefaultAllocator as Allocator<D>>::Buffer<T>: Sync + Send,
+    <DefaultAllocator as Allocator<U1, D>>::Buffer<T>: Sync + Send,
+    <DefaultAllocator as Allocator<D, U1>>::Buffer<T>: Sync + Send,
+    <DefaultAllocator as Allocator<D, D>>::Buffer<T>: Sync + Send,
 {
     #[inline]
     fn copysign(self, sign: Self) -> Self {
@@ -746,21 +808,13 @@ where
     /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn max(self, other: Self) -> Self {
-        if other > self {
-            other
-        } else {
-            self
-        }
+        if other > self { other } else { self }
     }
 
     /// Got to be careful using this, because it throws away the derivatives of the one not chosen
     #[inline]
     fn min(self, other: Self) -> Self {
-        if other < self {
-            other
-        } else {
-            self
-        }
+        if other < self { other } else { self }
     }
 
     /// If the min/max values are constants and the clamping has an effect, you lose your gradients.
