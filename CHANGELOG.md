@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2025-10-11
+### Added
+- Added `derivative` functions for vector dual numbers (`DualVec`, `Dual2Vec`, `HyperDualVec`) analogous to the scalar dual numbers. [#96](https://github.com/itt-ustutt/num-dual/pull/96)
+
 ## [0.12.0] - 2025-09-28
 ### Added
 - Added `Real` datatype which can be useful to calculate zeroth derivatives in certain generic cases. [#95](https://github.com/itt-ustutt/num-dual/pull/95)
