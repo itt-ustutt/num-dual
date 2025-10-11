@@ -33,6 +33,8 @@ impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for Dual2Vec
 {
 }
 
+pub type Dual2SVec<T, F, const N: usize> = Dual2Vec<T, F, Const<N>>;
+pub type Dual2DVec<T, F> = Dual2Vec<T, F, Dyn>;
 pub type Dual2Vec32<D> = Dual2Vec<f32, f32, D>;
 pub type Dual2Vec64<D> = Dual2Vec<f64, f64, D>;
 pub type Dual2SVec32<const N: usize> = Dual2Vec<f32, f32, Const<N>>;
@@ -53,6 +55,52 @@ where
             v2,
             f: PhantomData,
         }
+    }
+}
+
+impl<T: DualNum<F>, F, const N: usize> Dual2SVec<T, F, N> {
+    /// Set the derivative part of variable `index` to 1.
+    ///
+    /// For most cases, the [`hessian`](crate::hessian) function provides a convenient
+    /// interface to calculate derivatives. This function exists for the more edge cases
+    /// where more control over the variables is required.
+    /// ```
+    /// # use num_dual::Dual2SVec64;
+    /// # use nalgebra::{U1, U2, matrix};
+    /// let x: Dual2SVec64<2> = Dual2SVec64::from_re(5.0).derivative(0);
+    /// let y: Dual2SVec64<2> = Dual2SVec64::from_re(3.0).derivative(1);
+    /// let z = x * x * y;
+    /// assert_eq!(z.re, 75.0);                                                 // x²y
+    /// assert_eq!(z.v1.unwrap_generic(U1, U2), matrix![30.0, 25.0]);           // [2xy, x²]
+    /// assert_eq!(z.v2.unwrap_generic(U2, U2), matrix![6.0, 10.0; 10.0, 0.0]); // [2y, 2x; 2x, 0]
+    /// ```
+    #[inline]
+    pub fn derivative(mut self, index: usize) -> Self {
+        self.v1 = Derivative::derivative_generic(U1, Const::<N>, index);
+        self
+    }
+}
+
+impl<T: DualNum<F>, F> Dual2DVec<T, F> {
+    /// Set the derivative part of variable `index` to 1.
+    ///
+    /// For most cases, the [`hessian`](crate::hessian) function provides a convenient interface
+    /// to calculate derivatives. This function exists for the more edge cases
+    /// where more control over the variables is required.
+    /// ```
+    /// # use num_dual::Dual2DVec64;
+    /// # use nalgebra::{Dyn, U1, dmatrix};
+    /// let x: Dual2DVec64 = Dual2DVec64::from_re(5.0).derivative(2, 0);
+    /// let y: Dual2DVec64 = Dual2DVec64::from_re(3.0).derivative(2, 1);
+    /// let z = &x * &x * y;
+    /// assert_eq!(z.re, 75.0);                                                          // x²y
+    /// assert_eq!(z.v1.unwrap_generic(U1, Dyn(2)), dmatrix![30.0, 25.0]);               // [2xy, x²]
+    /// assert_eq!(z.v2.unwrap_generic(Dyn(2), Dyn(2)), dmatrix![6.0, 10.0; 10.0, 0.0]); // [2y, 2x; 2x, 0]
+    /// ```
+    #[inline]
+    pub fn derivative(mut self, variables: usize, index: usize) -> Self {
+        self.v1 = Derivative::derivative_generic(U1, Dyn(variables), index);
+        self
     }
 }
 

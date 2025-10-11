@@ -39,6 +39,9 @@ where
 {
 }
 
+pub type HyperDualSVec<T, F, const M: usize, const N: usize> =
+    HyperDualVec<T, F, Const<M>, Const<N>>;
+pub type HyperDualDVec<T, F> = HyperDualVec<T, F, Dyn, Dyn>;
 pub type HyperDualVec32<M, N> = HyperDualVec<f32, f32, M, N>;
 pub type HyperDualVec64<M, N> = HyperDualVec<f64, f64, M, N>;
 pub type HyperDualSVec32<const M: usize, const N: usize> =
@@ -83,6 +86,54 @@ where
             Derivative::none(),
             Derivative::none(),
         )
+    }
+}
+
+impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualSVec<T, F, M, N> {
+    /// Set the 1st dimension derivative of variable `index` to 1.
+    ///
+    /// For most cases, the [`partial_hessian`](crate::partial_hessian) function provides a
+    /// convenient interface to calculate derivatives. This function exists for the more edge
+    /// cases where more control over the variables is required.
+    #[inline]
+    pub fn derivative1(mut self, index: usize) -> Self {
+        self.eps1 = Derivative::derivative_generic(Const::<M>, U1, index);
+        self
+    }
+
+    /// Set the 2nd dimension derivative of variable `index` to 1.
+    ///
+    /// For most cases, the [`partial_hessian`](crate::partial_hessian) function provides a
+    /// convenient interface to calculate derivatives. This function exists for the more edge
+    /// cases where more control over the variables is required.
+    #[inline]
+    pub fn derivative2(mut self, index: usize) -> Self {
+        self.eps2 = Derivative::derivative_generic(U1, Const::<N>, index);
+        self
+    }
+}
+
+impl<T: DualNum<F>, F> HyperDualDVec<T, F> {
+    /// Set the 1st dimension derivative part of variable `index` to 1.
+    ///
+    /// For most cases, the [`partial_hessian`](crate::partial_hessian) function provides a
+    /// convenient interface to calculate derivatives. This function exists for the more edge
+    /// cases where more control over the variables is required.
+    #[inline]
+    pub fn derivative1(mut self, variables: usize, index: usize) -> Self {
+        self.eps1 = Derivative::derivative_generic(Dyn(variables), U1, index);
+        self
+    }
+
+    /// Set the 2nd dimension derivative part of variable `index` to 1.
+    ///
+    /// For most cases, the [`partial_hessian`](crate::partial_hessian) function provides a
+    /// convenient interface to calculate derivatives. This function exists for the more edge
+    /// cases where more control over the variables is required.
+    #[inline]
+    pub fn derivative2(mut self, variables: usize, index: usize) -> Self {
+        self.eps2 = Derivative::derivative_generic(U1, Dyn(variables), index);
+        self
     }
 }
 
