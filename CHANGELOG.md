@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-12-04
+### Packaging
+- Updated `pyo3` and `numpy` dependencies to 0.27. [#97](https://github.com/itt-ustutt/num-dual/pull/97)
+- Updated `ndarray` dependency to 0.17. [#97](https://github.com/itt-ustutt/num-dual/pull/97)
+
 ## [0.12.1] - 2025-10-11
 ### Added
 - Added `derivative` functions for vector dual numbers (`DualVec`, `Dual2Vec`, `HyperDualVec`) analogous to the scalar dual numbers. [#96](https://github.com/itt-ustutt/num-dual/pull/96)
