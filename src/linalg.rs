@@ -170,8 +170,12 @@ where
         let (a, b, c) = (a[(0, 0)], a[(0, 1)], a[(1, 1)]);
         let l = (a + c - ((a - c).powi(2) + b * b * F::from(4.0).unwrap()).sqrt())
             * F::from(0.5).unwrap();
-        let u = OVector::from_fn_generic(r, U1, |i, _| [b, l - a][i]);
-        let u = u / (b * b + (l - a) * (l - a)).sqrt();
+        let theta = (b + b).atan2(a - c) * F::from(0.5).unwrap();
+        let (s, c) = theta.sin_cos();
+        let mut u = OVector::from_fn_generic(r, U1, |i, _| [-s, c][i]);
+        if u[0].re() < F::zero() || u[0].re().is_zero() && u[1].re() < F::zero() {
+            u = -u;
+        }
         (l, u)
     } else {
         let (e, vecs) = jacobi_eigenvalue(a, 200);
@@ -338,6 +342,40 @@ mod tests {
     #[test]
     fn test_eig_f64_2() {
         let a = dmatrix![2.0, 2.0; 2.0, 5.0];
+        let (l, v) = jacobi_eigenvalue(a.clone(), 200);
+        let (l1, v1) = smallest_ev(a.clone());
+        let av = a * &v;
+        println!("{l} {v}");
+        println!("{l1} {v1}");
+        assert_abs_diff_eq!(av[(0, 0)], (l[0] * v[(0, 0)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(1, 0)], (l[0] * v[(1, 0)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(0, 1)], (l[1] * v[(0, 1)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(1, 1)], (l[1] * v[(1, 1)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0], l1, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)], v1[0], epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)], v1[1], epsilon = 1e-14);
+    }
+
+    #[test]
+    fn test_eig_f64_zeros1() {
+        let a = dmatrix![1.0, 0.0; 0.0, 0.0];
+        let (l, v) = jacobi_eigenvalue(a.clone(), 200);
+        let (l1, v1) = smallest_ev(a.clone());
+        let av = a * &v;
+        println!("{l} {v}");
+        println!("{l1} {v1}");
+        assert_abs_diff_eq!(av[(0, 0)], (l[0] * v[(0, 0)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(1, 0)], (l[0] * v[(1, 0)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(0, 1)], (l[1] * v[(0, 1)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(av[(1, 1)], (l[1] * v[(1, 1)]), epsilon = 1e-14);
+        assert_abs_diff_eq!(l[0], l1, epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(0, 0)], v1[0], epsilon = 1e-14);
+        assert_abs_diff_eq!(v[(1, 0)], v1[1], epsilon = 1e-14);
+    }
+
+    #[test]
+    fn test_eig_f64_zeros2() {
+        let a = dmatrix![0.0, 0.0; 0.0, 1.0];
         let (l, v) = jacobi_eigenvalue(a.clone(), 200);
         let (l1, v1) = smallest_ev(a.clone());
         let av = a * &v;
