@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.13.1] - 2025-12-17
 ### Fixed
-- Fixed the calculation of eigenvalues of 2x2 matrices to be robust with zeros as elements.  [#98](https://github.com/itt-ustutt/num-dual/pull/98)
+- Fixed the calculation of eigenvectors of 2x2 matrices with zeros as elements.  [#98](https://github.com/itt-ustutt/num-dual/pull/98)
 
 ## [0.13.0] - 2025-12-04
 ### Packaging
