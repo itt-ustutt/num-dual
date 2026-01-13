@@ -1,11 +1,11 @@
-use std::marker::PhantomData;
-
 use crate::linalg::LU;
 use crate::{
-    first_derivative, jacobian, partial, Dual, DualNum, DualNumFloat, DualSVec, DualStruct, DualVec,
+    Dual, Dual2Vec, DualNum, DualNumFloat, DualSVec, DualStruct, DualVec, first_derivative,
+    hessian, jacobian, partial,
 };
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, OVector, SVector, U1, U2};
+use std::marker::PhantomData;
 
 /// Calculate the derivative of the unary implicit function
 ///         g(x, args) = 0
@@ -122,6 +122,47 @@ where
     x
 }
 
+/// Calculate the derivative of stationary points of the scalar potential
+///         g(x, args)
+/// ```
+/// # use num_dual::{implicit_derivative_sp, Dual64, DualNum, Dual2Vec};
+/// # use approx::assert_relative_eq;
+/// # use nalgebra::SVector;
+/// let a = Dual64::from(2.0).derivative();
+/// let x = implicit_derivative_sp(
+///     |x, a: &Dual2Vec<_, _, _>| (a - x[0]).powi(2) + (x[1] - x[0]*x[0]).powi(2)*100.0,
+///     SVector::from([2.0f64, 4.0f64]),
+///     &a,
+///     );
+/// assert_relative_eq!(x[0].re, a.re, max_relative = 1e-13);
+/// assert_relative_eq!(x[0].eps, a.eps, max_relative = 1e-13);
+/// assert_relative_eq!(x[1].re, (a*a).re, max_relative = 1e-13);
+/// assert_relative_eq!(x[1].eps, (a*a).eps, max_relative = 1e-13);
+/// ```
+pub fn implicit_derivative_sp<
+    G,
+    D: DualNum<F> + Copy,
+    F: DualNumFloat,
+    A: DualStruct<Dual2Vec<D, F, N>, F>,
+    N: Dim,
+>(
+    g: G,
+    x: OVector<F, N>,
+    args: &A::Inner,
+) -> OVector<D, N>
+where
+    DefaultAllocator: Allocator<N> + Allocator<N, N> + Allocator<U1, N>,
+    G: Fn(OVector<Dual2Vec<D, F, N>, N>, &A) -> Dual2Vec<D, F, N>,
+{
+    let mut x = x.map(D::from);
+    let args = A::from_inner(args);
+    for _ in 0..D::NDERIV {
+        let (_, grad, hess) = hessian(|x| g(x, &args), &x);
+        x -= LU::new(hess).unwrap().solve(&grad);
+    }
+    x
+}
+
 /// An implicit function g(x, args) = 0 for which derivatives of x can be
 /// calculated with the [ImplicitDerivative] struct.
 pub trait ImplicitFunction<F> {
@@ -196,10 +237,10 @@ where
     ) -> [D; 2]
     where
         G: ImplicitFunction<
-            F,
-            Variable<DualVec<D, F, U2>> = [DualVec<D, F, U2>; 2],
-            Parameters<DualVec<D, F, U2>> = A,
-        >,
+                F,
+                Variable<DualVec<D, F, U2>> = [DualVec<D, F, U2>; 2],
+                Parameters<DualVec<D, F, U2>> = A,
+            >,
     {
         implicit_derivative_binary(
             |x, y, args: &A| G::residual::<DualVec<D, F, U2>>([x, y], args),
@@ -210,12 +251,8 @@ where
     }
 }
 
-impl<
-        G: ImplicitFunction<F>,
-        D: DualNum<F> + Copy,
-        F: DualNum<F> + DualNumFloat,
-        const N: usize,
-    > ImplicitDerivative<G, D, F, SVector<F, N>>
+impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat, const N: usize>
+    ImplicitDerivative<G, D, F, SVector<F, N>>
 where
     G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
 {
@@ -226,10 +263,10 @@ where
     ) -> SVector<D, N>
     where
         G: ImplicitFunction<
-            F,
-            Variable<DualSVec<D, F, N>> = SVector<DualSVec<D, F, N>, N>,
-            Parameters<DualSVec<D, F, N>> = A,
-        >,
+                F,
+                Variable<DualSVec<D, F, N>> = SVector<DualSVec<D, F, N>, N>,
+                Parameters<DualSVec<D, F, N>> = A,
+            >,
     {
         implicit_derivative_vec(G::residual::<DualSVec<D, F, N>>, x, &self.derivative)
     }
