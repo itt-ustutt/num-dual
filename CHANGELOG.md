@@ -6,9 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-01-13
+### Added
+- Added support for computing Jacobians in Python for arbitrary input sizes and increased the maximum number of variables that uses static allocation to 16 (from 10). [#99](https://github.com/itt-ustutt/num-dual/pull/99)
+- Added `implicit_differentiation_sp` for implicit differentiation of stationary points. [#100](https://github.com/itt-ustutt/num-dual/pull/100)
+
 ## [0.13.1] - 2025-12-17
 ### Fixed
-- Fixed the calculation of eigenvectors of 2x2 matrices with zeros as elements.  [#98](https://github.com/itt-ustutt/num-dual/pull/98)
+- Fixed the calculation of eigenvectors of 2x2 matrices with zeros as elements. [#98](https://github.com/itt-ustutt/num-dual/pull/98)
 
 ## [0.13.0] - 2025-12-04
 ### Packaging
