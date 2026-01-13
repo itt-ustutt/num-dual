@@ -198,10 +198,27 @@ macro_rules! impl_gradient_and_jacobian {
                     })
                 } else
             )+
-            if x.extract::<Vec<f64>>().is_ok() {
-                Err(PyErr::new::<PyTypeError, _>(
-                    "Jacobians are only available for up to 10 variables!".to_string(),
-                ))
+            if let Ok(x) = x.extract::<Vec<f64>>() {
+                let g = |x: DVector<DualDVec64>| {
+                    let x: Vec<_> = x.into_iter().map(|x| PyDual64Dyn::from(x.clone())).collect();
+                    let res = f.call1((x,))?;
+                    if let Ok(res) = res.extract::<Vec<PyDual64Dyn>>() {
+                        let res = DVector::from_iterator(res.len(), res.into_iter().map(|r| r.0));
+                        Ok(res)
+                    } else {
+                        Err(PyErr::new::<PyTypeError, _>(
+                            "argument 'f' must return a list. For scalar functions use 'first_derivative' or 'gradient' instead."
+                                .to_string(),
+                        ))
+                    }
+                };
+                crate::jacobian(g, &DVector::from(x)).map(|(re, eps)| {
+                    let eps: Vec<_> = eps
+                        .row_iter()
+                        .map(|r| r.iter().copied().collect::<Vec<_>>())
+                        .collect();
+                    (re.iter().copied().collect(), eps)
+                })
             } else {
                 Err(PyErr::new::<PyTypeError, _>(
                         "argument 'x': must be a list. For univariate functions use 'first_derivative' instead.".to_string(),
@@ -223,5 +240,11 @@ impl_gradient_and_jacobian!([
     (PyDual64_7, 7),
     (PyDual64_8, 8),
     (PyDual64_9, 9),
-    (PyDual64_10, 10)
+    (PyDual64_10, 10),
+    (PyDual64_11, 11),
+    (PyDual64_12, 12),
+    (PyDual64_13, 13),
+    (PyDual64_14, 14),
+    (PyDual64_15, 15),
+    (PyDual64_16, 16)
 ]);

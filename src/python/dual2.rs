@@ -210,5 +210,11 @@ impl_hessian!([
     (PyDual2_64_7, 7),
     (PyDual2_64_8, 8),
     (PyDual2_64_9, 9),
-    (PyDual2_64_10, 10)
+    (PyDual2_64_10, 10),
+    (PyDual2_64_11, 11),
+    (PyDual2_64_12, 12),
+    (PyDual2_64_13, 13),
+    (PyDual2_64_14, 14),
+    (PyDual2_64_15, 15),
+    (PyDual2_64_16, 16)
 ]);
