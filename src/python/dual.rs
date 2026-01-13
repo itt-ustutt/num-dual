@@ -214,9 +214,9 @@ macro_rules! impl_gradient_and_jacobian {
                 };
                 crate::jacobian(g, &DVector::from(x)).map(|(re, eps)| {
                     let eps: Vec<_> = eps
-                    .row_iter()
-                    .map(|r| r.iter().copied().collect::<Vec<_>>())
-                    .collect();
+                        .row_iter()
+                        .map(|r| r.iter().copied().collect::<Vec<_>>())
+                        .collect();
                     (re.iter().copied().collect(), eps)
                 })
             } else {
