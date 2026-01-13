@@ -241,14 +241,15 @@ mod implicit;
 pub use bessel::BesselDual;
 pub use datatypes::derivative::Derivative;
 pub use datatypes::dual::{Dual, Dual32, Dual64};
-pub use datatypes::dual2::{Dual2, Dual2_32, Dual2_64};
-pub use datatypes::dual2_vec::{
-    Dual2DVec32, Dual2DVec64, Dual2SVec32, Dual2SVec64, Dual2Vec, Dual2Vec32, Dual2Vec64,
-};
-pub use datatypes::dual3::{Dual3, Dual3_32, Dual3_64};
 pub use datatypes::dual_vec::{
     DualDVec32, DualDVec64, DualSVec, DualSVec32, DualSVec64, DualVec, DualVec32, DualVec64,
 };
+pub use datatypes::dual2::{Dual2, Dual2_32, Dual2_64};
+pub use datatypes::dual2_vec::{
+    Dual2DVec, Dual2DVec32, Dual2DVec64, Dual2SVec, Dual2SVec32, Dual2SVec64, Dual2Vec, Dual2Vec32,
+    Dual2Vec64,
+};
+pub use datatypes::dual3::{Dual3, Dual3_32, Dual3_64};
 pub use datatypes::hyperdual::{HyperDual, HyperDual32, HyperDual64};
 pub use datatypes::hyperdual_vec::{
     HyperDualDVec32, HyperDualDVec64, HyperDualSVec32, HyperDualSVec64, HyperDualVec,
@@ -257,13 +258,13 @@ pub use datatypes::hyperdual_vec::{
 pub use datatypes::hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
 pub use datatypes::real::Real;
 pub use explicit::{
-    first_derivative, gradient, hessian, jacobian, partial, partial2, partial_hessian,
+    Gradients, first_derivative, gradient, hessian, jacobian, partial, partial_hessian, partial2,
     second_derivative, second_partial_derivative, third_derivative, third_partial_derivative,
-    third_partial_derivative_vec, zeroth_derivative, Gradients,
+    third_partial_derivative_vec, zeroth_derivative,
 };
 pub use implicit::{
-    implicit_derivative, implicit_derivative_binary, implicit_derivative_vec, ImplicitDerivative,
-    ImplicitFunction,
+    ImplicitDerivative, ImplicitFunction, implicit_derivative, implicit_derivative_binary,
+    implicit_derivative_sp, implicit_derivative_vec,
 };
 
 pub mod linalg;
@@ -785,14 +786,8 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>> Mappable<D> for (T1, 
     }
 }
 
-impl<
-        D,
-        F,
-        T1: DualStruct<D, F>,
-        T2: DualStruct<D, F>,
-        T3: DualStruct<D, F>,
-        T4: DualStruct<D, F>,
-    > DualStruct<D, F> for (T1, T2, T3, T4)
+impl<D, F, T1: DualStruct<D, F>, T2: DualStruct<D, F>, T3: DualStruct<D, F>, T4: DualStruct<D, F>>
+    DualStruct<D, F> for (T1, T2, T3, T4)
 {
     type Real = (T1::Real, T2::Real, T3::Real, T4::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner, T4::Inner);
@@ -827,14 +822,14 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>, T4: Mappable<D>> Mapp
 }
 
 impl<
-        D,
-        F,
-        T1: DualStruct<D, F>,
-        T2: DualStruct<D, F>,
-        T3: DualStruct<D, F>,
-        T4: DualStruct<D, F>,
-        T5: DualStruct<D, F>,
-    > DualStruct<D, F> for (T1, T2, T3, T4, T5)
+    D,
+    F,
+    T1: DualStruct<D, F>,
+    T2: DualStruct<D, F>,
+    T3: DualStruct<D, F>,
+    T4: DualStruct<D, F>,
+    T5: DualStruct<D, F>,
+> DualStruct<D, F> for (T1, T2, T3, T4, T5)
 {
     type Real = (T1::Real, T2::Real, T3::Real, T4::Real, T5::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner, T4::Inner, T5::Inner);
