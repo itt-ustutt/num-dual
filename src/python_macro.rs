@@ -410,6 +410,29 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
+            fn __richcmp__(&self, rhs: &Bound<'_, PyAny>, op: pyo3::class::basic::CompareOp) -> PyResult<bool> {
+                use pyo3::class::basic::CompareOp;
+
+                let r = if let Ok(r_int) = rhs.extract::<i32>() {
+                    (r_int as f64).into()
+                } else if let Ok(r_f64) = rhs.extract::<f64>() {
+                    (r_f64).into()
+                } else if let Ok(r_dual) = rhs.extract::<Self>() {
+                    r_dual.0.re
+                } else {
+                    return Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")));
+                };
+
+                match op {
+                    CompareOp::Lt => Ok(self.0 < r),
+                    CompareOp::Le => Ok(self.0 <= r),
+                    CompareOp::Eq => Ok(self.0 == r),
+                    CompareOp::Ne => Ok(self.0 != r),
+                    CompareOp::Gt => Ok(self.0 > r),
+                    CompareOp::Ge => Ok(self.0 >= r),
+                }
+            }
+
             fn __neg__(&self) -> PyResult<Self> {
                 Ok((-self.0.clone()).into())
             }
