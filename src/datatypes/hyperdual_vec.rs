@@ -10,7 +10,7 @@ use std::ops::{
 };
 
 /// A vector hyper-dual number for the calculation of partial Hessians.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct HyperDualVec<T: DualNum<F>, F, M: Dim, N: Dim>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
@@ -230,3 +230,46 @@ impl_dual!(
     [M, N],
     [U1, N]
 );
+
+/// Comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialEq, F: Float, M: Dim, N: Dim> PartialEq for HyperDualVec<T, F, M, N>
+where
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.re.eq(&other.re)
+    }
+}
+impl<T: DualNum<F> + PartialEq, F: Float, M: Dim, N: Dim> PartialEq<T> for HyperDualVec<T, F, M, N>
+where
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
+{
+    #[inline]
+    fn eq(&self, other: &T) -> bool {
+        self.re.eq(&other)
+    }
+}
+
+/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialOrd, F: Float, M: Dim, N: Dim> PartialOrd for HyperDualVec<T, F, M, N>
+where
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other.re)
+    }
+}
+impl<T: DualNum<F> + PartialOrd, F: Float, M: Dim, N: Dim> PartialOrd<T>
+    for HyperDualVec<T, F, M, N>
+where
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
+{
+    #[inline]
+    fn partial_cmp(&self, other: &T) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other)
+    }
+}

@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 use std::ops::*;
 
 /// A scalar hyper-hyper-dual number for the calculation of third partial derivatives.
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HyperHyperDual<T, F = T> {
     /// Real part of the hyper-hyper-dual number
@@ -193,3 +193,33 @@ impl_dual!(
     HyperHyperDual,
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
+
+/// Comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialEq, F: Float> PartialEq for HyperHyperDual<T, F> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.re.eq(&other.re)
+    }
+}
+impl<T: DualNum<F> + PartialEq, F: Float> PartialEq<T> for HyperHyperDual<T, F> {
+    #[inline]
+    fn eq(&self, other: &T) -> bool {
+        self.re.eq(&other)
+    }
+}
+
+/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd for HyperHyperDual<T, F> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other.re)
+    }
+}
+impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd<T> for HyperHyperDual<T, F> {
+    #[inline]
+    fn partial_cmp(&self, other: &T) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other)
+    }
+}
