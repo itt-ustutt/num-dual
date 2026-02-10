@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 use std::ops::*;
 
 /// A scalar third order dual number for the calculation of third derivatives.
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Dual3<T, F = T> {
     /// Real part of the third order dual number
@@ -122,3 +122,33 @@ impl<T: fmt::Display, F> fmt::Display for Dual3<T, F> {
 
 impl_third_derivatives!(Dual3, [v1, v2, v3]);
 impl_dual!(Dual3, [v1, v2, v3]);
+
+/// Comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialEq, F: Float> PartialEq for Dual3<T, F> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.re.eq(&other.re)
+    }
+}
+impl<T: DualNum<F> + PartialEq, F: Float> PartialEq<T> for Dual3<T, F> {
+    #[inline]
+    fn eq(&self, other: &T) -> bool {
+        self.re.eq(&other)
+    }
+}
+
+/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+/// same execution path as real-valued code would.
+impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd for Dual3<T, F> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other.re)
+    }
+}
+impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd<T> for Dual3<T, F> {
+    #[inline]
+    fn partial_cmp(&self, other: &T) -> Option<std::cmp::Ordering> {
+        self.re.partial_cmp(&other)
+    }
+}
