@@ -1,7 +1,7 @@
 use crate::linalg::LU;
 use crate::{
-    Dual, Dual2Vec, DualNum, DualNumFloat, DualSVec, DualStruct, DualVec, first_derivative,
-    hessian, jacobian, partial,
+    Dual, DualNum, DualNumFloat, DualSVec, DualStruct, DualVec, Gradients, first_derivative,
+    jacobian, partial,
 };
 use nalgebra::allocator::Allocator;
 use nalgebra::{DefaultAllocator, Dim, OVector, SVector, U1, U2};
@@ -125,13 +125,23 @@ where
 /// Calculate the derivative of stationary points of the scalar potential
 ///         g(x, args)
 /// ```
-/// # use num_dual::{implicit_derivative_sp, Dual64, DualNum, Dual2Vec};
+/// # use num_dual::{implicit_derivative_sp, Dual64, DualNum, Dual2Vec, HyperDual};
 /// # use approx::assert_relative_eq;
-/// # use nalgebra::SVector;
+/// # use nalgebra::{vector, dvector};
 /// let a = Dual64::from(2.0).derivative();
 /// let x = implicit_derivative_sp(
 ///     |x, a: &Dual2Vec<_, _, _>| (a - x[0]).powi(2) + (x[1] - x[0]*x[0]).powi(2)*100.0,
-///     SVector::from([2.0f64, 4.0f64]),
+///     vector![2.0f64, 4.0f64],
+///     &a,
+///     );
+/// assert_relative_eq!(x[0].re, a.re, max_relative = 1e-13);
+/// assert_relative_eq!(x[0].eps, a.eps, max_relative = 1e-13);
+/// assert_relative_eq!(x[1].re, (a*a).re, max_relative = 1e-13);
+/// assert_relative_eq!(x[1].eps, (a*a).eps, max_relative = 1e-13);
+///
+/// let x = implicit_derivative_sp(
+///     |x, a: &HyperDual<_, _>| (a - x[0]).powi(2) + (x[1] - x[0]*x[0]).powi(2)*100.0,
+///     dvector![2.0f64, 4.0f64],
 ///     &a,
 ///     );
 /// assert_relative_eq!(x[0].re, a.re, max_relative = 1e-13);
@@ -143,8 +153,8 @@ pub fn implicit_derivative_sp<
     G,
     D: DualNum<F> + Copy,
     F: DualNumFloat,
-    A: DualStruct<Dual2Vec<D, F, N>, F>,
-    N: Dim,
+    A: DualStruct<N::Dual2<D, F>, F>,
+    N: Gradients,
 >(
     g: G,
     x: OVector<F, N>,
@@ -152,12 +162,11 @@ pub fn implicit_derivative_sp<
 ) -> OVector<D, N>
 where
     DefaultAllocator: Allocator<N> + Allocator<N, N> + Allocator<U1, N>,
-    G: Fn(OVector<Dual2Vec<D, F, N>, N>, &A) -> Dual2Vec<D, F, N>,
+    G: Fn(OVector<N::Dual2<D, F>, N>, &A) -> N::Dual2<D, F>,
 {
     let mut x = x.map(D::from);
-    let args = A::from_inner(args);
     for _ in 0..D::NDERIV {
-        let (_, grad, hess) = hessian(|x| g(x, &args), &x);
+        let (_, grad, hess) = N::hessian(|x, args| g(x, args), &x, args);
         x -= LU::new(hess).unwrap().solve(&grad);
     }
     x
