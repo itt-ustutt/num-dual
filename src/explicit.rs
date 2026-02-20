@@ -31,6 +31,29 @@ pub fn partial2<
     move |x| g(x, &args1, &args2)
 }
 
+/// Evaluate the function `g` with extra arguments `args1`, `args2` and `args3` that are automatically adjusted to the
+/// correct dual number type.
+pub fn partial3<
+    G: Fn(X, &A1, &A2, &A3) -> O,
+    T: DualNum<F>,
+    F,
+    X,
+    A1: DualStruct<T, F>,
+    A2: DualStruct<T, F>,
+    A3: DualStruct<T, F>,
+    O,
+>(
+    g: G,
+    args1: &A1::Inner,
+    args2: &A2::Inner,
+    args3: &A3::Inner,
+) -> impl Fn(X) -> O {
+    let args1 = A1::from_inner(args1);
+    let args2 = A2::from_inner(args2);
+    let args3 = A3::from_inner(args3);
+    move |x| g(x, &args1, &args2, &args3)
+}
+
 /// Calculate the zeroth derivative of a scalar function.
 ///
 /// Only useful for specific generic cases in which the trait bound
