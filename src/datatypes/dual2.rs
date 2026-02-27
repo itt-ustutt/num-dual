@@ -238,22 +238,6 @@ where
     }
 }
 
-/// Comparisons are only made based on the real part. This allows the code to follow the
-/// same execution path as real-valued code would.
-impl<T: DualNum<F> + PartialEq, F: Float> PartialEq for Dual2<T, F> {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.re.eq(&other.re)
-    }
-}
-/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
-/// same execution path as real-valued code would.
-impl<T: DualNum<F> + PartialOrd, F: Float> PartialOrd for Dual2<T, F> {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.re.partial_cmp(&other.re)
-    }
-}
 /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
 /// same execution path as real-valued code would.
 impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F: Float> approx::AbsDiffEq for Dual2<T, F> {

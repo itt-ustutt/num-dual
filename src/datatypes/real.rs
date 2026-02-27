@@ -12,7 +12,7 @@ use std::ops::{
 /// A real number for the calculations of zeroth derivatives in generic contexts.
 ///
 /// In most situations f64 or f32 can be used directly!
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Real<T: DualNum<F>, F> {
     /// Real part of the dual number

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Added `PartialOrd` and `PartialOrd<F>` as supertraits to `DualNum<F>`. All comparisons are based on the real part of the generalized (hyper-) dual numbers to ensure that the execution path does not depend on the dual number type. [#103](https://github.com/itt-ustutt/num-dual/pull/103)
 
 ## [0.13.4] - 2026-02-20
 ### Added

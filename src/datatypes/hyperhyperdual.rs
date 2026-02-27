@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 use std::ops::*;
 
 /// A scalar hyper-hyper-dual number for the calculation of third partial derivatives.
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HyperHyperDual<T, F = T> {
     /// Real part of the hyper-hyper-dual number
