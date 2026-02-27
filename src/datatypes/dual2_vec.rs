@@ -285,28 +285,6 @@ where
     }
 }
 
-/// Comparisons are only made based on the real part. This allows the code to follow the
-/// same execution path as real-valued code would.
-impl<T: DualNum<F> + PartialEq, F: Float, D: Dim> PartialEq for Dual2Vec<T, F, D>
-where
-    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
-{
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.re.eq(&other.re)
-    }
-}
-/// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
-/// same execution path as real-valued code would.
-impl<T: DualNum<F> + PartialOrd, F: Float, D: Dim> PartialOrd for Dual2Vec<T, F, D>
-where
-    DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
-{
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.re.partial_cmp(&other.re)
-    }
-}
 /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
 /// same execution path as real-valued code would.
 impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F: Float, D: Dim> approx::AbsDiffEq

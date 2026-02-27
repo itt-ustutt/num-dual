@@ -293,7 +293,8 @@ pub trait DualNum<F>:
     + DualStruct<Self, F, Real = F>
     + Mappable<Self>
     + fmt::Display
-    + PartialEq
+    + PartialOrd
+    + PartialOrd<F>
     + fmt::Debug
     + ScalarOperand
     + 'static
@@ -422,7 +423,8 @@ pub trait DualNum<F>:
     + DualStruct<Self, F, Real = F>
     + Mappable<Self>
     + fmt::Display
-    + PartialEq
+    + PartialOrd
+    + PartialOrd<F>
     + fmt::Debug
     + 'static
 {

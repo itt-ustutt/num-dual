@@ -10,7 +10,7 @@ use std::ops::{
 };
 
 /// A scalar hyper-dual number for the calculation of second partial derivatives.
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HyperDual<T: DualNum<F>, F> {
     /// Real part of the hyper-dual number
