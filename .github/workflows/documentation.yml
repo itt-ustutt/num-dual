@@ -22,7 +22,6 @@ jobs:
       - name: Build Wheels
         uses: messense/maturin-action@v1
         with:
-          manylinux: auto
           command: build
           args: --release --out dist
       - name: Install module
