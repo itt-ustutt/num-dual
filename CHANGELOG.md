@@ -5,12 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.13.5] - 2026-03-08
 ### Changed
 - Added `PartialOrd` and `PartialOrd<F>` as supertraits to `DualNum<F>`. All comparisons are based on the real part of the generalized (hyper-) dual numbers to ensure that the execution path does not depend on the dual number type. [#103](https://github.com/itt-ustutt/num-dual/pull/103)
+- Python: Added `__richcmp__` to allow the comparison between dual numbers of the same type and dual numbers and floats also in Python. [#101](https://github.com/itt-ustutt/num-dual/pull/101)
 
 ## [0.13.4] - 2026-02-20
 ### Added
-- Add `partial3` in analogy to `partial` and `partial2`.
+- Added `partial3` in analogy to `partial` and `partial2`.
 
 ## [0.13.3] - 2026-02-20
 ### Changed
