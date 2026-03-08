@@ -410,6 +410,46 @@ macro_rules! impl_dual_num {
                 Err(PyErr::new::<PyTypeError, _>(format!("not implemented!")))
             }
 
+            fn __richcmp__(
+                &self,
+                rhs: &Bound<'_, PyAny>,
+                op: pyo3::class::basic::CompareOp,
+            ) -> PyResult<bool> {
+                use pyo3::class::basic::CompareOp;
+
+                if let Ok(r) = rhs.extract::<f64>() {
+                    match op {
+                        CompareOp::Lt => Ok(self.0 < r),
+                        CompareOp::Le => Ok(self.0 <= r),
+                        CompareOp::Eq => Ok(self.0 == r),
+                        CompareOp::Ne => Ok(self.0 != r),
+                        CompareOp::Gt => Ok(self.0 > r),
+                        CompareOp::Ge => Ok(self.0 >= r),
+                    }
+                } else if let Ok(r) = rhs.extract::<Self>() {
+                    match op {
+                        CompareOp::Lt => Ok(self.0 < r.0),
+                        CompareOp::Le => Ok(self.0 <= r.0),
+                        CompareOp::Eq => Ok(self.0 == r.0),
+                        CompareOp::Ne => Ok(self.0 != r.0),
+                        CompareOp::Gt => Ok(self.0 > r.0),
+                        CompareOp::Ge => Ok(self.0 >= r.0),
+                    }
+                } else {
+                    match op {
+                        CompareOp::Eq => Ok(false),
+                        CompareOp::Ne => Ok(true),
+                        _ =>
+                        Err(PyErr::new::<PyTypeError, _>(format!(
+                            "unsupported operand types for comparison: '{}' and unsupported type '{:?}'. Supported data types are 'float' and '{}'.",
+                            stringify!($py_type_name),
+                            rhs.get_type(),
+                            stringify!($py_type_name)
+                        ))),
+                    }
+                }
+            }
+
             fn __neg__(&self) -> PyResult<Self> {
                 Ok((-self.0.clone()).into())
             }
