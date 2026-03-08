@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.6] - 2026-03-08
+### Fixed
+- Fixed a bug around the manylinux and cpython versions in CI that lead to a cp38 wheel being built instead of the correct cp310-abi3 wheel. [#104](https://github.com/itt-ustutt/num-dual/pull/104)
+
 ## [0.13.5] - 2026-03-08
 ### Changed
 - Added `PartialOrd` and `PartialOrd<F>` as supertraits to `DualNum<F>`. All comparisons are based on the real part of the generalized (hyper-) dual numbers to ensure that the execution path does not depend on the dual number type. [#103](https://github.com/itt-ustutt/num-dual/pull/103)
