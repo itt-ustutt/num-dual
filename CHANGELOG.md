@@ -7,8 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - Made inner field of `Derivative` struct public. [#111](https://github.com/itt-ustutt/num-dual/pull/111)
-
-### Changed
+- Changed `DualStruct<T, F>` to `DualStruct<F>` to simplify some trait bounds. [#109](https://github.com/itt-ustutt/num-dual/pull/109)
 - Specified `from_py_object` parameter for all `#[pyclass]` objects as this feature became opt-in rather than opt-out in `pyo3` 0.28.
 
 ### Packaging
