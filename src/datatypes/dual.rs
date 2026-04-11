@@ -592,6 +592,11 @@ where
             None
         }
     }
+
+    #[inline]
+    fn signum(self) -> Self {
+        Signed::signum(&self)
+    }
 }
 
 impl<T> RealField for Dual<T, T::Element>

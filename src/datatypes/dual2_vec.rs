@@ -712,6 +712,11 @@ where
             None
         }
     }
+
+    #[inline]
+    fn signum(self) -> Self {
+        Signed::signum(&self)
+    }
 }
 
 impl<T, D: Dim> RealField for Dual2Vec<T, T::Element, D>
