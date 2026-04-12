@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Added custom implementations of `ComplexField::signum` for `Dual`, `Dual2`, `DualVec`, and `Dual2Vec`. These implementations delegate to `Signed::signum`, which sets the derivative part to `None` and avoids the floating point errors of the default implementation.
 
 ## [0.13.6] - 2026-03-08
 ### Fixed
@@ -57,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `pyo3` and `numpy` dependencies to 0.26.
 - Updated `criterion` dev-dependency to 0.7.
 - Updated Rust edition to 2024.
-- updated `nalgebra` dependency to 0.34. 
+- updated `nalgebra` dependency to 0.34.
 
 ## [0.11.2] - 2025-06-24
 ### Changed
