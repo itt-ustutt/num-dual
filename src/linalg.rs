@@ -36,13 +36,9 @@ where
 {
     pub fn new(mut a: OMatrix<T, D, D>) -> Result<Self, LinAlgError> {
         let (n, _) = a.shape_generic();
-        let mut p = OVector::zeros_generic(n, U1);
+        let mut p = OVector::from_iterator_generic(n, U1, 0..n.value());
         let n = n.value();
-        let mut p_count = n;
-
-        for i in 0..n {
-            p[i] = i;
-        }
+        let mut p_count = 0;
 
         for i in 0..n {
             let mut max_a = F::zero();
@@ -61,15 +57,8 @@ where
             }
 
             if imax != i {
-                let j = p[i];
-                p[i] = p[imax];
-                p[imax] = j;
-
-                for j in 0..n {
-                    let ptr = a[(i, j)];
-                    a[(i, j)] = a[(imax, j)];
-                    a[(imax, j)] = ptr;
-                }
+                p.swap_rows(i, imax);
+                a.swap_rows(i, imax);
 
                 p_count += 1;
             }
@@ -121,7 +110,7 @@ where
         let n = self.p.len();
         let det = (0..n).map(|i| self.a[(i, i)]).product();
 
-        if (self.p_count - n).is_multiple_of(2) {
+        if self.p_count.is_multiple_of(2) {
             det
         } else {
             -det
