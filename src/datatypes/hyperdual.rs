@@ -140,3 +140,4 @@ impl<T: DualNum<F>, F: fmt::Display> fmt::Display for HyperDual<T, F> {
 
 impl_second_derivatives!(HyperDual, [eps1, eps2, eps1eps2]);
 impl_dual!(HyperDual, [eps1, eps2, eps1eps2]);
+impl_nalgebra!(HyperDual, [eps1, eps2, eps1eps2]);
