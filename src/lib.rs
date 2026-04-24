@@ -232,6 +232,8 @@ use std::iter::{Product, Sum};
 #[macro_use]
 mod macros;
 #[macro_use]
+mod nalgebra_macros;
+#[macro_use]
 mod impl_derivatives;
 
 mod bessel;
