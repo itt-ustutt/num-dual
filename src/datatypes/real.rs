@@ -77,3 +77,4 @@ impl<T: DualNum<F>, F> fmt::Display for Real<T, F> {
 
 impl_zeroth_derivatives!(Real, []);
 impl_dual!(Real, []);
+impl_nalgebra!(Real, []);

@@ -193,3 +193,7 @@ impl_dual!(
     HyperHyperDual,
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
+impl_nalgebra!(
+    HyperHyperDual,
+    [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
+);

@@ -230,3 +230,11 @@ impl_dual!(
     [M, N],
     [U1, N]
 );
+impl_nalgebra!(
+    HyperDualVec,
+    [eps1, eps2, eps1eps2],
+    [M, N],
+    [M],
+    [M, N],
+    [U1, N]
+);
