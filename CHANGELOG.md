@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.13.7] - 2026-05-21
+### Added
+- Added `DualNumCopy<F>` trait for dual numbers that have a static size.
+
 ### Changed
 - Added custom implementations of `ComplexField::signum` for `Dual`, `Dual2`, `DualVec`, and `Dual2Vec`. These implementations delegate to `Signed::signum`, which sets the derivative part to `None` and avoids the floating point errors of the default implementation. [#105](https://github.com/itt-ustutt/num-dual/pull/105)
 - Extended the implementation of `ComplexField` and related traits from `nalgebra` to all (non-recursive) dual numbers via macros. [#107](https://github.com/itt-ustutt/num-dual/pull/107)

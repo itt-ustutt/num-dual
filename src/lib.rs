@@ -536,6 +536,10 @@ pub trait DualNum<F>:
     }
 }
 
+/// A generalized (hyper) dual number that has a static size.
+pub trait DualNumCopy<F>: DualNum<F> + Copy + Send + Sync {}
+impl<T: DualNum<F> + Copy + Send + Sync, F> DualNumCopy<F> for T {}
+
 /// The underlying data type of individual derivatives. Usually f32 or f64.
 pub trait DualNumFloat:
     Float + FloatConst + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
