@@ -11,7 +11,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 /// Wrapper struct for a derivative vector or matrix.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Derivative<T: DualNum<F>, F, R: Dim, C: Dim>(
-    pub(crate) Option<OMatrix<T, R, C>>,
+    pub Option<OMatrix<T, R, C>>,
     PhantomData<F>,
 )
 where
