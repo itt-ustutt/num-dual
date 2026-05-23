@@ -621,7 +621,7 @@ macro_rules! impl_num {
 #[macro_export]
 macro_rules! impl_dual_struct {
     ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
-        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> $crate::DualStruct<Self,F> for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum<F>, F$($(, $dim: Dim)*)?> $crate::DualStruct<F> for $struct<T, F$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {

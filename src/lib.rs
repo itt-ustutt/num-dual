@@ -106,7 +106,7 @@
 //! # use num_dual::{DualNum, first_derivative, Dual, DualStruct};
 //! # fn foo<D: DualNum<f64> + Copy>(x: D, args: &(D, D)) -> D { todo!() }
 //! fn main() {
-//!     let (val, deriv) = first_derivative(|x| foo(x, &(Dual::from_inner(&3.0), Dual::from_inner(&4.0))), 5.0);
+//!     let (val, deriv) = first_derivative(|x| foo(x, &(Dual::from_re(3.0), Dual::from_re(4.0))), 5.0);
 //! }
 //! ```
 //!
@@ -292,7 +292,7 @@ pub trait DualNum<F>:
     + Product
     + FromPrimitive
     + From<F>
-    + DualStruct<Self, F, Real = F>
+    + DualStruct<F, Real = F>
     + Mappable<Self>
     + fmt::Display
     + PartialOrd
@@ -422,7 +422,7 @@ pub trait DualNum<F>:
     + Product
     + FromPrimitive
     + From<F>
-    + DualStruct<Self, F, Real = F>
+    + DualStruct<F, Real = F>
     + Mappable<Self>
     + fmt::Display
     + PartialOrd
@@ -432,6 +432,9 @@ pub trait DualNum<F>:
 {
     /// Highest derivative that can be calculated with this struct
     const NDERIV: usize;
+
+    type InnerDual: DualNum<F>;
+    fn from_re(re: Self::InnerDual) -> Self;
 
     /// Reciprocal (inverse) of a number `1/x`
     fn recip(&self) -> Self;
@@ -563,6 +566,11 @@ macro_rules! impl_dual_num_float {
         impl DualNum<$float> for $float {
             const NDERIV: usize = 0;
 
+            type InnerDual = $float;
+            fn from_re(re: $float) -> Self {
+                re
+            }
+
             fn mul_add(&self, a: Self, b: Self) -> Self {
                 <$float>::mul_add(*self, a, b)
             }
@@ -686,9 +694,9 @@ impl_dual_num_float!(f64);
 ///
 /// The trait is implemented for all dual types themselves, and common data types (tuple, vec,
 /// array, ...) and can be implemented for custom data types to achieve full flexibility.
-pub trait DualStruct<D, F> {
+pub trait DualStruct<F> {
     type Real;
-    type Inner;
+    type Inner: DualStruct<F>;
     fn re(&self) -> Self::Real;
     fn from_inner(inner: &Self::Inner) -> Self;
 }
@@ -702,7 +710,7 @@ pub trait Mappable<D> {
     fn map_dual<M: Fn(D) -> O, O>(self, f: M) -> Self::Output<O>;
 }
 
-impl<D, F> DualStruct<D, F> for () {
+impl<F> DualStruct<F> for () {
     type Real = ();
     type Inner = ();
     fn re(&self) {}
@@ -714,7 +722,7 @@ impl<D> Mappable<D> for () {
     fn map_dual<M: FnOnce(D) -> O, O>(self, _: M) {}
 }
 
-impl DualStruct<f32, f32> for f32 {
+impl DualStruct<f32> for f32 {
     type Real = f32;
     type Inner = f32;
     fn re(&self) -> f32 {
@@ -732,7 +740,7 @@ impl Mappable<f32> for f32 {
     }
 }
 
-impl DualStruct<f64, f64> for f64 {
+impl DualStruct<f64> for f64 {
     type Real = f64;
     type Inner = f64;
     fn re(&self) -> f64 {
@@ -750,7 +758,7 @@ impl Mappable<f64> for f64 {
     }
 }
 
-impl<D, F, T1: DualStruct<D, F>, T2: DualStruct<D, F>> DualStruct<D, F> for (T1, T2) {
+impl<T1: DualStruct<F>, T2: DualStruct<F>, F> DualStruct<F> for (T1, T2) {
     type Real = (T1::Real, T2::Real);
     type Inner = (T1::Inner, T2::Inner);
     fn re(&self) -> Self::Real {
@@ -771,9 +779,7 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>> Mappable<D> for (T1, T2) {
     }
 }
 
-impl<D, F, T1: DualStruct<D, F>, T2: DualStruct<D, F>, T3: DualStruct<D, F>> DualStruct<D, F>
-    for (T1, T2, T3)
-{
+impl<F, T1: DualStruct<F>, T2: DualStruct<F>, T3: DualStruct<F>> DualStruct<F> for (T1, T2, T3) {
     type Real = (T1::Real, T2::Real, T3::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner);
     fn re(&self) -> Self::Real {
@@ -794,8 +800,8 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>> Mappable<D> for (T1, 
     }
 }
 
-impl<D, F, T1: DualStruct<D, F>, T2: DualStruct<D, F>, T3: DualStruct<D, F>, T4: DualStruct<D, F>>
-    DualStruct<D, F> for (T1, T2, T3, T4)
+impl<F, T1: DualStruct<F>, T2: DualStruct<F>, T3: DualStruct<F>, T4: DualStruct<F>> DualStruct<F>
+    for (T1, T2, T3, T4)
 {
     type Real = (T1::Real, T2::Real, T3::Real, T4::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner, T4::Inner);
@@ -830,14 +836,13 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>, T4: Mappable<D>> Mapp
 }
 
 impl<
-    D,
     F,
-    T1: DualStruct<D, F>,
-    T2: DualStruct<D, F>,
-    T3: DualStruct<D, F>,
-    T4: DualStruct<D, F>,
-    T5: DualStruct<D, F>,
-> DualStruct<D, F> for (T1, T2, T3, T4, T5)
+    T1: DualStruct<F>,
+    T2: DualStruct<F>,
+    T3: DualStruct<F>,
+    T4: DualStruct<F>,
+    T5: DualStruct<F>,
+> DualStruct<F> for (T1, T2, T3, T4, T5)
 {
     type Real = (T1::Real, T2::Real, T3::Real, T4::Real, T5::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner, T4::Inner, T5::Inner);
@@ -879,7 +884,7 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>, T4: Mappable<D>, T5: 
     }
 }
 
-impl<D, F, T: DualStruct<D, F>, const N: usize> DualStruct<D, F> for [T; N] {
+impl<F, T: DualStruct<F>, const N: usize> DualStruct<F> for [T; N] {
     type Real = [T::Real; N];
     type Inner = [T::Inner; N];
     fn re(&self) -> Self::Real {
@@ -897,7 +902,7 @@ impl<D, T: Mappable<D>, const N: usize> Mappable<D> for [T; N] {
     }
 }
 
-impl<D, F, T: DualStruct<D, F>> DualStruct<D, F> for Option<T> {
+impl<F, T: DualStruct<F>> DualStruct<F> for Option<T> {
     type Real = Option<T::Real>;
     type Inner = Option<T::Inner>;
     fn re(&self) -> Self::Real {
@@ -922,7 +927,7 @@ impl<D, T: Mappable<D>, E> Mappable<D> for Result<T, E> {
     }
 }
 
-impl<D, F, T: DualStruct<D, F>> DualStruct<D, F> for Vec<T> {
+impl<F, T: DualStruct<F>> DualStruct<F> for Vec<T> {
     type Real = Vec<T::Real>;
     type Inner = Vec<T::Inner>;
     fn re(&self) -> Self::Real {
@@ -940,7 +945,7 @@ impl<D, T: Mappable<D>> Mappable<D> for Vec<T> {
     }
 }
 
-impl<D, F, T: DualStruct<D, F>, K: Clone + Eq + Hash> DualStruct<D, F> for HashMap<K, T> {
+impl<F, T: DualStruct<F>, K: Clone + Eq + Hash> DualStruct<F> for HashMap<K, T> {
     type Real = HashMap<K, T::Real>;
     type Inner = HashMap<K, T::Inner>;
     fn re(&self) -> Self::Real {
@@ -961,18 +966,17 @@ impl<D, T: Mappable<D>, K: Eq + Hash> Mappable<D> for HashMap<K, T> {
     }
 }
 
-impl<D: DualNum<F>, F: DualNumFloat, R: Dim, C: Dim> DualStruct<D, F> for OMatrix<D, R, C>
+impl<F: DualNumFloat, D: DualNum<F>, R: Dim, C: Dim> DualStruct<F> for OMatrix<D, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
-    D::Inner: DualNum<F>,
 {
-    type Real = OMatrix<F, R, C>;
-    type Inner = OMatrix<D::Inner, R, C>;
+    type Real = OMatrix<D::Real, R, C>;
+    type Inner = OMatrix<D::InnerDual, R, C>;
     fn re(&self) -> Self::Real {
         self.map(|x| x.re())
     }
     fn from_inner(inner: &Self::Inner) -> Self {
-        inner.map(|x| D::from_inner(&x))
+        inner.map(|x| DualNum::from_re(x))
     }
 }
 
