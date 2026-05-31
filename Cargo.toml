@@ -5,7 +5,7 @@ authors = [
     "Gernot Bauer <bauer@itt.uni-stuttgart.de>",
     "Philipp Rehner <prehner@ethz.ch>",
 ]
-rust-version = "1.87"
+rust-version = "1.89"
 edition = "2024"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
@@ -21,15 +21,15 @@ name = "num_dual"
 
 [dependencies]
 num-traits = "0.2"
-nalgebra = "0.34"
-numpy = { version = "0.27", optional = true }
+nalgebra = "0.35"
+numpy = { version = "0.28", optional = true }
 approx = "0.5"
-simba = "0.9"
+simba = "0.10"
 serde = { version = "1.0", features = ["derive"], optional = true }
 ndarray = { version = "0.17", optional = true }
 
 [dependencies.pyo3]
-version = "0.27"
+version = "0.28"
 optional = true
 features = ["multiple-pymethods", "extension-module", "abi3", "abi3-py310"]
 
