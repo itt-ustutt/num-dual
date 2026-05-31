@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Packaging
+- Updated `nalgebra` dependency to 0.35.
+- Updated `simba` dependency to 0.10.
+- Updated `pyo3` and `numpy` dependencies to 0.28.
+- Updated MSRV to 1.89.
+
 ## [0.13.7] - 2026-05-21
 ### Added
 - Added `DualNumCopy<F>` trait for dual numbers that have a static size.
