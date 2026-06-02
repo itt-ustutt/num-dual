@@ -5,7 +5,7 @@ use numpy::{PyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
-#[pyclass(name = "HyperDual64")]
+#[pyclass(name = "HyperDual64", from_py_object)]
 #[derive(Clone)]
 /// Hyper-dual number using 64-bit-floats as fields.
 ///
@@ -54,7 +54,7 @@ impl PyHyperDual64 {
 
 impl_dual_num!(PyHyperDual64, HyperDual64, f64);
 
-#[pyclass(name = "HyperDualDual64")]
+#[pyclass(name = "HyperDualDual64", from_py_object)]
 #[derive(Clone)]
 /// Hyper-dual number using dual numbers as fields.
 pub struct PyHyperDualDual64(HyperDual<Dual64, f64>);
@@ -81,7 +81,7 @@ impl_dual_num!(PyHyperDualDual64, HyperDual<Dual64, f64>, PyDual64);
 
 macro_rules! impl_hyper_dual_mn {
     ($py_type_name:ident, $m:literal, $n:literal) => {
-        #[pyclass(name = "HyperDualVec64")]
+        #[pyclass(name = "HyperDualVec64", from_py_object)]
         #[derive(Clone, Copy)]
         pub struct $py_type_name(HyperDualSVec64<$m, $n>);
 
@@ -104,7 +104,7 @@ macro_rules! impl_hyper_dual_mn {
         impl_dual_num!($py_type_name, HyperDualSVec64<$m, $n>, f64);
     };
 }
-#[pyclass(name = "HyperDual64Dyn")]
+#[pyclass(name = "HyperDual64Dyn", from_py_object)]
 #[derive(Clone)]
 pub struct PyHyperDual64Dyn(HyperDualDVec64);
 

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Specified `from_py_object` parameter for all `#[pyclass]` objects as this feature became opt-in rather than opt-out in `pyo3` 0.28.
+
 ### Packaging
 - Updated `nalgebra` dependency to 0.35.
 - Updated `simba` dependency to 0.10.
