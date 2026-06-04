@@ -12,8 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Packaging
 - Updated `nalgebra` dependency to 0.35.
 - Updated `simba` dependency to 0.10.
-- Updated `pyo3` and `numpy` dependencies to 0.28.
-- Updated MSRV to 1.89.
+- Updated `pyo3` and `numpy` dependencies to 0.28 and removed deprecated `extension-module` feature.
+- Updated `maturin` minimum required version to 1.9.4.
+- Updated minimum supported Rust version to 1.89.
 
 ## [0.13.7] - 2026-05-21
 ### Added
