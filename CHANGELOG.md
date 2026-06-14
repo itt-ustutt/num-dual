@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Made inner field of `Derivative` struct public. [#111](https://github.com/itt-ustutt/num-dual/pull/111)
 
+### Changed
+- Specified `from_py_object` parameter for all `#[pyclass]` objects as this feature became opt-in rather than opt-out in `pyo3` 0.28.
+
+### Packaging
+- Updated `nalgebra` dependency to 0.35.
+- Updated `simba` dependency to 0.10.
+- Updated `pyo3` and `numpy` dependencies to 0.29 and removed deprecated `extension-module` feature.
+- Updated `maturin` minimum required version to 1.9.4.
+- Updated minimum supported Rust version to 1.89.
+
 ## [0.13.7] - 2026-05-21
 ### Added
 - Added `DualNumCopy<F>` trait for dual numbers that have a static size.

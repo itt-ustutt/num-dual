@@ -4,7 +4,7 @@ use numpy::{PyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
-#[pyclass(name = "Dual3_64")]
+#[pyclass(name = "Dual3_64", from_py_object)]
 #[derive(Clone)]
 /// Third order dual number using 64-bit-floats as fields.
 pub struct PyDual3_64(Dual3_64);
@@ -34,7 +34,7 @@ impl PyDual3_64 {
 
 impl_dual_num!(PyDual3_64, Dual3_64, f64);
 
-#[pyclass(name = "Dual3Dual64")]
+#[pyclass(name = "Dual3Dual64", from_py_object)]
 #[derive(Clone)]
 /// Third order dual number using dual numbers as fields.
 pub struct PyDual3Dual64(Dual3<Dual64, f64>);

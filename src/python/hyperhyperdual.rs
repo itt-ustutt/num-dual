@@ -3,7 +3,7 @@ use numpy::{PyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
-#[pyclass(name = "HyperHyperDual64")]
+#[pyclass(name = "HyperHyperDual64", from_py_object)]
 #[derive(Clone)]
 /// Third order hyper dual number using 64-bit-floats as fields.
 pub struct PyHyperHyperDual64(HyperHyperDual64);

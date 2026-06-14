@@ -4,7 +4,7 @@ use numpy::{PyArray, PyReadonlyArrayDyn, PyReadwriteArrayDyn};
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
-#[pyclass(name = "Dual64")]
+#[pyclass(name = "Dual64", from_py_object)]
 #[derive(Clone, Debug)]
 /// Dual number using 64-bit-floats as fields.
 ///
@@ -48,7 +48,7 @@ impl_dual_num!(PyDual64, Dual64, f64);
 
 macro_rules! impl_dual_n {
     ($py_type_name:ident, $n:literal) => {
-        #[pyclass(name = "DualSVec64")]
+        #[pyclass(name = "DualSVec64", from_py_object)]
         #[derive(Clone, Copy)]
         pub struct $py_type_name(DualSVec64<$n>);
 
@@ -64,7 +64,7 @@ macro_rules! impl_dual_n {
     };
 }
 
-#[pyclass(name = "Dual64Dyn")]
+#[pyclass(name = "Dual64Dyn", from_py_object)]
 #[derive(Clone)]
 pub struct PyDual64Dyn(DualDVec64);
 
