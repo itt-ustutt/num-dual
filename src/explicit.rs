@@ -453,9 +453,10 @@ pub trait Gradients: Dim
 where
     DefaultAllocator: Allocator<Self>,
 {
-    type Dual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T> + Copy;
-    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T> + Copy;
-    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T> + Copy;
+    type Dual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T, Inner = T> + Copy;
+    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T, Inner = T> + Copy;
+    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T, Inner = T>
+        + Copy;
 
     fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,

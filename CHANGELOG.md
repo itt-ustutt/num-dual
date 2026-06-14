@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-06-14
+### Fixed
+- Fixed trait bounds in the `Gradients` trait to cover for certain edge cases.
+
 ## [0.14.0] - 2026-06-14
 ### Changed
 - Made inner field of `Derivative` struct public. [#111](https://github.com/itt-ustutt/num-dual/pull/111)
