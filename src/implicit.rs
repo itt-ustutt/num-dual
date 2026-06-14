@@ -18,7 +18,7 @@ use std::marker::PhantomData;
 /// assert_relative_eq!(x.v1, y.sqrt().v1, max_relative=1e-16);
 /// assert_relative_eq!(x.v2, y.sqrt().v2, max_relative=1e-16);
 /// ```
-pub fn implicit_derivative<G, D: DualNum<F>, F: DualNumFloat, A: DualStruct<Dual<D, F>, F>>(
+pub fn implicit_derivative<G, D: DualNum<F>, F: DualNumFloat, A: DualStruct<F>>(
     g: G,
     x: F,
     args: &A::Inner,
@@ -47,12 +47,7 @@ where
 /// assert_relative_eq!(y.re, a.re, max_relative = 1e-16);
 /// assert_relative_eq!(y.eps, a.eps, max_relative = 1e-16);
 /// ```
-pub fn implicit_derivative_binary<
-    G,
-    D: DualNum<F>,
-    F: DualNumFloat,
-    A: DualStruct<DualVec<D, F, U2>, F>,
->(
+pub fn implicit_derivative_binary<G, D: DualNum<F>, F: DualNumFloat, A: DualStruct<F>>(
     g: G,
     x: F,
     y: F,
@@ -98,13 +93,7 @@ where
 /// assert_relative_eq!(x[1].re, a.re, max_relative = 1e-16);
 /// assert_relative_eq!(x[1].eps, a.eps, max_relative = 1e-16);
 /// ```
-pub fn implicit_derivative_vec<
-    G,
-    D: DualNum<F> + Copy,
-    F: DualNumFloat,
-    A: DualStruct<DualVec<D, F, N>, F>,
-    N: Dim,
->(
+pub fn implicit_derivative_vec<G, D: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>, N: Dim>(
     g: G,
     x: OVector<F, N>,
     args: &A::Inner,
@@ -153,7 +142,7 @@ pub fn implicit_derivative_sp<
     G,
     D: DualNum<F> + Copy,
     F: DualNumFloat,
-    A: DualStruct<N::Dual2<D, F>, F>,
+    A: DualStruct<F>,
     N: Gradients,
 >(
     g: G,
@@ -175,7 +164,7 @@ where
 /// An implicit function g(x, args) = 0 for which derivatives of x can be
 /// calculated with the [ImplicitDerivative] struct.
 pub trait ImplicitFunction<F> {
-    /// data type of the parameter struct, needs to implement [DualStruct].
+    /// data type of the parameter struct, needs to implement [DualStruct<F>].
     type Parameters<D>;
 
     /// data type of the variable `x`, needs to be either `D`, `[D; 2]`, or `SVector<D, N>`.
@@ -200,7 +189,7 @@ pub struct ImplicitDerivative<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: D
 impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat>
     ImplicitDerivative<G, D, F, G::Variable<f64>>
 where
-    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+    G::Parameters<D>: DualStruct<F, Real = G::Parameters<F>>,
 {
     pub fn new(_: G, parameters: G::Parameters<D>) -> Self {
         Self {
@@ -219,13 +208,10 @@ where
 impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat>
     ImplicitDerivative<G, D, F, F>
 where
-    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+    G::Parameters<D>: DualStruct<F, Real = G::Parameters<F>>,
 {
     /// Evaluate the implicit derivative for a scalar function.
-    pub fn implicit_derivative<A: DualStruct<Dual<D, F>, F, Inner = G::Parameters<D>>>(
-        &self,
-        x: F,
-    ) -> D
+    pub fn implicit_derivative<A: DualStruct<F, Inner = G::Parameters<D>>>(&self, x: F) -> D
     where
         G: ImplicitFunction<F, Variable<Dual<D, F>> = Dual<D, F>, Parameters<Dual<D, F>> = A>,
     {
@@ -236,10 +222,10 @@ where
 impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat>
     ImplicitDerivative<G, D, F, [F; 2]>
 where
-    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+    G::Parameters<D>: DualStruct<F, Real = G::Parameters<F>>,
 {
     /// Evaluate the implicit derivative for a bivariate function.
-    pub fn implicit_derivative<A: DualStruct<DualVec<D, F, U2>, F, Inner = G::Parameters<D>>>(
+    pub fn implicit_derivative<A: DualStruct<F, Inner = G::Parameters<D>>>(
         &self,
         x: F,
         y: F,
@@ -263,10 +249,10 @@ where
 impl<G: ImplicitFunction<F>, D: DualNum<F> + Copy, F: DualNum<F> + DualNumFloat, const N: usize>
     ImplicitDerivative<G, D, F, SVector<F, N>>
 where
-    G::Parameters<D>: DualStruct<D, F, Real = G::Parameters<F>>,
+    G::Parameters<D>: DualStruct<F, Real = G::Parameters<F>>,
 {
     /// Evaluate the implicit derivative for a multivariate function.
-    pub fn implicit_derivative<A: DualStruct<DualSVec<D, F, N>, F, Inner = G::Parameters<D>>>(
+    pub fn implicit_derivative<A: DualStruct<F, Inner = G::Parameters<D>>>(
         &self,
         x: SVector<F, N>,
     ) -> SVector<D, N>

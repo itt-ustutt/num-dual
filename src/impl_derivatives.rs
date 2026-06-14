@@ -3,10 +3,14 @@ macro_rules! impl_derivatives {
     ($deriv:ident, $nderiv:expr, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> DualNum<F> for $struct<T, F$($(, $dim)*)?>
         where
-        // $($(DefaultAllocator: Allocator<$dim> + Allocator<U1, $dim> + Allocator<$dim, $dim>,)*)?
         $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
             const NDERIV: usize = T::NDERIV + $nderiv;
+
+            type InnerDual = T;
+            fn from_re(inner: Self::InnerDual) -> Self {
+                Self::from_re(inner)
+            }
 
             #[inline]
             fn recip(&self) -> Self {

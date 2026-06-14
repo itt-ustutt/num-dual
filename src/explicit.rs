@@ -3,7 +3,7 @@ use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1};
 
 /// Evaluate the function `g` with extra arguments `args` that are automatically adjusted to the correct
 /// dual number type.
-pub fn partial<G: Fn(X, &A) -> O, T: DualNum<F>, F, X, A: DualStruct<T, F>, O>(
+pub fn partial<G: Fn(X, &A) -> O, F, X, A: DualStruct<F>, O>(
     g: G,
     args: &A::Inner,
 ) -> impl Fn(X) -> O {
@@ -13,15 +13,7 @@ pub fn partial<G: Fn(X, &A) -> O, T: DualNum<F>, F, X, A: DualStruct<T, F>, O>(
 
 /// Evaluate the function `g` with extra arguments `args1` and `args2` that are automatically adjusted to the
 /// correct dual number type.
-pub fn partial2<
-    G: Fn(X, &A1, &A2) -> O,
-    T: DualNum<F>,
-    F,
-    X,
-    A1: DualStruct<T, F>,
-    A2: DualStruct<T, F>,
-    O,
->(
+pub fn partial2<G: Fn(X, &A1, &A2) -> O, F, X, A1: DualStruct<F>, A2: DualStruct<F>, O>(
     g: G,
     args1: &A1::Inner,
     args2: &A2::Inner,
@@ -35,12 +27,11 @@ pub fn partial2<
 /// correct dual number type.
 pub fn partial3<
     G: Fn(X, &A1, &A2, &A3) -> O,
-    T: DualNum<F>,
     F,
     X,
-    A1: DualStruct<T, F>,
-    A2: DualStruct<T, F>,
-    A3: DualStruct<T, F>,
+    A1: DualStruct<F>,
+    A2: DualStruct<F>,
+    A3: DualStruct<F>,
     O,
 >(
     g: G,
@@ -462,11 +453,11 @@ pub trait Gradients: Dim
 where
     DefaultAllocator: Allocator<Self>,
 {
-    type Dual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, Inner = T> + Copy;
-    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, Inner = T> + Copy;
-    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, Inner = T> + Copy;
+    type Dual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T> + Copy;
+    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T> + Copy;
+    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T> + Copy;
 
-    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
@@ -474,7 +465,7 @@ where
     where
         G: Fn(OVector<Self::Dual<T, F>, Self>, &A) -> Self::Dual<T, F>;
 
-    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual2<T, F>, F>>(
+    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
@@ -483,12 +474,7 @@ where
         G: Fn(OVector<Self::Dual2<T, F>, Self>, &A) -> Self::Dual2<T, F>,
         DefaultAllocator: Allocator<Self, Self>;
 
-    fn partial_hessian<
-        G,
-        T: DualNum<F> + Copy,
-        F: DualNumFloat,
-        A: DualStruct<Self::HyperDual<T, F>, F>,
-    >(
+    fn partial_hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         y: T,
@@ -501,7 +487,7 @@ where
             &A,
         ) -> Self::HyperDual<T, F>;
 
-    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
@@ -516,7 +502,7 @@ impl<const N: usize> Gradients for Const<N> {
     type Dual2<T: DualNum<F> + Copy, F: DualNumFloat> = Dual2Vec<T, F, Const<N>>;
     type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat> = HyperDualVec<T, F, Const<N>, U1>;
 
-    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<DualSVec<T, F, N>, F>>(
+    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &SVector<T, N>,
         args: &A::Inner,
@@ -527,7 +513,7 @@ impl<const N: usize> Gradients for Const<N> {
         gradient(partial(g, args), x)
     }
 
-    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual2<T, F>, F>>(
+    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
@@ -538,12 +524,7 @@ impl<const N: usize> Gradients for Const<N> {
         hessian(partial(g, args), x)
     }
 
-    fn partial_hessian<
-        G,
-        T: DualNum<F> + Copy,
-        F: DualNumFloat,
-        A: DualStruct<Self::HyperDual<T, F>, F>,
-    >(
+    fn partial_hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         y: T,
@@ -567,7 +548,7 @@ impl<const N: usize> Gradients for Const<N> {
         (a, b, c, d)
     }
 
-    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
@@ -584,7 +565,7 @@ impl Gradients for Dyn {
     type Dual2<T: DualNum<F> + Copy, F: DualNumFloat> = HyperDual<T, F>;
     type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat> = HyperDual<T, F>;
 
-    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Dual<T, F>, F>>(
+    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &DVector<T>,
         args: &A::Inner,
@@ -605,7 +586,7 @@ impl Gradients for Dyn {
         (re, grad)
     }
 
-    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<HyperDual<T, F>, F>>(
+    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &DVector<T>,
         args: &A::Inner,
@@ -630,12 +611,7 @@ impl Gradients for Dyn {
         (re, grad, hessian)
     }
 
-    fn partial_hessian<
-        G,
-        T: DualNum<F> + Copy,
-        F: DualNumFloat,
-        A: DualStruct<HyperDual<T, F>, F>,
-    >(
+    fn partial_hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &DVector<T>,
         y: T,
@@ -662,7 +638,7 @@ impl Gradients for Dyn {
         (re, grad_x, grad_y, hessian)
     }
 
-    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<Self::Dual<T, F>, F>>(
+    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
