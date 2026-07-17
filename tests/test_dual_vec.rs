@@ -380,6 +380,60 @@ fn test_dual_vec_sph_j2() {
 }
 
 #[test]
+fn test_dual_vec_sph_j0_1() {
+    let res = DualSVec64::new(-1.2, Derivative::some(Vector::from([1.0, 1.0]))).sph_j0();
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - 0.776699238306022).abs() < 1e-12);
+    assert!((eps[0] - 0.345284569857790).abs() < 1e-12);
+    assert!((eps[1] - 0.345284569857790).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_sph_j1_1() {
+    let res = DualSVec64::new(-1.2, Derivative::some(Vector::from([1.0, 1.0]))).sph_j1();
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - -0.345284569857790).abs() < 1e-12);
+    assert!((eps[0] - 0.201224955209705).abs() < 1e-12);
+    assert!((eps[1] - 0.201224955209705).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_sph_j2_1() {
+    let res = DualSVec64::new(-1.2, Derivative::some(Vector::from([1.0, 1.0]))).sph_j2();
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - 0.0865121863384538).abs() < 1e-12);
+    assert!((eps[0] - -0.129004104011656).abs() < 1e-12);
+    assert!((eps[1] - -0.129004104011656).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_sph_j0_2() {
+    let res = DualSVec64::new(-7.2, Derivative::some(Vector::from([1.0, 1.0]))).sph_j0();
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - 0.110231647756827).abs() < 1e-12);
+    assert!((eps[0] - -0.0691832870521427).abs() < 1e-12);
+    assert!((eps[1] - -0.0691832870521427).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_sph_j1_2() {
+    let res = DualSVec64::new(-7.2, Derivative::some(Vector::from([1.0, 1.0]))).sph_j1();
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - 0.0691832870521427).abs() < 1e-12);
+    assert!((eps[0] - 0.129449227493533).abs() < 1e-12);
+    assert!((eps[1] - 0.129449227493533).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual_vec_sph_j2_2() {
+    let res = DualSVec64::new(-7.2, Derivative::some(Vector::from([1.0, 1.0]))).sph_j2();
+    let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);
+    assert!((res.re - -0.139058017361886).abs() < 1e-12);
+    assert!((eps[0] - 0.0112424464846901).abs() < 1e-12);
+    assert!((eps[1] - 0.0112424464846901).abs() < 1e-12);
+}
+
+#[test]
 fn test_dual_vec_bessel_j0_0() {
     let res = DualSVec64::new(0.0, Derivative::some(Vector::from([1.0, 1.0]))).bessel_j0();
     let eps = res.eps.unwrap_generic(Const::<2>, Const::<1>);

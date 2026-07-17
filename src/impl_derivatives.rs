@@ -274,7 +274,7 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn sph_j0(&self) -> Self {
-                if self.re() < F::epsilon() {
+                if self.re().abs() < F::epsilon() {
                     Self::one() - self * self / F::from(6.0).unwrap()
                 } else {
                     self.sin() / self
@@ -283,7 +283,7 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn sph_j1(&self) -> Self {
-                if self.re() < F::epsilon() {
+                if self.re().abs() < F::epsilon() {
                     self.clone() / F::from(3.0).unwrap()
                 } else {
                     let (s, c) = self.sin_cos();
@@ -293,7 +293,7 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn sph_j2(&self) -> Self {
-                if self.re() < F::epsilon() {
+                if self.re().abs() < F::epsilon() {
                     self * self / F::from(15.0).unwrap()
                 } else {
                     let (s, c) = self.sin_cos();

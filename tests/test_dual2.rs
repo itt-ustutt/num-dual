@@ -337,6 +337,54 @@ fn test_dual2_sph_j2() {
 }
 
 #[test]
+fn test_dual2_sph_j0_1() {
+    let res = Dual2_64::from(-1.2).derivative().sph_j0();
+    assert!((res.re - 0.776699238306022).abs() < 1e-12);
+    assert!((res.v1 - 0.345284569857790).abs() < 1e-12);
+    assert!((res.v2 - -0.201224955209705).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual2_sph_j1_1() {
+    let res = Dual2_64::from(-1.2).derivative().sph_j1();
+    assert!((res.re - -0.345284569857790).abs() < 1e-12);
+    assert!((res.v1 - 0.201224955209705).abs() < 1e-12);
+    assert!((res.v2 - 0.201097592627034).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual2_sph_j2_1() {
+    let res = Dual2_64::from(-1.2).derivative().sph_j2();
+    assert!((res.re - 0.0865121863384538).abs() < 1e-12);
+    assert!((res.v1 - -0.129004104011656).abs() < 1e-12);
+    assert!((res.v2 - 0.0589484167190109).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual2_sph_j0_2() {
+    let res = Dual2_64::from(-7.2).derivative().sph_j0();
+    assert!((res.re - 0.110231647756827).abs() < 1e-12);
+    assert!((res.v1 - -0.0691832870521427).abs() < 1e-12);
+    assert!((res.v2 - -0.129449227493533).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual2_sph_j1_2() {
+    let res = Dual2_64::from(-7.2).derivative().sph_j1();
+    assert!((res.re - 0.0691832870521427).abs() < 1e-12);
+    assert!((res.v1 - 0.129449227493533).abs() < 1e-12);
+    assert!((res.v2 - -0.0305560600071743).abs() < 1e-12);
+}
+
+#[test]
+fn test_dual2_sph_j2_2() {
+    let res = Dual2_64::from(-7.2).derivative().sph_j2();
+    assert!((res.re - -0.139058017361886).abs() < 1e-12);
+    assert!((res.v1 - 0.0112424464846901).abs() < 1e-12);
+    assert!((res.v2 - 0.126086241227786).abs() < 1e-12);
+}
+
+#[test]
 fn test_dual2_bessel_j0_0() {
     let res = Dual2_64::from(0.0).derivative().bessel_j0();
     assert!((res.re - 1.00000000000000).abs() < 1e-12);
