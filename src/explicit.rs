@@ -3,17 +3,14 @@ use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1};
 
 /// Evaluate the function `g` with extra arguments `args` that are automatically adjusted to the correct
 /// dual number type.
-pub fn partial<G: Fn(X, &A) -> O, F, X, A: DualStruct<F>, O>(
-    g: G,
-    args: &A::Inner,
-) -> impl Fn(X) -> O {
+pub fn partial<G: Fn(X, &A) -> O, X, A: DualStruct, O>(g: G, args: &A::Inner) -> impl Fn(X) -> O {
     let args = A::from_inner(args);
     move |x| g(x, &args)
 }
 
 /// Evaluate the function `g` with extra arguments `args1` and `args2` that are automatically adjusted to the
 /// correct dual number type.
-pub fn partial2<G: Fn(X, &A1, &A2) -> O, F, X, A1: DualStruct<F>, A2: DualStruct<F>, O>(
+pub fn partial2<G: Fn(X, &A1, &A2) -> O, X, A1: DualStruct, A2: DualStruct, O>(
     g: G,
     args1: &A1::Inner,
     args2: &A2::Inner,
@@ -27,11 +24,10 @@ pub fn partial2<G: Fn(X, &A1, &A2) -> O, F, X, A1: DualStruct<F>, A2: DualStruct
 /// correct dual number type.
 pub fn partial3<
     G: Fn(X, &A1, &A2, &A3) -> O,
-    F,
     X,
-    A1: DualStruct<F>,
-    A2: DualStruct<F>,
-    A3: DualStruct<F>,
+    A1: DualStruct,
+    A2: DualStruct,
+    A3: DualStruct,
     O,
 >(
     g: G,
@@ -48,18 +44,15 @@ pub fn partial3<
 /// Calculate the zeroth derivative of a scalar function.
 ///
 /// Only useful for specific generic cases in which the trait bound
-/// `Real<T, F>: DualNum<F, Inner=T>` is required.
+/// `Real<T>: DualNum<Inner=T>` is required.
 /// ```
 /// # use num_dual::{zeroth_derivative, DualNum};
 /// let f = zeroth_derivative(|x| x.powi(2), 5.0);
 /// assert_eq!(f, 25.0);
 /// ```
-pub fn zeroth_derivative<G, T: DualNum<F>, F: DualNumFloat, O: Mappable<Real<T, F>>>(
-    g: G,
-    x: T,
-) -> O::Output<T>
+pub fn zeroth_derivative<G, T: DualNum, O: Mappable<Real<T>>>(g: G, x: T) -> O::Output<T>
 where
-    G: Fn(Real<T, F>) -> O,
+    G: Fn(Real<T>) -> O,
 {
     let x = Real::from_re(x);
     g(x).map_dual(|r| r.re)
@@ -72,12 +65,9 @@ where
 /// assert_eq!(f, 25.0);
 /// assert_eq!(df, 10.0);
 /// ```
-pub fn first_derivative<G, T: DualNum<F>, F: DualNumFloat, O: Mappable<Dual<T, F>>>(
-    g: G,
-    x: T,
-) -> O::Output<(T, T)>
+pub fn first_derivative<G, T: DualNum, O: Mappable<Dual<T>>>(g: G, x: T) -> O::Output<(T, T)>
 where
-    G: Fn(Dual<T, F>) -> O,
+    G: Fn(Dual<T>) -> O,
 {
     let x = Dual::from_re(x).derivative();
     g(x).map_dual(|r| (r.re, r.eps))
@@ -110,12 +100,12 @@ where
 /// assert_relative_eq!(g[2], 0.5);
 /// assert_relative_eq!(g[3], 0.5);
 /// ```
-pub fn gradient<G, T: DualNum<F>, F: DualNumFloat, D: Dim, O: Mappable<DualVec<T, F, D>>>(
+pub fn gradient<G, T: DualNum, D: Dim, O: Mappable<DualVec<T, D>>>(
     g: G,
     x: &OVector<T, D>,
 ) -> O::Output<(T, OVector<T, D>)>
 where
-    G: Fn(OVector<DualVec<T, F, D>, D>) -> O,
+    G: Fn(OVector<DualVec<T, D>, D>) -> O,
     DefaultAllocator: Allocator<D>,
 {
     let mut x = x.map(DualVec::from_re);
@@ -146,19 +136,12 @@ where
 /// assert_eq!(jac[(1,2)], 300.0);     // 2x²yz
 /// ```
 #[expect(clippy::type_complexity)]
-pub fn jacobian<
-    G,
-    T: DualNum<F>,
-    F: DualNumFloat,
-    M: Dim,
-    N: Dim,
-    O: Mappable<OVector<DualVec<T, F, N>, M>>,
->(
+pub fn jacobian<G, T: DualNum, M: Dim, N: Dim, O: Mappable<OVector<DualVec<T, N>, M>>>(
     g: G,
     x: &OVector<T, N>,
 ) -> O::Output<(OVector<T, M>, OMatrix<T, M, N>)>
 where
-    G: FnOnce(OVector<DualVec<T, F, N>, N>) -> O,
+    G: FnOnce(OVector<DualVec<T, N>, N>) -> O,
     DefaultAllocator: Allocator<M> + Allocator<N> + Allocator<M, N> + Allocator<U1, N>,
 {
     let mut x = x.map(DualVec::from_re);
@@ -197,12 +180,9 @@ where
 /// assert_eq!(d2f.re, 30.0);   // 6x
 /// assert_eq!(d2f.eps, 6.0);   // 6
 /// ```
-pub fn second_derivative<G, T: DualNum<F>, F, O: Mappable<Dual2<T, F>>>(
-    g: G,
-    x: T,
-) -> O::Output<(T, T, T)>
+pub fn second_derivative<G, T: DualNum, O: Mappable<Dual2<T>>>(g: G, x: T) -> O::Output<(T, T, T)>
 where
-    G: Fn(Dual2<T, F>) -> O,
+    G: Fn(Dual2<T>) -> O,
 {
     let x = Dual2::from_re(x).derivative();
     g(x).map_dual(|r| (r.re, r.v1, r.v2))
@@ -220,12 +200,12 @@ where
 /// assert_relative_eq!(dfdy, 0.6);
 /// assert_relative_eq!(d2fdxdy, -0.096);
 /// ```
-pub fn second_partial_derivative<G, T: DualNum<F>, F, O: Mappable<HyperDual<T, F>>>(
+pub fn second_partial_derivative<G, T: DualNum, O: Mappable<HyperDual<T>>>(
     g: G,
     (x, y): (T, T),
 ) -> O::Output<(T, T, T, T)>
 where
-    G: Fn((HyperDual<T, F>, HyperDual<T, F>)) -> O,
+    G: Fn((HyperDual<T>, HyperDual<T>)) -> O,
 {
     let x = HyperDual::from_re(x).derivative1();
     let y = HyperDual::from_re(y).derivative2();
@@ -249,12 +229,12 @@ where
 /// assert_relative_eq!(h[(1,1)], 0.128);
 /// ```
 #[expect(clippy::type_complexity)]
-pub fn hessian<G, T: DualNum<F>, F: DualNumFloat, D: Dim, O: Mappable<Dual2Vec<T, F, D>>>(
+pub fn hessian<G, T: DualNum, D: Dim, O: Mappable<Dual2Vec<T, D>>>(
     g: G,
     x: &OVector<T, D>,
 ) -> O::Output<(T, OVector<T, D>, OMatrix<T, D, D>)>
 where
-    G: Fn(OVector<Dual2Vec<T, F, D>, D>) -> O,
+    G: Fn(OVector<Dual2Vec<T, D>, D>) -> O,
     DefaultAllocator: Allocator<D> + Allocator<U1, D> + Allocator<D, D>,
 {
     let mut x = x.map(Dual2Vec::from_re);
@@ -289,22 +269,15 @@ where
 /// assert_relative_eq!(d2fdxdy[1], -0.024);
 /// ```
 #[expect(clippy::type_complexity)]
-pub fn partial_hessian<
-    G,
-    T: DualNum<F>,
-    F: DualNumFloat,
-    M: Dim,
-    N: Dim,
-    O: Mappable<HyperDualVec<T, F, M, N>>,
->(
+pub fn partial_hessian<G, T: DualNum, M: Dim, N: Dim, O: Mappable<HyperDualVec<T, M, N>>>(
     g: G,
     (x, y): (&OVector<T, M>, &OVector<T, N>),
 ) -> O::Output<(T, OVector<T, M>, OVector<T, N>, OMatrix<T, M, N>)>
 where
     G: Fn(
         (
-            OVector<HyperDualVec<T, F, M, N>, M>,
-            OVector<HyperDualVec<T, F, M, N>, N>,
+            OVector<HyperDualVec<T, M, N>, M>,
+            OVector<HyperDualVec<T, M, N>, N>,
         ),
     ) -> O,
     DefaultAllocator: Allocator<N> + Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
@@ -338,12 +311,9 @@ where
 /// assert_eq!(d2f, 30.0);     // 6x
 /// assert_eq!(d3f, 6.0);      // 6
 /// ```
-pub fn third_derivative<G, T: DualNum<F>, F, O: Mappable<Dual3<T, F>>>(
-    g: G,
-    x: T,
-) -> O::Output<(T, T, T, T)>
+pub fn third_derivative<G, T: DualNum, O: Mappable<Dual3<T>>>(g: G, x: T) -> O::Output<(T, T, T, T)>
 where
-    G: Fn(Dual3<T, F>) -> O,
+    G: Fn(Dual3<T>) -> O,
 {
     let x = Dual3::from_re(x).derivative();
     g(x).map_dual(|r| (r.re, r.v1, r.v2, r.v3))
@@ -367,18 +337,12 @@ where
 /// assert_relative_eq!(d3fdxdydz, 288.0);
 /// ```
 #[expect(clippy::type_complexity)]
-pub fn third_partial_derivative<G, T: DualNum<F>, F, O: Mappable<HyperHyperDual<T, F>>>(
+pub fn third_partial_derivative<G, T: DualNum, O: Mappable<HyperHyperDual<T>>>(
     g: G,
     (x, y, z): (T, T, T),
 ) -> O::Output<(T, T, T, T, T, T, T, T)>
 where
-    G: Fn(
-        (
-            HyperHyperDual<T, F>,
-            HyperHyperDual<T, F>,
-            HyperHyperDual<T, F>,
-        ),
-    ) -> O,
+    G: Fn((HyperHyperDual<T>, HyperHyperDual<T>, HyperHyperDual<T>)) -> O,
 {
     let x = HyperHyperDual::from_re(x).derivative1();
     let y = HyperHyperDual::from_re(y).derivative2();
@@ -416,7 +380,7 @@ where
 /// assert_relative_eq!(d3fdxdydz, 24.0);
 /// ```
 #[expect(clippy::type_complexity)]
-pub fn third_partial_derivative_vec<G, T: DualNum<F>, F, O: Mappable<HyperHyperDual<T, F>>>(
+pub fn third_partial_derivative_vec<G, T: DualNum, O: Mappable<HyperHyperDual<T>>>(
     g: G,
     x: &[T],
     i: usize,
@@ -424,7 +388,7 @@ pub fn third_partial_derivative_vec<G, T: DualNum<F>, F, O: Mappable<HyperHyperD
     k: usize,
 ) -> O::Output<(T, T, T, T, T, T, T, T)>
 where
-    G: Fn(&[HyperHyperDual<T, F>]) -> O,
+    G: Fn(&[HyperHyperDual<T>]) -> O,
 {
     let mut x: Vec<_> = x
         .iter()
@@ -453,90 +417,83 @@ pub trait Gradients: Dim
 where
     DefaultAllocator: Allocator<Self>,
 {
-    type Dual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T, Inner = T> + Copy;
-    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T, Inner = T> + Copy;
-    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat>: DualNum<F, InnerDual = T, Inner = T>
+    type Dual<T: DualNum + Copy>: DualNum<Primitive = T::Primitive, InnerDual = T, Inner = T> + Copy;
+    type Dual2<T: DualNum + Copy>: DualNum<Primitive = T::Primitive, InnerDual = T, Inner = T>
+        + Copy;
+    type HyperDual<T: DualNum + Copy>: DualNum<Primitive = T::Primitive, InnerDual = T, Inner = T>
         + Copy;
 
-    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn gradient<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
     ) -> (T, OVector<T, Self>)
     where
-        G: Fn(OVector<Self::Dual<T, F>, Self>, &A) -> Self::Dual<T, F>;
+        G: Fn(OVector<Self::Dual<T>, Self>, &A) -> Self::Dual<T>;
 
-    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn hessian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
     ) -> (T, OVector<T, Self>, OMatrix<T, Self, Self>)
     where
-        G: Fn(OVector<Self::Dual2<T, F>, Self>, &A) -> Self::Dual2<T, F>,
+        G: Fn(OVector<Self::Dual2<T>, Self>, &A) -> Self::Dual2<T>,
         DefaultAllocator: Allocator<Self, Self>;
 
-    fn partial_hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn partial_hessian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         y: T,
         args: &A::Inner,
     ) -> (T, OVector<T, Self>, T, OVector<T, Self>)
     where
-        G: Fn(
-            OVector<Self::HyperDual<T, F>, Self>,
-            Self::HyperDual<T, F>,
-            &A,
-        ) -> Self::HyperDual<T, F>;
+        G: Fn(OVector<Self::HyperDual<T>, Self>, Self::HyperDual<T>, &A) -> Self::HyperDual<T>;
 
-    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn jacobian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
     ) -> (OVector<T, Self>, OMatrix<T, Self, Self>)
     where
-        G: Fn(OVector<Self::Dual<T, F>, Self>, &A) -> OVector<Self::Dual<T, F>, Self>,
+        G: Fn(OVector<Self::Dual<T>, Self>, &A) -> OVector<Self::Dual<T>, Self>,
         DefaultAllocator: Allocator<Self, Self>;
 }
 
 impl<const N: usize> Gradients for Const<N> {
-    type Dual<T: DualNum<F> + Copy, F: DualNumFloat> = DualSVec<T, F, N>;
-    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat> = Dual2Vec<T, F, Const<N>>;
-    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat> = HyperDualVec<T, F, Const<N>, U1>;
+    type Dual<T: DualNum + Copy> = DualSVec<T, N>;
+    type Dual2<T: DualNum + Copy> = Dual2Vec<T, Const<N>>;
+    type HyperDual<T: DualNum + Copy> = HyperDualVec<T, Const<N>, U1>;
 
-    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn gradient<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &SVector<T, N>,
         args: &A::Inner,
     ) -> (T, SVector<T, N>)
     where
-        G: Fn(SVector<DualSVec<T, F, N>, N>, &A) -> DualSVec<T, F, N>,
+        G: Fn(SVector<DualSVec<T, N>, N>, &A) -> DualSVec<T, N>,
     {
         gradient(partial(g, args), x)
     }
 
-    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn hessian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
     ) -> (T, OVector<T, Self>, OMatrix<T, Self, Self>)
     where
-        G: Fn(OVector<Self::Dual2<T, F>, Self>, &A) -> Self::Dual2<T, F>,
+        G: Fn(OVector<Self::Dual2<T>, Self>, &A) -> Self::Dual2<T>,
     {
         hessian(partial(g, args), x)
     }
 
-    fn partial_hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn partial_hessian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         y: T,
         args: &A::Inner,
     ) -> (T, OVector<T, Self>, T, OVector<T, Self>)
     where
-        G: Fn(
-            OVector<Self::HyperDual<T, F>, Self>,
-            Self::HyperDual<T, F>,
-            &A,
-        ) -> Self::HyperDual<T, F>,
+        G: Fn(OVector<Self::HyperDual<T>, Self>, Self::HyperDual<T>, &A) -> Self::HyperDual<T>,
     {
         let (a, b, c, d) = partial_hessian(
             |(x, y)| {
@@ -549,30 +506,30 @@ impl<const N: usize> Gradients for Const<N> {
         (a, b, c, d)
     }
 
-    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn jacobian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
     ) -> (OVector<T, Self>, OMatrix<T, Self, Self>)
     where
-        G: Fn(OVector<DualVec<T, F, Self>, Self>, &A) -> OVector<DualVec<T, F, Self>, Self>,
+        G: Fn(OVector<DualVec<T, Self>, Self>, &A) -> OVector<DualVec<T, Self>, Self>,
     {
         jacobian(partial(g, args), x)
     }
 }
 
 impl Gradients for Dyn {
-    type Dual<T: DualNum<F> + Copy, F: DualNumFloat> = Dual<T, F>;
-    type Dual2<T: DualNum<F> + Copy, F: DualNumFloat> = HyperDual<T, F>;
-    type HyperDual<T: DualNum<F> + Copy, F: DualNumFloat> = HyperDual<T, F>;
+    type Dual<T: DualNum + Copy> = Dual<T>;
+    type Dual2<T: DualNum + Copy> = HyperDual<T>;
+    type HyperDual<T: DualNum + Copy> = HyperDual<T>;
 
-    fn gradient<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn gradient<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &DVector<T>,
         args: &A::Inner,
     ) -> (T, DVector<T>)
     where
-        G: Fn(OVector<Dual<T, F>, Dyn>, &A) -> Dual<T, F>,
+        G: Fn(OVector<Dual<T>, Dyn>, &A) -> Dual<T>,
     {
         let mut re = T::zero();
         let n = x.len();
@@ -587,13 +544,13 @@ impl Gradients for Dyn {
         (re, grad)
     }
 
-    fn hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn hessian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &DVector<T>,
         args: &A::Inner,
     ) -> (T, DVector<T>, DMatrix<T>)
     where
-        G: Fn(DVector<HyperDual<T, F>>, &A) -> HyperDual<T, F>,
+        G: Fn(DVector<HyperDual<T>>, &A) -> HyperDual<T>,
     {
         let mut re = T::zero();
         let n = x.len();
@@ -612,14 +569,14 @@ impl Gradients for Dyn {
         (re, grad, hessian)
     }
 
-    fn partial_hessian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn partial_hessian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &DVector<T>,
         y: T,
         args: &A::Inner,
     ) -> (T, DVector<T>, T, DVector<T>)
     where
-        G: Fn(DVector<HyperDual<T, F>>, HyperDual<T, F>, &A) -> HyperDual<T, F>,
+        G: Fn(DVector<HyperDual<T>>, HyperDual<T>, &A) -> HyperDual<T>,
     {
         let mut re = T::zero();
         let n = x.len();
@@ -639,13 +596,13 @@ impl Gradients for Dyn {
         (re, grad_x, grad_y, hessian)
     }
 
-    fn jacobian<G, T: DualNum<F> + Copy, F: DualNumFloat, A: DualStruct<F>>(
+    fn jacobian<G, T: DualNum + Copy, A: DualStruct>(
         g: G,
         x: &OVector<T, Self>,
         args: &A::Inner,
     ) -> (OVector<T, Self>, OMatrix<T, Self, Self>)
     where
-        G: Fn(OVector<Dual<T, F>, Self>, &A) -> OVector<Dual<T, F>, Self>,
+        G: Fn(OVector<Dual<T>, Self>, &A) -> OVector<Dual<T>, Self>,
         DefaultAllocator: Allocator<Self, Self>,
     {
         let n = x.len();

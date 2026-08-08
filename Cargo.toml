@@ -31,7 +31,7 @@ ndarray = { version = "0.17", optional = true }
 [dependencies.pyo3]
 version = "0.29"
 optional = true
-features = ["multiple-pymethods", "abi3", "abi3-py310"]
+features = ["multiple-pymethods"]
 
 [profile.release]
 lto = true

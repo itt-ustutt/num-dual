@@ -58,7 +58,7 @@ impl_dual_num!(PyDual2_64, Dual2_64, f64);
 #[pyclass(name = "Dual2Dual64", from_py_object)]
 #[derive(Clone)]
 /// Second order dual number using dual numbers as fields.
-pub struct PyDual2Dual64(Dual2<Dual64, f64>);
+pub struct PyDual2Dual64(Dual2<Dual64>);
 
 #[pymethods]
 impl PyDual2Dual64 {
@@ -78,7 +78,7 @@ impl PyDual2Dual64 {
     }
 }
 
-impl_dual_num!(PyDual2Dual64, Dual2<Dual64, f64>, PyDual64);
+impl_dual_num!(PyDual2Dual64, Dual2<Dual64>, PyDual64);
 
 macro_rules! impl_dual2_n {
     ($py_type_name:ident, $n:literal) => {

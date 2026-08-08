@@ -37,7 +37,7 @@ impl_dual_num!(PyDual3_64, Dual3_64, f64);
 #[pyclass(name = "Dual3Dual64", from_py_object)]
 #[derive(Clone)]
 /// Third order dual number using dual numbers as fields.
-pub struct PyDual3Dual64(Dual3<Dual64, f64>);
+pub struct PyDual3Dual64(Dual3<Dual64>);
 
 #[pymethods]
 impl PyDual3Dual64 {
@@ -62,7 +62,7 @@ impl PyDual3Dual64 {
     }
 }
 
-impl_dual_num!(PyDual3Dual64, Dual3<Dual64, f64>, PyDual64);
+impl_dual_num!(PyDual3Dual64, Dual3<Dual64>, PyDual64);
 
 #[pyfunction]
 /// Calculate the third derivative of a scalar, univariate function.

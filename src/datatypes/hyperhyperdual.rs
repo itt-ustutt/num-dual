@@ -4,13 +4,12 @@ use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::*;
 
 /// A scalar hyper-hyper-dual number for the calculation of third partial derivatives.
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct HyperHyperDual<T, F = T> {
+pub struct HyperHyperDual<T> {
     /// Real part of the hyper-hyper-dual number
     pub re: T,
     /// First partial derivative part of the hyper-hyper-dual number
@@ -27,17 +26,15 @@ pub struct HyperHyperDual<T, F = T> {
     pub eps2eps3: T,
     /// Third partial derivative part of the hyper-hyper-dual number
     pub eps1eps2eps3: T,
-    #[cfg_attr(feature = "serde", serde(skip))]
-    f: PhantomData<F>,
 }
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for HyperHyperDual<T, F> {}
+impl<T: DualNum> ndarray::ScalarOperand for HyperHyperDual<T> {}
 
 pub type HyperHyperDual32 = HyperHyperDual<f32>;
 pub type HyperHyperDual64 = HyperHyperDual<f64>;
 
-impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
+impl<T: DualNum> HyperHyperDual<T> {
     /// Create a new hyper-hyper-dual number from its fields.
     #[inline]
     #[expect(clippy::too_many_arguments)]
@@ -60,7 +57,6 @@ impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
             eps1eps3,
             eps2eps3,
             eps1eps2eps3,
-            f: PhantomData,
         }
     }
 
@@ -101,7 +97,7 @@ impl<T: DualNum<F>, F> HyperHyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
+impl<T: DualNum> HyperHyperDual<T> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
         Self::new(
@@ -121,10 +117,10 @@ impl<T: DualNum<F>, F: Float> HyperHyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Mul<&HyperHyperDual<T, F>> for &HyperHyperDual<T, F> {
-    type Output = HyperHyperDual<T, F>;
+impl<T: DualNum> Mul<&HyperHyperDual<T>> for &HyperHyperDual<T> {
+    type Output = HyperHyperDual<T>;
     #[inline]
-    fn mul(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
+    fn mul(self, rhs: &HyperHyperDual<T>) -> HyperHyperDual<T> {
         HyperHyperDual::new(
             self.re.clone() * &rhs.re,
             self.eps1.clone() * &rhs.re + self.re.clone() * &rhs.eps1,
@@ -154,21 +150,21 @@ impl<T: DualNum<F>, F: Float> Mul<&HyperHyperDual<T, F>> for &HyperHyperDual<T, 
     }
 }
 
-impl<T: DualNum<F>, F: Float> Div<&HyperHyperDual<T, F>> for &HyperHyperDual<T, F> {
-    type Output = HyperHyperDual<T, F>;
+impl<T: DualNum> Div<&HyperHyperDual<T>> for &HyperHyperDual<T> {
+    type Output = HyperHyperDual<T>;
     #[inline]
-    fn div(self, rhs: &HyperHyperDual<T, F>) -> HyperHyperDual<T, F> {
+    fn div(self, rhs: &HyperHyperDual<T>) -> HyperHyperDual<T> {
         let rec = T::one() / &rhs.re;
         let f0 = rec.clone();
         let f1 = -f0.clone() * &rec;
-        let f2 = f1.clone() * &rec * F::from(-2.0).unwrap();
-        let f3 = f2.clone() * rec * F::from(-3.0).unwrap();
+        let f2 = -f1.clone() * &rec * T::Primitive::TWO;
+        let f3 = -f2.clone() * rec * T::Primitive::THREE;
         self * rhs.chain_rule(f0, f1, f2, f3)
     }
 }
 
 /* string conversions */
-impl<T: fmt::Display, F> fmt::Display for HyperHyperDual<T, F> {
+impl<T: fmt::Display> fmt::Display for HyperHyperDual<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

@@ -1,11 +1,10 @@
 //! Basic linear algebra functionalities (linear solve and eigenvalues) for matrices containing dual numbers.
-use crate::DualNum;
+use crate::{DualNum, DualNumFloat};
 use nalgebra::allocator::Allocator;
-use nalgebra::{DefaultAllocator, Dim, OMatrix, OVector, U1};
-use num_traits::Float;
+use nalgebra::{DefaultAllocator, Dim, OMatrix, OVector, Scalar, U1};
+use num_traits::{Float, FromPrimitive, One, Zero};
 use std::fmt;
 use std::iter::Product;
-use std::marker::PhantomData;
 
 /// Error type for fallible linear algebra operations.
 #[derive(Debug)]
@@ -20,17 +19,16 @@ impl fmt::Display for LinAlgError {
 impl std::error::Error for LinAlgError {}
 
 /// LU decomposition for symmetric matrices with dual numbers as elements.
-pub struct LU<T: DualNum<F>, F, D: Dim>
+pub struct LU<T: Scalar, D: Dim>
 where
     DefaultAllocator: Allocator<D, D> + Allocator<D>,
 {
     a: OMatrix<T, D, D>,
     p: OVector<usize, D>,
     p_count: usize,
-    f: PhantomData<F>,
 }
 
-impl<T: DualNum<F> + Copy, F: Float, D: Dim> LU<T, F, D>
+impl<T: DualNum + Copy, D: Dim> LU<T, D>
 where
     DefaultAllocator: Allocator<D, D> + Allocator<D>,
 {
@@ -41,7 +39,7 @@ where
         let mut p_count = 0;
 
         for i in 0..n {
-            let mut max_a = F::zero();
+            let mut max_a = T::Primitive::zero();
             let mut imax = i;
 
             for k in i..n {
@@ -71,12 +69,7 @@ where
                 }
             }
         }
-        Ok(LU {
-            a,
-            p,
-            p_count,
-            f: PhantomData,
-        })
+        Ok(LU { a, p, p_count })
     }
 
     pub fn solve(&self, b: &OVector<T, D>) -> OVector<T, D> {
@@ -145,9 +138,7 @@ where
 
 /// Smallest eigenvalue and corresponding eigenvector calculated using the full Jacobi
 /// eigenvalue algorithm ([`jacobi_eigenvalue`]).
-pub fn smallest_ev<T: DualNum<F> + Copy, F: Float, D: Dim>(
-    a: OMatrix<T, D, D>,
-) -> (T, OVector<T, D>)
+pub fn smallest_ev<T: DualNum + Copy, D: Dim>(a: OMatrix<T, D, D>) -> (T, OVector<T, D>)
 where
     DefaultAllocator: Allocator<D, D> + Allocator<D>,
 {
@@ -157,12 +148,14 @@ where
         (a[(0, 0)], OVector::from_element_generic(r, U1, T::one()))
     } else if n == 2 {
         let (a, b, c) = (a[(0, 0)], a[(0, 1)], a[(1, 1)]);
-        let l = (a + c - ((a - c).powi(2) + b * b * F::from(4.0).unwrap()).sqrt())
-            * F::from(0.5).unwrap();
-        let theta = (b + b).atan2(a - c) * F::from(0.5).unwrap();
+        let l =
+            (a + c - ((a - c).powi(2) + b * b * T::Primitive::FOUR).sqrt()) * T::Primitive::HALF;
+        let theta = (b + b).atan2(a - c) * T::Primitive::HALF;
         let (s, c) = theta.sin_cos();
         let mut u = OVector::from_fn_generic(r, U1, |i, _| [-s, c][i]);
-        if u[0].re() < F::zero() || u[0].re().is_zero() && u[1].re() < F::zero() {
+        if u[0].re() < T::Primitive::zero()
+            || u[0].re().is_zero() && u[1].re() < T::Primitive::zero()
+        {
             u = -u;
         }
         (l, u)
@@ -173,7 +166,7 @@ where
 }
 
 /// Eigenvalues and corresponding eigenvectors of a symmetric matrix.
-pub fn jacobi_eigenvalue<T: DualNum<F> + Copy, F: Float, D: Dim>(
+pub fn jacobi_eigenvalue<T: DualNum + Copy, D: Dim>(
     mut a: OMatrix<T, D, D>,
     max_iter: usize,
 ) -> (OVector<T, D>, OMatrix<T, D, D>)
@@ -190,13 +183,13 @@ where
     let mut zw = OVector::zeros_generic(r, U1);
 
     for it_num in 0..max_iter {
-        let mut thresh = F::zero();
+        let mut thresh = T::Primitive::zero();
         for j in 0..n {
             for i in 0..j {
-                thresh = thresh + a[(i, j)].re().powi(2);
+                thresh += a[(i, j)].re().powi(2);
             }
         }
-        thresh = thresh.sqrt() / F::from(n).unwrap();
+        thresh = thresh.sqrt() / T::Primitive::from_usize(n).unwrap();
 
         if thresh.is_zero() {
             break;
@@ -204,7 +197,7 @@ where
 
         for p in 0..n {
             for q in p + 1..n {
-                let gapq = a[(p, q)].abs() * F::from(10.0).unwrap();
+                let gapq = a[(p, q)].abs() * T::Primitive::TEN;
                 let termp = gapq + d[p].abs();
                 let termq = gapq + d[q].abs();
 
@@ -217,17 +210,18 @@ where
                     let t = if term == h.abs() {
                         a[(p, q)] / h
                     } else {
-                        let theta = h * F::from(0.5).unwrap() / a[(p, q)];
-                        let mut t = (theta.abs() + (theta * theta + F::one()).sqrt()).recip();
+                        let theta = h * T::Primitive::HALF / a[(p, q)];
+                        let mut t =
+                            (theta.abs() + (theta * theta + T::Primitive::one()).sqrt()).recip();
                         if theta.is_negative() {
                             t = -t;
                         }
                         t
                     };
 
-                    let c = (t * t + F::one()).sqrt().recip();
+                    let c = (t * t + T::Primitive::one()).sqrt().recip();
                     let s = t * c;
-                    let tau = s / (c + F::one());
+                    let tau = s / (c + T::Primitive::one());
                     let h = t * a[(p, q)];
 
                     zw[p] -= h;

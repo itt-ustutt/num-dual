@@ -57,7 +57,7 @@ impl_dual_num!(PyHyperDual64, HyperDual64, f64);
 #[pyclass(name = "HyperDualDual64", from_py_object)]
 #[derive(Clone)]
 /// Hyper-dual number using dual numbers as fields.
-pub struct PyHyperDualDual64(HyperDual<Dual64, f64>);
+pub struct PyHyperDualDual64(HyperDual<Dual64>);
 
 #[pymethods]
 impl PyHyperDualDual64 {
@@ -77,7 +77,7 @@ impl PyHyperDualDual64 {
     }
 }
 
-impl_dual_num!(PyHyperDualDual64, HyperDual<Dual64, f64>, PyDual64);
+impl_dual_num!(PyHyperDualDual64, HyperDual<Dual64>, PyDual64);
 
 macro_rules! impl_hyper_dual_mn {
     ($py_type_name:ident, $m:literal, $n:literal) => {

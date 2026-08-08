@@ -6,11 +6,11 @@
 //! use num_dual::*;
 //! use nalgebra::SVector;
 //!
-//! fn foo<D: DualNum<f64>>(x: D) -> D {
+//! fn foo<D: DualNum>(x: D) -> D {
 //!     x.powi(3)
 //! }
 //!
-//! fn bar<D: DualNum<f64>, const N: usize>(x: SVector<D, N>) -> D {
+//! fn bar<D: DualNum, const N: usize>(x: SVector<D, N>) -> D {
 //!     x.dot(&x).sqrt()
 //! }
 //!
@@ -51,7 +51,7 @@
 //! To be able to calculate the derivative of a function, it needs to be generic over the type of dual number used.
 //! Most commonly this would look like this:
 //! ```compile_fail
-//! fn foo<D: DualNum<f64> + Copy>(x: X) -> O {...}
+//! fn foo<D: DualNum + Copy>(x: X) -> O {...}
 //! ```
 //! Of course, the function could also use single precision ([`f32`]) or be generic over the precision (`F:` [`DualNumFloat`]).
 //! For now, [`Copy`] is not a supertrait of [`DualNum`] to enable the calculation of derivatives with respect
@@ -69,7 +69,7 @@
 //! ```no_run
 //! # use num_dual::{DualNum, first_derivative};
 //! # type E = ();
-//! fn foo<D: DualNum<f64> + Copy>(x: D) -> Result<D, E> { todo!() }
+//! fn foo<D: DualNum + Copy>(x: D) -> Result<D, E> { todo!() }
 //!
 //! fn main() -> Result<(), E> {
 //!     let (val, deriv) = first_derivative(foo, 2.0)?;
@@ -84,7 +84,7 @@
 //! The [`partial`] and [`partial2`] functions are used to pass additional arguments to the function, e.g.:
 //! ```no_run
 //! # use num_dual::{DualNum, first_derivative, partial};
-//! fn foo<D: DualNum<f64> + Copy>(x: D, args: &(D, D)) -> D { todo!() }
+//! fn foo<D: DualNum + Copy>(x: D, args: &(D, D)) -> D { todo!() }
 //!
 //! fn main() {
 //!     let (val, deriv) = first_derivative(partial(foo, &(3.0, 4.0)), 5.0);
@@ -96,7 +96,7 @@
 //! dual number type used for the automatic differentiation. Note that the following code would not compile:
 //! ```compile_fail
 //! # use num_dual::{DualNum, first_derivative};
-//! # fn foo<D: DualNum<f64> + Copy>(x: D, args: &(D, D)) -> D { todo!() }
+//! # fn foo<D: DualNum + Copy>(x: D, args: &(D, D)) -> D { todo!() }
 //! fn main() {
 //!     let (val, deriv) = first_derivative(|x| foo(x, &(3.0, 4.0)), 5.0);
 //! }
@@ -104,7 +104,7 @@
 //! The code created by [`partial`] essentially translates to:
 //! ```no_run
 //! # use num_dual::{DualNum, first_derivative, Dual, DualStruct};
-//! # fn foo<D: DualNum<f64> + Copy>(x: D, args: &(D, D)) -> D { todo!() }
+//! # fn foo<D: DualNum + Copy>(x: D, args: &(D, D)) -> D { todo!() }
 //! fn main() {
 //!     let (val, deriv) = first_derivative(|x| foo(x, &(Dual::from_re(3.0), Dual::from_re(4.0))), 5.0);
 //! }
@@ -121,7 +121,7 @@
 //! # use num_dual::{DualNum, Gradients};
 //! # use nalgebra::{OVector, DefaultAllocator, allocator::Allocator, vector, dvector};
 //! # use approx::assert_relative_eq;
-//! fn foo<D: DualNum<f64> + Copy, N: Gradients>(x: OVector<D, N>, n: &D) -> D where DefaultAllocator: Allocator<N> {
+//! fn foo<D: DualNum + Copy, N: Gradients>(x: OVector<D, N>, n: &D) -> D where DefaultAllocator: Allocator<N> {
 //!     x.dot(&x).sqrt() - n
 //! }
 //!
@@ -158,7 +158,7 @@
 //! and therefore, we can use all the functionalities from the std library (including the square root).
 //! ```
 //! # use num_dual::{DualNum, implicit_derivative, first_derivative};
-//! fn implicit_sqrt<D: DualNum<f64> + Copy>(x: D) -> D {
+//! fn implicit_sqrt<D: DualNum + Copy>(x: D) -> D {
 //!     implicit_derivative(|s, x| s * s - x, x.re().sqrt(), &x)
 //! }
 //!
@@ -186,10 +186,10 @@
 //! ```
 //! # use num_dual::{ImplicitFunction, DualNum, Dual, ImplicitDerivative};
 //! struct ImplicitSqrt;
-//! impl ImplicitFunction<f64> for ImplicitSqrt {
+//! impl ImplicitFunction for ImplicitSqrt {
 //!     type Parameters<D> = D;
 //!     type Variable<D> = D;
-//!     fn residual<D: DualNum<f64> + Copy>(x: D, square: &D) -> D {
+//!     fn residual<D: DualNum + Copy>(x: D, square: &D) -> D {
 //!         *square - x * x
 //!     }
 //! }
@@ -279,33 +279,35 @@ mod python_macro;
 
 /// A generalized (hyper) dual number.
 #[cfg(feature = "ndarray")]
-pub trait DualNum<F>:
+pub trait DualNum:
     NumOps
     + for<'r> NumOps<&'r Self>
     + Signed
-    + NumOps<F>
+    + NumOps<Self::Primitive>
     + NumAssignOps
-    + NumAssignOps<F>
+    + NumAssignOps<Self::Primitive>
     + Clone
     + Inv<Output = Self>
     + Sum
     + Product
     + FromPrimitive
-    + From<F>
-    + DualStruct<F, Real = F>
+    + From<Self::Primitive>
+    + DualStruct<Real = Self::Primitive>
     + Mappable<Self>
     + fmt::Display
     + PartialOrd
-    + PartialOrd<F>
+    + PartialOrd<Self::Primitive>
     + fmt::Debug
     + ScalarOperand
     + 'static
 {
+    type Primitive: DualNumFloat;
+
     /// Highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
     /// The type of the individual elements of this dual number
-    type InnerDual: DualNum<F>;
+    type InnerDual: DualNum;
 
     /// Build a dual number from its real part, setting all other values to 0
     fn from_re(re: Self::InnerDual) -> Self;
@@ -317,7 +319,7 @@ pub trait DualNum<F>:
     fn powi(&self, n: i32) -> Self;
 
     /// Power with real exponent `x^n`
-    fn powf(&self, n: F) -> Self;
+    fn powf(&self, n: Self::Primitive) -> Self;
 
     /// Square root
     fn sqrt(&self) -> Self;
@@ -338,7 +340,7 @@ pub trait DualNum<F>:
     fn ln(&self) -> Self;
 
     /// Logarithm with arbitrary base
-    fn log(&self, base: F) -> Self;
+    fn log(&self, base: Self::Primitive) -> Self;
 
     /// Logarithm with base 2
     fn log2(&self) -> Self;
@@ -415,32 +417,34 @@ pub trait DualNum<F>:
 
 /// A generalized (hyper) dual number.
 #[cfg(not(feature = "ndarray"))]
-pub trait DualNum<F>:
+pub trait DualNum:
     NumOps
     + for<'r> NumOps<&'r Self>
     + Signed
-    + NumOps<F>
+    + NumOps<Self::Primitive>
     + NumAssignOps
-    + NumAssignOps<F>
+    + NumAssignOps<Self::Primitive>
     + Clone
     + Inv<Output = Self>
     + Sum
     + Product
     + FromPrimitive
-    + From<F>
-    + DualStruct<F, Real = F>
+    + From<Self::Primitive>
+    + DualStruct<Real = Self::Primitive>
     + Mappable<Self>
     + fmt::Display
     + PartialOrd
-    + PartialOrd<F>
+    + PartialOrd<Self::Primitive>
     + fmt::Debug
     + 'static
 {
+    type Primitive: DualNumFloat;
+
     /// Highest derivative that can be calculated with this struct
     const NDERIV: usize;
 
     /// The type of the individual elements of this dual number
-    type InnerDual: DualNum<F>;
+    type InnerDual: DualNum;
 
     /// Build a dual number from its real part, setting all other values to 0
     fn from_re(re: Self::InnerDual) -> Self;
@@ -452,7 +456,7 @@ pub trait DualNum<F>:
     fn powi(&self, n: i32) -> Self;
 
     /// Power with real exponent `x^n`
-    fn powf(&self, n: F) -> Self;
+    fn powf(&self, n: Self::Primitive) -> Self;
 
     /// Square root
     fn sqrt(&self) -> Self;
@@ -473,7 +477,7 @@ pub trait DualNum<F>:
     fn ln(&self) -> Self;
 
     /// Logarithm with arbitrary base
-    fn log(&self, base: F) -> Self;
+    fn log(&self, base: Self::Primitive) -> Self;
 
     /// Logarithm with base 2
     fn log2(&self) -> Self;
@@ -549,30 +553,26 @@ pub trait DualNum<F>:
 }
 
 /// A generalized (hyper) dual number that has a static size.
-pub trait DualNumCopy<F>: DualNum<F> + Copy + Send + Sync {}
-impl<T: DualNum<F> + Copy + Send + Sync, F> DualNumCopy<F> for T {}
+pub trait DualNumCopy: DualNum + Copy + Send + Sync {}
+impl<T: DualNum + Copy + Send + Sync> DualNumCopy for T {}
 
-/// The underlying data type of individual derivatives. Usually f32 or f64.
-pub trait DualNumFloat:
-    Float + FloatConst + FromPrimitive + Signed + fmt::Display + fmt::Debug + Sync + Send + 'static
-{
-}
-impl<T> DualNumFloat for T where
-    T: Float
-        + FloatConst
-        + FromPrimitive
-        + Signed
-        + fmt::Display
-        + fmt::Debug
-        + Sync
-        + Send
-        + 'static
-{
+/// The underlying data type of individual derivatives. Implemented for f32 or f64.
+pub trait DualNumFloat: DualNumCopy + Float + FloatConst {
+    const THIRD: Self;
+    const HALF: Self;
+    const TWO: Self;
+    const THREE: Self;
+    const FOUR: Self;
+    const SIX: Self;
+    const TEN: Self;
+    const FIFTEEN: Self;
 }
 
 macro_rules! impl_dual_num_float {
     ($float:ty) => {
-        impl DualNum<$float> for $float {
+        impl DualNum for $float {
+            type Primitive = $float;
+
             const NDERIV: usize = 0;
 
             type InnerDual = $float;
@@ -693,6 +693,17 @@ macro_rules! impl_dual_num_float {
                 }
             }
         }
+
+        impl DualNumFloat for $float {
+            const THIRD: Self = 1.0 / 3.0;
+            const HALF: Self = 0.5;
+            const TWO: Self = 2.0;
+            const THREE: Self = 3.0;
+            const FOUR: Self = 4.0;
+            const SIX: Self = 6.0;
+            const TEN: Self = 10.0;
+            const FIFTEEN: Self = 15.0;
+        }
     };
 }
 
@@ -703,9 +714,9 @@ impl_dual_num_float!(f64);
 ///
 /// The trait is implemented for all dual types themselves, and common data types (tuple, vec,
 /// array, ...) and can be implemented for custom data types to achieve full flexibility.
-pub trait DualStruct<F> {
+pub trait DualStruct {
     type Real;
-    type Inner: DualStruct<F>;
+    type Inner: DualStruct;
     fn re(&self) -> Self::Real;
     fn from_inner(inner: &Self::Inner) -> Self;
 }
@@ -719,7 +730,7 @@ pub trait Mappable<D> {
     fn map_dual<M: Fn(D) -> O, O>(self, f: M) -> Self::Output<O>;
 }
 
-impl<F> DualStruct<F> for () {
+impl DualStruct for () {
     type Real = ();
     type Inner = ();
     fn re(&self) {}
@@ -731,7 +742,7 @@ impl<D> Mappable<D> for () {
     fn map_dual<M: FnOnce(D) -> O, O>(self, _: M) {}
 }
 
-impl DualStruct<f32> for f32 {
+impl DualStruct for f32 {
     type Real = f32;
     type Inner = f32;
     fn re(&self) -> f32 {
@@ -749,7 +760,7 @@ impl Mappable<f32> for f32 {
     }
 }
 
-impl DualStruct<f64> for f64 {
+impl DualStruct for f64 {
     type Real = f64;
     type Inner = f64;
     fn re(&self) -> f64 {
@@ -767,7 +778,7 @@ impl Mappable<f64> for f64 {
     }
 }
 
-impl<T1: DualStruct<F>, T2: DualStruct<F>, F> DualStruct<F> for (T1, T2) {
+impl<T1: DualStruct, T2: DualStruct> DualStruct for (T1, T2) {
     type Real = (T1::Real, T2::Real);
     type Inner = (T1::Inner, T2::Inner);
     fn re(&self) -> Self::Real {
@@ -788,7 +799,7 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>> Mappable<D> for (T1, T2) {
     }
 }
 
-impl<F, T1: DualStruct<F>, T2: DualStruct<F>, T3: DualStruct<F>> DualStruct<F> for (T1, T2, T3) {
+impl<T1: DualStruct, T2: DualStruct, T3: DualStruct> DualStruct for (T1, T2, T3) {
     type Real = (T1::Real, T2::Real, T3::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner);
     fn re(&self) -> Self::Real {
@@ -809,7 +820,7 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>> Mappable<D> for (T1, 
     }
 }
 
-impl<F, T1: DualStruct<F>, T2: DualStruct<F>, T3: DualStruct<F>, T4: DualStruct<F>> DualStruct<F>
+impl<T1: DualStruct, T2: DualStruct, T3: DualStruct, T4: DualStruct> DualStruct
     for (T1, T2, T3, T4)
 {
     type Real = (T1::Real, T2::Real, T3::Real, T4::Real);
@@ -844,14 +855,8 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>, T4: Mappable<D>> Mapp
     }
 }
 
-impl<
-    F,
-    T1: DualStruct<F>,
-    T2: DualStruct<F>,
-    T3: DualStruct<F>,
-    T4: DualStruct<F>,
-    T5: DualStruct<F>,
-> DualStruct<F> for (T1, T2, T3, T4, T5)
+impl<T1: DualStruct, T2: DualStruct, T3: DualStruct, T4: DualStruct, T5: DualStruct> DualStruct
+    for (T1, T2, T3, T4, T5)
 {
     type Real = (T1::Real, T2::Real, T3::Real, T4::Real, T5::Real);
     type Inner = (T1::Inner, T2::Inner, T3::Inner, T4::Inner, T5::Inner);
@@ -893,7 +898,7 @@ impl<D, T1: Mappable<D>, T2: Mappable<D>, T3: Mappable<D>, T4: Mappable<D>, T5: 
     }
 }
 
-impl<F, T: DualStruct<F>, const N: usize> DualStruct<F> for [T; N] {
+impl<T: DualStruct, const N: usize> DualStruct for [T; N] {
     type Real = [T::Real; N];
     type Inner = [T::Inner; N];
     fn re(&self) -> Self::Real {
@@ -911,7 +916,7 @@ impl<D, T: Mappable<D>, const N: usize> Mappable<D> for [T; N] {
     }
 }
 
-impl<F, T: DualStruct<F>> DualStruct<F> for Option<T> {
+impl<T: DualStruct> DualStruct for Option<T> {
     type Real = Option<T::Real>;
     type Inner = Option<T::Inner>;
     fn re(&self) -> Self::Real {
@@ -936,7 +941,7 @@ impl<D, T: Mappable<D>, E> Mappable<D> for Result<T, E> {
     }
 }
 
-impl<F, T: DualStruct<F>> DualStruct<F> for Vec<T> {
+impl<T: DualStruct> DualStruct for Vec<T> {
     type Real = Vec<T::Real>;
     type Inner = Vec<T::Inner>;
     fn re(&self) -> Self::Real {
@@ -954,7 +959,7 @@ impl<D, T: Mappable<D>> Mappable<D> for Vec<T> {
     }
 }
 
-impl<F, T: DualStruct<F>, K: Clone + Eq + Hash> DualStruct<F> for HashMap<K, T> {
+impl<T: DualStruct, K: Clone + Eq + Hash> DualStruct for HashMap<K, T> {
     type Real = HashMap<K, T::Real>;
     type Inner = HashMap<K, T::Inner>;
     fn re(&self) -> Self::Real {
@@ -975,7 +980,7 @@ impl<D, T: Mappable<D>, K: Eq + Hash> Mappable<D> for HashMap<K, T> {
     }
 }
 
-impl<F: DualNumFloat, D: DualNum<F>, R: Dim, C: Dim> DualStruct<F> for OMatrix<D, R, C>
+impl<D: DualNum, R: Dim, C: Dim> DualStruct for OMatrix<D, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
 {
