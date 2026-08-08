@@ -4,13 +4,12 @@ use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::*;
 
 /// A scalar third order dual number for the calculation of third derivatives.
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Dual3<T, F = T> {
+pub struct Dual3<T> {
     /// Real part of the third order dual number
     pub re: T,
     /// First derivative part of the third order dual number
@@ -19,31 +18,23 @@ pub struct Dual3<T, F = T> {
     pub v2: T,
     /// Third derivative part of the third order dual number
     pub v3: T,
-    #[cfg_attr(feature = "serde", serde(skip))]
-    f: PhantomData<F>,
 }
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for Dual3<T, F> {}
+impl<T: DualNum> ndarray::ScalarOperand for Dual3<T> {}
 
 pub type Dual3_32 = Dual3<f32>;
 pub type Dual3_64 = Dual3<f64>;
 
-impl<T, F> Dual3<T, F> {
+impl<T> Dual3<T> {
     /// Create a new third order dual number from its fields.
     #[inline]
     pub fn new(re: T, v1: T, v2: T, v3: T) -> Self {
-        Self {
-            re,
-            v1,
-            v2,
-            v3,
-            f: PhantomData,
-        }
+        Self { re, v1, v2, v3 }
     }
 }
 
-impl<T: DualNum<F>, F> Dual3<T, F> {
+impl<T: One + Zero> Dual3<T> {
     /// Create a new third order dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
@@ -66,7 +57,7 @@ impl<T: DualNum<F>, F> Dual3<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Dual3<T, F> {
+impl<T: DualNum> Dual3<T> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T, f3: T) -> Self {
         let three = T::one() + T::one() + T::one();
@@ -79,10 +70,10 @@ impl<T: DualNum<F>, F: Float> Dual3<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Mul<&Dual3<T, F>> for &Dual3<T, F> {
-    type Output = Dual3<T, F>;
+impl<T: DualNum> Mul<&Dual3<T>> for &Dual3<T> {
+    type Output = Dual3<T>;
     #[inline]
-    fn mul(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
+    fn mul(self, rhs: &Dual3<T>) -> Dual3<T> {
         let two = T::one() + T::one();
         let three = T::one() + &two;
         Dual3::new(
@@ -96,21 +87,21 @@ impl<T: DualNum<F>, F: Float> Mul<&Dual3<T, F>> for &Dual3<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F: Float> Div<&Dual3<T, F>> for &Dual3<T, F> {
-    type Output = Dual3<T, F>;
+impl<T: DualNum> Div<&Dual3<T>> for &Dual3<T> {
+    type Output = Dual3<T>;
     #[inline]
-    fn div(self, rhs: &Dual3<T, F>) -> Dual3<T, F> {
+    fn div(self, rhs: &Dual3<T>) -> Dual3<T> {
         let rec = T::one() / &rhs.re;
         let f0 = rec.clone();
         let f1 = -f0.clone() * &rec;
-        let f2 = f1.clone() * &rec * F::from(-2.0).unwrap();
-        let f3 = f2.clone() * rec * F::from(-3.0).unwrap();
+        let f2 = -f1.clone() * &rec * T::Primitive::TWO;
+        let f3 = -f2.clone() * rec * T::Primitive::THREE;
         self * rhs.chain_rule(f0, f1, f2, f3)
     }
 }
 
 /* string conversions */
-impl<T: fmt::Display, F> fmt::Display for Dual3<T, F> {
+impl<T: fmt::Display> fmt::Display for Dual3<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

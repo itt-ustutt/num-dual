@@ -4,7 +4,6 @@ use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
@@ -12,7 +11,7 @@ use std::ops::{
 /// A scalar hyper-dual number for the calculation of second partial derivatives.
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct HyperDual<T: DualNum<F>, F> {
+pub struct HyperDual<T> {
     /// Real part of the hyper-dual number
     pub re: T,
     /// Partial derivative part of the hyper-dual number
@@ -21,17 +20,15 @@ pub struct HyperDual<T: DualNum<F>, F> {
     pub eps2: T,
     /// Second partial derivative part of the hyper-dual number
     pub eps1eps2: T,
-    #[cfg_attr(feature = "serde", serde(skip))]
-    f: PhantomData<F>,
 }
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for HyperDual<T, F> {}
+impl<T: DualNum> ndarray::ScalarOperand for HyperDual<T> {}
 
-pub type HyperDual32 = HyperDual<f32, f32>;
-pub type HyperDual64 = HyperDual<f64, f64>;
+pub type HyperDual32 = HyperDual<f32>;
+pub type HyperDual64 = HyperDual<f64>;
 
-impl<T: DualNum<F>, F> HyperDual<T, F> {
+impl<T> HyperDual<T> {
     /// Create a new hyper-dual number from its fields.
     #[inline]
     pub fn new(re: T, eps1: T, eps2: T, eps1eps2: T) -> Self {
@@ -40,12 +37,11 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
             eps1,
             eps2,
             eps1eps2,
-            f: PhantomData,
         }
     }
 }
 
-impl<T: DualNum<F>, F> HyperDual<T, F> {
+impl<T: DualNum> HyperDual<T> {
     /// Set the partial derivative part w.r.t. the 1st variable to 1.
     #[inline]
     pub fn derivative1(mut self) -> Self {
@@ -61,7 +57,7 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F> HyperDual<T, F> {
+impl<T: DualNum> HyperDual<T> {
     /// Create a new hyper-dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
@@ -70,7 +66,7 @@ impl<T: DualNum<F>, F> HyperDual<T, F> {
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float> HyperDual<T, F> {
+impl<T: DualNum> HyperDual<T> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
         Self::new(
@@ -83,10 +79,10 @@ impl<T: DualNum<F>, F: Float> HyperDual<T, F> {
 }
 
 /* product rule */
-impl<T: DualNum<F>, F: Float> Mul<&HyperDual<T, F>> for &HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<T: DualNum> Mul<&HyperDual<T>> for &HyperDual<T> {
+    type Output = HyperDual<T>;
     #[inline]
-    fn mul(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
+    fn mul(self, other: &HyperDual<T>) -> HyperDual<T> {
         HyperDual::new(
             self.re.clone() * other.re.clone(),
             other.eps1.clone() * self.re.clone() + self.eps1.clone() * other.re.clone(),
@@ -100,10 +96,10 @@ impl<T: DualNum<F>, F: Float> Mul<&HyperDual<T, F>> for &HyperDual<T, F> {
 }
 
 /* quotient rule */
-impl<T: DualNum<F>, F: Float> Div<&HyperDual<T, F>> for &HyperDual<T, F> {
-    type Output = HyperDual<T, F>;
+impl<T: DualNum> Div<&HyperDual<T>> for &HyperDual<T> {
+    type Output = HyperDual<T>;
     #[inline]
-    fn div(self, other: &HyperDual<T, F>) -> HyperDual<T, F> {
+    fn div(self, other: &HyperDual<T>) -> HyperDual<T> {
         let inv = other.re.recip();
         let inv2 = inv.clone() * &inv;
         HyperDual::new(
@@ -125,7 +121,7 @@ impl<T: DualNum<F>, F: Float> Div<&HyperDual<T, F>> for &HyperDual<T, F> {
 }
 
 /* string conversions */
-impl<T: DualNum<F>, F: fmt::Display> fmt::Display for HyperDual<T, F> {
+impl<T: DualNum> fmt::Display for HyperDual<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.re, f)?;
         write!(f, " + ")?;

@@ -1,10 +1,12 @@
 #[macro_export]
 macro_rules! impl_derivatives {
     ($deriv:ident, $nderiv:expr, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
-        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> DualNum<F> for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum<Primitive = F>, F: DualNumFloat$($(, $dim: Dim)*)?> DualNum for $struct<T$($(, $dim)*)?>
         where
         $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
+            type Primitive = F;
+
             const NDERIV: usize = T::NDERIV + $nderiv;
 
             type InnerDual = T;
@@ -17,8 +19,8 @@ macro_rules! impl_derivatives {
                 let rec = self.re.recip();
                 let f0 = rec.clone();
                 first!($deriv, let f1 = -f0.clone() * &rec;);
-                second!($deriv, let f2 = f1.clone() * &rec * F::from(-2.0).unwrap(););
-                third!($deriv, let f3 = f2.clone() * rec * F::from(-3.0).unwrap(););
+                second!($deriv, let f2 = -f1.clone() * &rec * T::Primitive::TWO;);
+                third!($deriv, let f3 = -f2.clone() * rec * T::Primitive::THREE;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -31,9 +33,9 @@ macro_rules! impl_derivatives {
                     _ => {
                         let pow3 = self.re.powi(exp - 3);
                         let f0 = pow3.clone() * &self.re * &self.re * &self.re;
-                        first!($deriv, let f1 = pow3.clone() * &self.re * &self.re * F::from(exp).unwrap(););
-                        second!($deriv, let f2 = pow3.clone() * &self.re * F::from(exp * (exp - 1)).unwrap(););
-                        third!($deriv, let f3 = pow3 * F::from(exp * (exp - 1) * (exp - 2)).unwrap(););
+                        first!($deriv, let f1 = pow3.clone() * &self.re * &self.re * T::Primitive::from_i32(exp).unwrap(););
+                        second!($deriv, let f2 = pow3.clone() * &self.re * T::Primitive::from_i32(exp * (exp - 1)).unwrap(););
+                        third!($deriv, let f3 = pow3 * T::Primitive::from_i32(exp * (exp - 1) * (exp - 2)).unwrap(););
                         chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
                     }
                 }
@@ -63,7 +65,7 @@ macro_rules! impl_derivatives {
             #[inline]
             fn sqrt(&self) -> Self {
                 first!($deriv, let rec = self.re.recip(););
-                first!($deriv, let half = F::from(0.5).unwrap(););
+                first!($deriv, let half = T::Primitive::HALF;);
                 let f0 = self.re.sqrt();
                 first!($deriv, let f1 = f0.clone() * &rec * half;);
                 second!($deriv, let f2 = -f1.clone() * &rec * half;);
@@ -74,7 +76,7 @@ macro_rules! impl_derivatives {
             #[inline]
             fn cbrt(&self) -> Self {
                 first!($deriv, let rec = self.re.recip(););
-                first!($deriv, let third = F::from(1.0 / 3.0).unwrap(););
+                first!($deriv, let third = T::Primitive::THIRD;);
                 let f0 = self.re.cbrt();
                 first!($deriv, let f1 = f0.clone() * &rec * third;);
                 second!($deriv, let f2 = f1.clone() * &rec * (third - F::one()););
@@ -91,7 +93,7 @@ macro_rules! impl_derivatives {
 
             #[inline]
             fn exp2(&self) -> Self {
-                first!($deriv, let ln2 = F::from(2.0).unwrap().ln(););
+                first!($deriv, let ln2 = T::Primitive::TWO.ln(););
                 let f0 = self.re.exp2();
                 first!($deriv, let f1 = f0.clone() * ln2;);
                 second!($deriv, let f2 = f1.clone() * ln2;);
@@ -112,7 +114,7 @@ macro_rules! impl_derivatives {
                 let f0 = self.re.ln();
                 first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
-                third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
+                third!($deriv, let f3 = -f2.clone() * rec * T::Primitive::TWO;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -122,7 +124,7 @@ macro_rules! impl_derivatives {
                 let f0 = self.re.log(base);
                 first!($deriv, let f1 = rec.clone() / base.ln(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
-                third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
+                third!($deriv, let f3 = -f2.clone() * rec * T::Primitive::TWO;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -132,7 +134,7 @@ macro_rules! impl_derivatives {
                 let f0 = self.re.log2();
                 first!($deriv, let f1 = rec.clone() / (F::one() + F::one()).ln(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
-                third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
+                third!($deriv, let f3 = -f2.clone() * rec * T::Primitive::TWO;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -140,9 +142,9 @@ macro_rules! impl_derivatives {
             fn log10(&self) -> Self {
                 first!($deriv, let rec = self.re.recip(););
                 let f0 = self.re.log10();
-                first!($deriv, let f1 = rec.clone() / F::from(10.0).unwrap().ln(););
+                first!($deriv, let f1 = rec.clone() / T::Primitive::LN_10(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
-                third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
+                third!($deriv, let f3 = -f2.clone() * rec * T::Primitive::TWO;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -152,7 +154,7 @@ macro_rules! impl_derivatives {
                 let f0 = self.re.ln_1p();
                 first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let f2 = -f1.clone() * &rec;);
-                third!($deriv, let f3 = f2.clone() * rec * F::from(-2.0).unwrap(););
+                third!($deriv, let f3 = -f2.clone() * rec * T::Primitive::TWO;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -211,7 +213,7 @@ macro_rules! impl_derivatives {
                 first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let two = F::one() + F::one(););
                 second!($deriv, let f2 = -self.re.clone() * &f1 * &rec * two;);
-                third!($deriv, let f3 = (self.re.clone() * &self.re * F::from(6.0).unwrap() - two) * &f1 * &rec * rec;);
+                third!($deriv, let f3 = (self.re.clone() * &self.re * T::Primitive::SIX - two) * &f1 * &rec * rec;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
@@ -268,14 +270,14 @@ macro_rules! impl_derivatives {
                 first!($deriv, let f1 = rec.clone(););
                 second!($deriv, let two = F::one() + F::one(););
                 second!($deriv, let f2 = self.re.clone() * &f1 * &rec * two;);
-                third!($deriv, let f3 = (self.re.clone() * &self.re * F::from(6.0).unwrap() + two) * &f1 * &rec * rec;);
+                third!($deriv, let f3 = (self.re.clone() * &self.re * T::Primitive::SIX + two) * &f1 * &rec * rec;);
                 chain_rule!($deriv, Self::chain_rule(self, f0, f1, f2, f3))
             }
 
             #[inline]
             fn sph_j0(&self) -> Self {
                 if self.re().abs() < F::epsilon() {
-                    Self::one() - self * self / F::from(6.0).unwrap()
+                    Self::one() - self * self / T::Primitive::SIX
                 } else {
                     self.sin() / self
                 }
@@ -284,7 +286,7 @@ macro_rules! impl_derivatives {
             #[inline]
             fn sph_j1(&self) -> Self {
                 if self.re().abs() < F::epsilon() {
-                    self.clone() / F::from(3.0).unwrap()
+                    self.clone() / T::Primitive::THREE
                 } else {
                     let (s, c) = self.sin_cos();
                     (s - self * c) / (self * self)
@@ -294,11 +296,11 @@ macro_rules! impl_derivatives {
             #[inline]
             fn sph_j2(&self) -> Self {
                 if self.re().abs() < F::epsilon() {
-                    self * self / F::from(15.0).unwrap()
+                    self * self / T::Primitive::FIFTEEN
                 } else {
                     let (s, c) = self.sin_cos();
                     let s2 = self * self;
-                    ((&s - self * c) * F::from(3.0).unwrap() - &s2 * s) / (s2 * self)
+                    ((&s - self * c) * T::Primitive::THREE - &s2 * s) / (s2 * self)
                 }
             }
         }

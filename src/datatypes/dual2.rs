@@ -4,7 +4,6 @@ use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
@@ -12,37 +11,30 @@ use std::ops::{
 /// A scalar second order dual number for the calculation of second derivatives.
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Dual2<T: DualNum<F>, F> {
+pub struct Dual2<T> {
     /// Real part of the second order dual number
     pub re: T,
     /// First derivative part of the second order dual number
     pub v1: T,
     /// Second derivative part of the second order dual number
     pub v2: T,
-    #[cfg_attr(feature = "serde", serde(skip))]
-    f: PhantomData<F>,
 }
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat> ndarray::ScalarOperand for Dual2<T, F> {}
+impl<T: DualNum> ndarray::ScalarOperand for Dual2<T> {}
 
-pub type Dual2_32 = Dual2<f32, f32>;
-pub type Dual2_64 = Dual2<f64, f64>;
+pub type Dual2_32 = Dual2<f32>;
+pub type Dual2_64 = Dual2<f64>;
 
-impl<T: DualNum<F>, F> Dual2<T, F> {
+impl<T> Dual2<T> {
     /// Create a new second order dual number from its fields.
     #[inline]
     pub fn new(re: T, v1: T, v2: T) -> Self {
-        Self {
-            re,
-            v1,
-            v2,
-            f: PhantomData,
-        }
+        Self { re, v1, v2 }
     }
 }
 
-impl<T: DualNum<F>, F> Dual2<T, F> {
+impl<T: One> Dual2<T> {
     /// Set the derivative part to 1.
     /// ```
     /// # use num_dual::{Dual2, DualNum};
@@ -71,7 +63,7 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F> Dual2<T, F> {
+impl<T: Zero> Dual2<T> {
     /// Create a new second order dual number from the real part.
     #[inline]
     pub fn from_re(re: T) -> Self {
@@ -80,7 +72,7 @@ impl<T: DualNum<F>, F> Dual2<T, F> {
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float> Dual2<T, F> {
+impl<T: DualNum> Dual2<T> {
     #[inline]
     fn chain_rule(&self, f0: T, f1: T, f2: T) -> Self {
         Self::new(
@@ -92,10 +84,10 @@ impl<T: DualNum<F>, F: Float> Dual2<T, F> {
 }
 
 /* product rule */
-impl<T: DualNum<F>, F: Float> Mul<&Dual2<T, F>> for &Dual2<T, F> {
-    type Output = Dual2<T, F>;
+impl<T: DualNum> Mul<&Dual2<T>> for &Dual2<T> {
+    type Output = Dual2<T>;
     #[inline]
-    fn mul(self, other: &Dual2<T, F>) -> Dual2<T, F> {
+    fn mul(self, other: &Dual2<T>) -> Dual2<T> {
         Dual2::new(
             self.re.clone() * other.re.clone(),
             other.v1.clone() * self.re.clone() + self.v1.clone() * other.re.clone(),
@@ -108,10 +100,10 @@ impl<T: DualNum<F>, F: Float> Mul<&Dual2<T, F>> for &Dual2<T, F> {
 }
 
 /* quotient rule */
-impl<T: DualNum<F>, F: Float> Div<&Dual2<T, F>> for &Dual2<T, F> {
-    type Output = Dual2<T, F>;
+impl<T: DualNum> Div<&Dual2<T>> for &Dual2<T> {
+    type Output = Dual2<T>;
     #[inline]
-    fn div(self, other: &Dual2<T, F>) -> Dual2<T, F> {
+    fn div(self, other: &Dual2<T>) -> Dual2<T> {
         let inv = other.re.recip();
         let inv2 = inv.clone() * inv.clone();
         Dual2::new(
@@ -131,7 +123,7 @@ impl<T: DualNum<F>, F: Float> Div<&Dual2<T, F>> for &Dual2<T, F> {
 }
 
 /* string conversions */
-impl<T: DualNum<F>, F: fmt::Display> fmt::Display for Dual2<T, F> {
+impl<T: DualNum> fmt::Display for Dual2<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} + {}ε1 + {}ε1²", self.re, self.v1, self.v2)
     }

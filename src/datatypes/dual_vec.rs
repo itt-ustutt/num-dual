@@ -4,57 +4,49 @@ use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
 /// A vector dual number for the calculations of gradients or Jacobians.
 #[derive(Clone, Debug)]
-pub struct DualVec<T: DualNum<F>, F, D: Dim>
+pub struct DualVec<T: Scalar, D: Dim>
 where
     DefaultAllocator: Allocator<D>,
 {
     /// Real part of the dual number
     pub re: T,
     /// Derivative part of the dual number
-    pub eps: Derivative<T, F, D, U1>,
-    f: PhantomData<F>,
+    pub eps: Derivative<T, D, U1>,
 }
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for DualVec<T, F, D> where
-    DefaultAllocator: Allocator<D>
-{
-}
+impl<T: Scalar, D: Dim> ndarray::ScalarOperand for DualVec<T, D> where DefaultAllocator: Allocator<D>
+{}
 
-impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for DualVec<T, F, Const<N>> {}
+impl<T: Scalar + Copy, const N: usize> Copy for DualVec<T, Const<N>> {}
 
-pub type DualSVec<D, F, const N: usize> = DualVec<D, F, Const<N>>;
-pub type DualDVec<D, F> = DualVec<D, F, Dyn>;
-pub type DualVec32<D> = DualVec<f32, f32, D>;
-pub type DualVec64<D> = DualVec<f64, f64, D>;
-pub type DualSVec32<const N: usize> = DualVec<f32, f32, Const<N>>;
-pub type DualSVec64<const N: usize> = DualVec<f64, f64, Const<N>>;
-pub type DualDVec32 = DualVec<f32, f32, Dyn>;
-pub type DualDVec64 = DualVec<f64, f64, Dyn>;
+pub type DualSVec<D, const N: usize> = DualVec<D, Const<N>>;
+pub type DualDVec<D> = DualVec<D, Dyn>;
+pub type DualVec32<D> = DualVec<f32, D>;
+pub type DualVec64<D> = DualVec<f64, D>;
+pub type DualSVec32<const N: usize> = DualVec<f32, Const<N>>;
+pub type DualSVec64<const N: usize> = DualVec<f64, Const<N>>;
+pub type DualDVec32 = DualVec<f32, Dyn>;
+pub type DualDVec64 = DualVec<f64, Dyn>;
 
-impl<T: DualNum<F>, F, D: Dim> DualVec<T, F, D>
+impl<T: DualNum, D: Dim> DualVec<T, D>
 where
     DefaultAllocator: Allocator<D>,
 {
     /// Create a new dual number from its fields.
     #[inline]
-    pub fn new(re: T, eps: Derivative<T, F, D, U1>) -> Self {
-        Self {
-            re,
-            eps,
-            f: PhantomData,
-        }
+    pub fn new(re: T, eps: Derivative<T, D, U1>) -> Self {
+        Self { re, eps }
     }
 }
 
-impl<T: DualNum<F>, F, const N: usize> DualSVec<T, F, N> {
+impl<T: DualNum, const N: usize> DualSVec<T, N> {
     /// Set the derivative part of variable `index` to 1.
     ///
     /// For most cases, the [`gradient`](crate::gradient) function provides a convenient interface
@@ -76,7 +68,7 @@ impl<T: DualNum<F>, F, const N: usize> DualSVec<T, F, N> {
     }
 }
 
-impl<T: DualNum<F>, F> DualDVec<T, F> {
+impl<T: DualNum> DualDVec<T> {
     /// Set the derivative part of variable `index` to 1.
     ///
     /// For most cases, the [`gradient`](crate::gradient) function provides a convenient interface
@@ -98,7 +90,7 @@ impl<T: DualNum<F>, F> DualDVec<T, F> {
     }
 }
 
-impl<T: DualNum<F> + Zero, F, D: Dim> DualVec<T, F, D>
+impl<T: DualNum, D: Dim> DualVec<T, D>
 where
     DefaultAllocator: Allocator<D>,
 {
@@ -110,7 +102,7 @@ where
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float, D: Dim> DualVec<T, F, D>
+impl<T: DualNum, D: Dim> DualVec<T, D>
 where
     DefaultAllocator: Allocator<D>,
 {
@@ -121,13 +113,13 @@ where
 }
 
 /* product rule */
-impl<T: DualNum<F>, F: Float, D: Dim> Mul<&DualVec<T, F, D>> for &DualVec<T, F, D>
+impl<T: DualNum, D: Dim> Mul<&DualVec<T, D>> for &DualVec<T, D>
 where
     DefaultAllocator: Allocator<D>,
 {
-    type Output = DualVec<T, F, D>;
+    type Output = DualVec<T, D>;
     #[inline]
-    fn mul(self, other: &DualVec<T, F, D>) -> Self::Output {
+    fn mul(self, other: &DualVec<T, D>) -> Self::Output {
         DualVec::new(
             self.re.clone() * other.re.clone(),
             &self.eps * other.re.clone() + &other.eps * self.re.clone(),
@@ -136,13 +128,13 @@ where
 }
 
 /* quotient rule */
-impl<T: DualNum<F>, F: Float, D: Dim> Div<&DualVec<T, F, D>> for &DualVec<T, F, D>
+impl<T: DualNum, D: Dim> Div<&DualVec<T, D>> for &DualVec<T, D>
 where
     DefaultAllocator: Allocator<D>,
 {
-    type Output = DualVec<T, F, D>;
+    type Output = DualVec<T, D>;
     #[inline]
-    fn div(self, other: &DualVec<T, F, D>) -> DualVec<T, F, D> {
+    fn div(self, other: &DualVec<T, D>) -> DualVec<T, D> {
         let inv = other.re.recip();
         DualVec::new(
             self.re.clone() * inv.clone(),
@@ -152,7 +144,7 @@ where
 }
 
 /* string conversions */
-impl<T: DualNum<F>, F, D: Dim> fmt::Display for DualVec<T, F, D>
+impl<T: DualNum, D: Dim> fmt::Display for DualVec<T, D>
 where
     DefaultAllocator: Allocator<D>,
 {

@@ -3,7 +3,7 @@ use nalgebra::{DVector, SVector};
 use num_dual::*;
 
 trait HelmholtzEnergy<const N: usize> {
-    fn helmholtz_energy<T: DualNum<f64>>(
+    fn helmholtz_energy<T: DualNum<Primitive = f64>>(
         &self,
         temperature: T,
         volume: T,
@@ -18,7 +18,7 @@ struct HSContribution<const N: usize> {
 }
 
 impl<const N: usize> HelmholtzEnergy<N> for HSContribution<N> {
-    fn helmholtz_energy<T: DualNum<f64>>(
+    fn helmholtz_energy<T: DualNum<Primitive = f64>>(
         &self,
         temperature: T,
         volume: T,
@@ -51,7 +51,7 @@ impl<const N: usize> HelmholtzEnergy<N> for HSContribution<N> {
     }
 }
 
-fn bench<T: DualNum<f64>>(one: T) -> T {
+fn bench<T: DualNum<Primitive = f64>>(one: T) -> T {
     let temperature = one.clone() * 300.0;
     let volume = one.clone() * 1.0;
     let moles = SVector::from([one.clone() * 0.001, one * 0.005]);

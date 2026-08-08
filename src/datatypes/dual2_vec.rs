@@ -4,60 +4,53 @@ use nalgebra::*;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
 /// A vector second order dual number for the calculation of Hessians.
 #[derive(Clone, Debug)]
-pub struct Dual2Vec<T: DualNum<F>, F, D: Dim>
+pub struct Dual2Vec<T: Scalar, D: Dim>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     /// Real part of the second order dual number
     pub re: T,
     /// Gradient part of the second order dual number
-    pub v1: Derivative<T, F, U1, D>,
+    pub v1: Derivative<T, U1, D>,
     /// Hessian part of the second order dual number
-    pub v2: Derivative<T, F, D, D>,
-    f: PhantomData<F>,
+    pub v2: Derivative<T, D, D>,
 }
 
-impl<T: DualNum<F> + Copy, F: Copy, const N: usize> Copy for Dual2Vec<T, F, Const<N>> {}
+impl<T: Scalar + Copy, const N: usize> Copy for Dual2Vec<T, Const<N>> {}
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat, D: Dim> ndarray::ScalarOperand for Dual2Vec<T, F, D> where
+impl<T: DualNum, D: Dim> ndarray::ScalarOperand for Dual2Vec<T, D> where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>
 {
 }
 
-pub type Dual2SVec<T, F, const N: usize> = Dual2Vec<T, F, Const<N>>;
-pub type Dual2DVec<T, F> = Dual2Vec<T, F, Dyn>;
-pub type Dual2Vec32<D> = Dual2Vec<f32, f32, D>;
-pub type Dual2Vec64<D> = Dual2Vec<f64, f64, D>;
-pub type Dual2SVec32<const N: usize> = Dual2Vec<f32, f32, Const<N>>;
-pub type Dual2SVec64<const N: usize> = Dual2Vec<f64, f64, Const<N>>;
-pub type Dual2DVec32 = Dual2Vec<f32, f32, Dyn>;
-pub type Dual2DVec64 = Dual2Vec<f64, f64, Dyn>;
+pub type Dual2SVec<T, const N: usize> = Dual2Vec<T, Const<N>>;
+pub type Dual2DVec<T> = Dual2Vec<T, Dyn>;
+pub type Dual2Vec32<D> = Dual2Vec<f32, D>;
+pub type Dual2Vec64<D> = Dual2Vec<f64, D>;
+pub type Dual2SVec32<const N: usize> = Dual2Vec<f32, Const<N>>;
+pub type Dual2SVec64<const N: usize> = Dual2Vec<f64, Const<N>>;
+pub type Dual2DVec32 = Dual2Vec<f32, Dyn>;
+pub type Dual2DVec64 = Dual2Vec<f64, Dyn>;
 
-impl<T: DualNum<F>, F, D: Dim> Dual2Vec<T, F, D>
+impl<T: DualNum, D: Dim> Dual2Vec<T, D>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
     /// Create a new second order dual number from its fields.
     #[inline]
-    pub fn new(re: T, v1: Derivative<T, F, U1, D>, v2: Derivative<T, F, D, D>) -> Self {
-        Self {
-            re,
-            v1,
-            v2,
-            f: PhantomData,
-        }
+    pub fn new(re: T, v1: Derivative<T, U1, D>, v2: Derivative<T, D, D>) -> Self {
+        Self { re, v1, v2 }
     }
 }
 
-impl<T: DualNum<F>, F, const N: usize> Dual2SVec<T, F, N> {
+impl<T: DualNum, const N: usize> Dual2SVec<T, N> {
     /// Set the derivative part of variable `index` to 1.
     ///
     /// For most cases, the [`hessian`](crate::hessian) function provides a convenient
@@ -80,7 +73,7 @@ impl<T: DualNum<F>, F, const N: usize> Dual2SVec<T, F, N> {
     }
 }
 
-impl<T: DualNum<F>, F> Dual2DVec<T, F> {
+impl<T: DualNum> Dual2DVec<T> {
     /// Set the derivative part of variable `index` to 1.
     ///
     /// For most cases, the [`hessian`](crate::hessian) function provides a convenient interface
@@ -103,7 +96,7 @@ impl<T: DualNum<F>, F> Dual2DVec<T, F> {
     }
 }
 
-impl<T: DualNum<F>, F, D: Dim> Dual2Vec<T, F, D>
+impl<T: DualNum, D: Dim> Dual2Vec<T, D>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
@@ -115,7 +108,7 @@ where
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float, D: Dim> Dual2Vec<T, F, D>
+impl<T: DualNum, D: Dim> Dual2Vec<T, D>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
@@ -130,13 +123,13 @@ where
 }
 
 /* product rule */
-impl<T: DualNum<F>, F: Float, D: Dim> Mul<&Dual2Vec<T, F, D>> for &Dual2Vec<T, F, D>
+impl<T: DualNum, D: Dim> Mul<&Dual2Vec<T, D>> for &Dual2Vec<T, D>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
-    type Output = Dual2Vec<T, F, D>;
+    type Output = Dual2Vec<T, D>;
     #[inline]
-    fn mul(self, other: &Dual2Vec<T, F, D>) -> Dual2Vec<T, F, D> {
+    fn mul(self, other: &Dual2Vec<T, D>) -> Dual2Vec<T, D> {
         Dual2Vec::new(
             self.re.clone() * other.re.clone(),
             &other.v1 * self.re.clone() + &self.v1 * other.re.clone(),
@@ -149,13 +142,13 @@ where
 }
 
 /* quotient rule */
-impl<T: DualNum<F>, F: Float, D: Dim> Div<&Dual2Vec<T, F, D>> for &Dual2Vec<T, F, D>
+impl<T: DualNum, D: Dim> Div<&Dual2Vec<T, D>> for &Dual2Vec<T, D>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {
-    type Output = Dual2Vec<T, F, D>;
+    type Output = Dual2Vec<T, D>;
     #[inline]
-    fn div(self, other: &Dual2Vec<T, F, D>) -> Dual2Vec<T, F, D> {
+    fn div(self, other: &Dual2Vec<T, D>) -> Dual2Vec<T, D> {
         let inv = other.re.recip();
         let inv2 = inv.clone() * inv.clone();
         Dual2Vec::new(
@@ -173,7 +166,7 @@ where
 }
 
 /* string conversions */
-impl<T: DualNum<F>, F: fmt::Display, D: Dim> fmt::Display for Dual2Vec<T, F, D>
+impl<T: DualNum, D: Dim> fmt::Display for Dual2Vec<T, D>
 where
     DefaultAllocator: Allocator<U1, D> + Allocator<D, D>,
 {

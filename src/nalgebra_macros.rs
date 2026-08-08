@@ -2,8 +2,8 @@ macro_rules! impl_approx {
     ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
         /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
         /// same execution path as real-valued code would.
-        impl<T: DualNum<F> + approx::AbsDiffEq<Epsilon = T>, F$($(, $dim: Dim)*)?> approx::AbsDiffEq
-            for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum + approx::AbsDiffEq<Epsilon = T>$($(, $dim: Dim)*)?> approx::AbsDiffEq
+            for $struct<T$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
@@ -22,8 +22,8 @@ macro_rules! impl_approx {
 
         /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
         /// same execution path as real-valued code would.
-        impl<T: DualNum<F> + approx::RelativeEq<Epsilon = T>, F$($(, $dim: Dim)*)?> approx::RelativeEq
-            for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum + approx::RelativeEq<Epsilon = T>$($(, $dim: Dim)*)?> approx::RelativeEq
+            for $struct<T$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
@@ -43,7 +43,7 @@ macro_rules! impl_approx {
             }
         }
 
-        impl<T: DualNum<F> + approx::UlpsEq<Epsilon = T>, F$($(, $dim: Dim)*)?> approx::UlpsEq for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum + approx::UlpsEq<Epsilon = T>$($(, $dim: Dim)*)?> approx::UlpsEq for $struct<T$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
@@ -80,10 +80,10 @@ macro_rules! impl_simd_value {
          * <https://github.com/dimforge/simba/issues/44>.
          *
          */
-        impl<T$($(, $dim: Dim)*)?> nalgebra::SimdValue for $struct<T, T::Element$($(, $dim)*)?>
+        impl<T$($(, $dim: Dim)*)?> nalgebra::SimdValue for $struct<T$($(, $dim)*)?>
         where
-            T: DualNum<T::Element> + nalgebra::SimdValue + nalgebra::Scalar,
-            T::Element: DualNum<T::Element> + nalgebra::Scalar,
+            T: DualNum<Primitive = T::Element> + nalgebra::SimdValue + nalgebra::Scalar,
+            T::Element: DualNum<Primitive = T::Element> + nalgebra::Scalar,
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
             // Say T = simba::f32x4. T::Element is f32. T::SimdBool is AutoSimd<[bool; 4]>.
@@ -94,7 +94,7 @@ macro_rules! impl_simd_value {
             // together.
             //
             // Hence this definition of Element:
-            type Element = $struct<T::Element, T::Element$($(, $dim)*)?>;
+            type Element = $struct<T::Element$($(, $dim)*)?>;
             type SimdBool = T::SimdBool;
 
             const LANES: usize = T::LANES;
@@ -142,7 +142,7 @@ macro_rules! impl_simd_value {
 macro_rules! impl_subset {
     ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
         // one of the weirdest things among the nalgebra trait bounds
-        impl<T: DualNum<F> + Clone, F: Clone$($(, $dim: Dim)*)?> simba::scalar::SubsetOf<Self> for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum$($(, $dim: Dim)*)?> simba::scalar::SubsetOf<Self> for $struct<T$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
@@ -168,8 +168,8 @@ macro_rules! impl_subset {
 
 macro_rules! impl_superset {
     ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
-        impl<T: DualNum<F> + simba::scalar::SupersetOf<f32>, F$($(, $dim: Dim)*)?> simba::scalar::SupersetOf<f32>
-            for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum + simba::scalar::SupersetOf<f32>$($(, $dim: Dim)*)?> simba::scalar::SupersetOf<f32>
+            for $struct<T$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
@@ -190,8 +190,8 @@ macro_rules! impl_superset {
             }
         }
 
-        impl<T: DualNum<F> + simba::scalar::SupersetOf<f64>, F$($(, $dim: Dim)*)?> simba::scalar::SupersetOf<f64>
-            for $struct<T, F$($(, $dim)*)?>
+        impl<T: DualNum + simba::scalar::SupersetOf<f64>$($(, $dim: Dim)*)?> simba::scalar::SupersetOf<f64>
+            for $struct<T$($(, $dim)*)?>
         where
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {
@@ -216,15 +216,15 @@ macro_rules! impl_superset {
 
 macro_rules! impl_complex_field {
     ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
-        impl<T: DualNum<T::Element>$($(, $dim: Dim)*)?> nalgebra::Field for $struct<T, T::Element$($(, $dim)*)?>
+        impl<T: DualNum<Primitive = T::Element>$($(, $dim: Dim)*)?> nalgebra::Field for $struct<T$($(, $dim)*)?>
         where
             T: nalgebra::SimdValue,
-            T::Element: DualNum<T::Element> + nalgebra::Scalar + Float,
+            T::Element: DualNum<Primitive = T::Element> + nalgebra::Scalar + Float,
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {}
 
         // This impl is modelled on `impl ComplexField for f32`. The imaginary part is nothing.
-        impl<T: DualNum<T::Element>$($(, $dim: Dim)*)?> nalgebra::ComplexField for $struct<T, T::Element$($(, $dim)*)?>
+        impl<T: DualNum<Primitive = T::Element>$($(, $dim: Dim)*)?> nalgebra::ComplexField for $struct<T$($(, $dim)*)?>
         where
             T: nalgebra::Scalar + DualNumFloat,
             T: simba::scalar::SupersetOf<T>,
@@ -488,7 +488,7 @@ macro_rules! impl_complex_field {
 
 macro_rules! impl_real_field {
     ($struct:ident$(, [$($dim:tt),*]$(, [$($ddim:tt),*])*)?) => {
-        impl<T: DualNum<T::Element>$($(, $dim: Dim)*)?> nalgebra::RealField for $struct<T, T::Element$($(, $dim)*)?>
+        impl<T: DualNum<Primitive = T::Element>$($(, $dim: Dim)*)?> nalgebra::RealField for $struct<T$($(, $dim)*)?>
         where
             T: nalgebra::Scalar + DualNumFloat,
             T: simba::scalar::SupersetOf<T>,

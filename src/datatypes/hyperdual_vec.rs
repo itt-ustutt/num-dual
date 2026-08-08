@@ -1,57 +1,50 @@
 use crate::{Derivative, DualNum, DualNumFloat, DualStruct};
 use nalgebra::allocator::Allocator;
-use nalgebra::{Const, DefaultAllocator, Dim, Dyn, U1};
+use nalgebra::{Const, DefaultAllocator, Dim, Dyn, Scalar, U1};
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
-use std::marker::PhantomData;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
 /// A vector hyper-dual number for the calculation of partial Hessians.
 #[derive(Clone, Debug)]
-pub struct HyperDualVec<T: DualNum<F>, F, M: Dim, N: Dim>
+pub struct HyperDualVec<T: Scalar, M: Dim, N: Dim>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
     /// Real part of the hyper-dual number
     pub re: T,
     /// Gradient part of the hyper-dual number
-    pub eps1: Derivative<T, F, M, U1>,
+    pub eps1: Derivative<T, M, U1>,
     /// Gradient part of the hyper-dual number
-    pub eps2: Derivative<T, F, U1, N>,
+    pub eps2: Derivative<T, U1, N>,
     /// Partial Hessian part of the hyper-dual number
-    pub eps1eps2: Derivative<T, F, M, N>,
-    f: PhantomData<F>,
+    pub eps1eps2: Derivative<T, M, N>,
 }
 
-impl<T: DualNum<F> + Copy, F: Copy, const M: usize, const N: usize> Copy
-    for HyperDualVec<T, F, Const<M>, Const<N>>
+impl<T: Scalar + Copy, const M: usize, const N: usize> Copy
+    for HyperDualVec<T, Const<M>, Const<N>>
 {
 }
 
 #[cfg(feature = "ndarray")]
-impl<T: DualNum<F>, F: DualNumFloat, M: Dim, N: Dim> ndarray::ScalarOperand
-    for HyperDualVec<T, F, M, N>
-where
-    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
+impl<T: Scalar, M: Dim, N: Dim> ndarray::ScalarOperand for HyperDualVec<T, M, N> where
+    DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>
 {
 }
 
-pub type HyperDualSVec<T, F, const M: usize, const N: usize> =
-    HyperDualVec<T, F, Const<M>, Const<N>>;
-pub type HyperDualDVec<T, F> = HyperDualVec<T, F, Dyn, Dyn>;
-pub type HyperDualVec32<M, N> = HyperDualVec<f32, f32, M, N>;
-pub type HyperDualVec64<M, N> = HyperDualVec<f64, f64, M, N>;
-pub type HyperDualSVec32<const M: usize, const N: usize> =
-    HyperDualVec<f32, f32, Const<M>, Const<N>>;
-pub type HyperDualSVec64<const M: usize, const N: usize> =
-    HyperDualVec<f64, f64, Const<M>, Const<N>>;
-pub type HyperDualDVec32 = HyperDualVec<f32, f32, Dyn, Dyn>;
-pub type HyperDualDVec64 = HyperDualVec<f64, f64, Dyn, Dyn>;
+pub type HyperDualSVec<T, const M: usize, const N: usize> = HyperDualVec<T, Const<M>, Const<N>>;
+pub type HyperDualDVec<T> = HyperDualVec<T, Dyn, Dyn>;
+pub type HyperDualVec32<M, N> = HyperDualVec<f32, M, N>;
+pub type HyperDualVec64<M, N> = HyperDualVec<f64, M, N>;
+pub type HyperDualSVec32<const M: usize, const N: usize> = HyperDualVec<f32, Const<M>, Const<N>>;
+pub type HyperDualSVec64<const M: usize, const N: usize> = HyperDualVec<f64, Const<M>, Const<N>>;
+pub type HyperDualDVec32 = HyperDualVec<f32, Dyn, Dyn>;
+pub type HyperDualDVec64 = HyperDualVec<f64, Dyn, Dyn>;
 
-impl<T: DualNum<F>, F, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
+impl<T: DualNum, M: Dim, N: Dim> HyperDualVec<T, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
@@ -59,21 +52,20 @@ where
     #[inline]
     pub fn new(
         re: T,
-        eps1: Derivative<T, F, M, U1>,
-        eps2: Derivative<T, F, U1, N>,
-        eps1eps2: Derivative<T, F, M, N>,
+        eps1: Derivative<T, M, U1>,
+        eps2: Derivative<T, U1, N>,
+        eps1eps2: Derivative<T, M, N>,
     ) -> Self {
         Self {
             re,
             eps1,
             eps2,
             eps1eps2,
-            f: PhantomData,
         }
     }
 }
 
-impl<T: DualNum<F>, F, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
+impl<T: DualNum, M: Dim, N: Dim> HyperDualVec<T, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
@@ -89,7 +81,7 @@ where
     }
 }
 
-impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualSVec<T, F, M, N> {
+impl<T: DualNum, const M: usize, const N: usize> HyperDualSVec<T, M, N> {
     /// Set the 1st dimension derivative of variable `index` to 1.
     ///
     /// For most cases, the [`partial_hessian`](crate::partial_hessian) function provides a
@@ -113,7 +105,7 @@ impl<T: DualNum<F>, F, const M: usize, const N: usize> HyperDualSVec<T, F, M, N>
     }
 }
 
-impl<T: DualNum<F>, F> HyperDualDVec<T, F> {
+impl<T: DualNum> HyperDualDVec<T> {
     /// Set the 1st dimension derivative part of variable `index` to 1.
     ///
     /// For most cases, the [`partial_hessian`](crate::partial_hessian) function provides a
@@ -138,7 +130,7 @@ impl<T: DualNum<F>, F> HyperDualDVec<T, F> {
 }
 
 /* chain rule */
-impl<T: DualNum<F>, F: Float, M: Dim, N: Dim> HyperDualVec<T, F, M, N>
+impl<T: DualNum, M: Dim, N: Dim> HyperDualVec<T, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
@@ -154,14 +146,13 @@ where
 }
 
 /* product rule */
-impl<T: DualNum<F>, F: Float, M: Dim, N: Dim> Mul<&HyperDualVec<T, F, M, N>>
-    for &HyperDualVec<T, F, M, N>
+impl<T: DualNum, M: Dim, N: Dim> Mul<&HyperDualVec<T, M, N>> for &HyperDualVec<T, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
-    type Output = HyperDualVec<T, F, M, N>;
+    type Output = HyperDualVec<T, M, N>;
     #[inline]
-    fn mul(self, other: &HyperDualVec<T, F, M, N>) -> HyperDualVec<T, F, M, N> {
+    fn mul(self, other: &HyperDualVec<T, M, N>) -> HyperDualVec<T, M, N> {
         HyperDualVec::new(
             self.re.clone() * other.re.clone(),
             &other.eps1 * self.re.clone() + &self.eps1 * other.re.clone(),
@@ -175,14 +166,13 @@ where
 }
 
 /* quotient rule */
-impl<T: DualNum<F>, F: Float, M: Dim, N: Dim> Div<&HyperDualVec<T, F, M, N>>
-    for &HyperDualVec<T, F, M, N>
+impl<T: DualNum, M: Dim, N: Dim> Div<&HyperDualVec<T, M, N>> for &HyperDualVec<T, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
-    type Output = HyperDualVec<T, F, M, N>;
+    type Output = HyperDualVec<T, M, N>;
     #[inline]
-    fn div(self, other: &HyperDualVec<T, F, M, N>) -> HyperDualVec<T, F, M, N> {
+    fn div(self, other: &HyperDualVec<T, M, N>) -> HyperDualVec<T, M, N> {
         let inv = other.re.recip();
         let inv2 = inv.clone() * &inv;
         HyperDualVec::new(
@@ -202,7 +192,7 @@ where
 }
 
 /* string conversions */
-impl<T: DualNum<F>, F: fmt::Display, M: Dim, N: Dim> fmt::Display for HyperDualVec<T, F, M, N>
+impl<T: DualNum, M: Dim, N: Dim> fmt::Display for HyperDualVec<T, M, N>
 where
     DefaultAllocator: Allocator<M> + Allocator<M, N> + Allocator<U1, N>,
 {
