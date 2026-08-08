@@ -1,5 +1,5 @@
 use crate::{DualNum, DualNumFloat, DualStruct};
-use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use num_traits::{FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -74,4 +74,5 @@ impl<T: DualNum> fmt::Display for Real<T> {
 
 impl_zeroth_derivatives!(Real, []);
 impl_dual!(Real, []);
+#[cfg(feature = "nalgebra")]
 impl_nalgebra!(Real, []);

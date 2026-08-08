@@ -1,3 +1,4 @@
+#![cfg(feature = "nalgebra")]
 use nalgebra::{Matrix2, Point2, Point3, SymmetricEigen, UnitQuaternion, Vector2, Vector3};
 use num_dual::*;
 use num_traits::Zero;

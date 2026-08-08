@@ -1,10 +1,10 @@
+#[cfg(feature = "nalgebra")]
 use crate::linalg::LU;
-use crate::{
-    Dual, DualNum, DualNumFloat, DualSVec, DualStruct, DualVec, Gradients, first_derivative,
-    jacobian, partial,
-};
-use nalgebra::allocator::Allocator;
-use nalgebra::{DefaultAllocator, Dim, OVector, SVector, U1, U2};
+use crate::{Dual, DualNum, DualNumFloat, DualStruct, first_derivative, partial};
+#[cfg(feature = "nalgebra")]
+use crate::{DualSVec, DualVec, Gradients, jacobian};
+#[cfg(feature = "nalgebra")]
+use nalgebra::{DefaultAllocator, Dim, OVector, SVector, U1, U2, allocator::Allocator};
 use std::marker::PhantomData;
 
 /// Calculate the derivative of the unary implicit function
@@ -47,6 +47,7 @@ where
 /// assert_relative_eq!(y.re, a.re, max_relative = 1e-16);
 /// assert_relative_eq!(y.eps, a.eps, max_relative = 1e-16);
 /// ```
+#[cfg(feature = "nalgebra")]
 pub fn implicit_derivative_binary<G, D: DualNum, A: DualStruct>(
     g: G,
     x: D::Primitive,
@@ -93,6 +94,7 @@ where
 /// assert_relative_eq!(x[1].re, a.re, max_relative = 1e-16);
 /// assert_relative_eq!(x[1].eps, a.eps, max_relative = 1e-16);
 /// ```
+#[cfg(feature = "nalgebra")]
 pub fn implicit_derivative_vec<G, D: DualNum + Copy, A: DualStruct, N: Dim>(
     g: G,
     x: OVector<D::Primitive, N>,
@@ -138,6 +140,7 @@ where
 /// assert_relative_eq!(x[1].re, (a*a).re, max_relative = 1e-13);
 /// assert_relative_eq!(x[1].eps, (a*a).eps, max_relative = 1e-13);
 /// ```
+#[cfg(feature = "nalgebra")]
 pub fn implicit_derivative_sp<G, D: DualNum + Copy, A: DualStruct, N: Gradients>(
     g: G,
     x: OVector<D::Primitive, N>,
@@ -212,6 +215,7 @@ where
     }
 }
 
+#[cfg(feature = "nalgebra")]
 impl<G: ImplicitFunction, D: DualNum<Primitive = F> + Copy, F: DualNumFloat>
     ImplicitDerivative<G, D, [F; 2]>
 where
@@ -234,6 +238,7 @@ where
     }
 }
 
+#[cfg(feature = "nalgebra")]
 impl<G: ImplicitFunction, D: DualNum<Primitive = F> + Copy, F: DualNumFloat, const N: usize>
     ImplicitDerivative<G, D, SVector<F, N>>
 where
@@ -257,7 +262,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use nalgebra::SVector;
 
     struct TestFunction;
     impl ImplicitFunction for TestFunction {
@@ -268,6 +272,23 @@ mod test {
             *square - x * x
         }
     }
+
+    #[test]
+    fn test() {
+        let f: crate::Dual64 = Dual::from(25.0).derivative();
+        let func = ImplicitDerivative::new(TestFunction, f);
+        println!("{}", func.residual(5.0));
+        println!("{}", func.implicit_derivative(5.0));
+        println!("{}", f.sqrt());
+        assert_eq!(f.sqrt(), func.implicit_derivative(5.0));
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "nalgebra")]
+mod test_nalgebra {
+    use super::*;
+    use nalgebra::SVector;
 
     struct TestFunction2;
     impl ImplicitFunction for TestFunction2 {
@@ -295,14 +316,7 @@ mod test {
     }
 
     #[test]
-    fn test() {
-        let f: crate::Dual64 = Dual::from(25.0).derivative();
-        let func = ImplicitDerivative::new(TestFunction, f);
-        println!("{}", func.residual(5.0));
-        println!("{}", func.implicit_derivative(5.0));
-        println!("{}", f.sqrt());
-        assert_eq!(f.sqrt(), func.implicit_derivative(5.0));
-
+    fn test_nalgebra() {
         let a: crate::Dual64 = Dual::from(25.0).derivative();
         let b: crate::Dual64 = Dual::from(7.0);
         let func = ImplicitDerivative::new(TestFunction2, (a, b));

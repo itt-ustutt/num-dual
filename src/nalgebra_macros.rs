@@ -219,7 +219,7 @@ macro_rules! impl_complex_field {
         impl<T: DualNum<Primitive = T::Element>$($(, $dim: Dim)*)?> nalgebra::Field for $struct<T$($(, $dim)*)?>
         where
             T: nalgebra::SimdValue,
-            T::Element: DualNum<Primitive = T::Element> + nalgebra::Scalar + Float,
+            T::Element: DualNum<Primitive = T::Element> + nalgebra::Scalar,
             $($(DefaultAllocator: Allocator<$($ddim,)*>),*)?
         {}
 

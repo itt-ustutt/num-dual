@@ -3,6 +3,8 @@
 //! # Example
 //! This example defines a generic scalar and a generic vector function that can be called using any (hyper-) dual number and automatically calculates derivatives.
 //! ```
+//! # #[cfg(feature = "nalgebra")]
+//! # {
 //! use num_dual::*;
 //! use nalgebra::SVector;
 //!
@@ -37,6 +39,7 @@
 //!     let (f0, f1, f2, f3) = third_derivative(|t| foo(t.cos()), 1.0);
 //!     println!("{f3}");                           // 1.5836632930100278
 //! }
+//! # }
 //! ```
 //!
 //! # Usage
@@ -118,6 +121,8 @@
 //! suffer significantly for dynamically sized dual numbers compared to statically sized dual numbers. The
 //! [`Gradients`] trait is introduced to overcome these limitations.
 //! ```
+//! # #[cfg(feature = "nalgebra")]
+//! # {
 //! # use num_dual::{DualNum, Gradients};
 //! # use nalgebra::{OVector, DefaultAllocator, allocator::Allocator, vector, dvector};
 //! # use approx::assert_relative_eq;
@@ -136,6 +141,7 @@
 //!     assert_eq!(f, 0.0);
 //!     assert_relative_eq!(grad, dvector![0.1, 0.5, 0.5, 0.7]);
 //! }
+//! # }
 //! ```
 //! For dynamically sized input arrays, the [`Gradients`] trait evaluates gradients or higher-order derivatives
 //! by iteratively evaluating scalar derivatives. For functions that do not rely on the [`Copy`] trait bound,
@@ -219,8 +225,8 @@
 #![warn(clippy::all)]
 #![warn(clippy::allow_attributes)]
 
-use nalgebra::allocator::Allocator;
-use nalgebra::{DefaultAllocator, Dim, OMatrix, Scalar};
+#[cfg(feature = "nalgebra")]
+use nalgebra::{DefaultAllocator, Dim, OMatrix, Scalar, allocator::Allocator};
 #[cfg(feature = "ndarray")]
 use ndarray::ScalarOperand;
 use num_traits::{Float, FloatConst, FromPrimitive, Inv, NumAssignOps, NumOps, Signed};
@@ -232,6 +238,7 @@ use std::iter::{Product, Sum};
 #[macro_use]
 mod macros;
 #[macro_use]
+#[cfg(feature = "nalgebra")]
 mod nalgebra_macros;
 #[macro_use]
 mod impl_derivatives;
@@ -241,34 +248,39 @@ mod datatypes;
 mod explicit;
 mod implicit;
 pub use bessel::BesselDual;
+#[cfg(feature = "nalgebra")]
 pub use datatypes::derivative::Derivative;
 pub use datatypes::dual::{Dual, Dual32, Dual64};
+#[cfg(feature = "nalgebra")]
 pub use datatypes::dual_vec::{
     DualDVec32, DualDVec64, DualSVec, DualSVec32, DualSVec64, DualVec, DualVec32, DualVec64,
 };
 pub use datatypes::dual2::{Dual2, Dual2_32, Dual2_64};
+#[cfg(feature = "nalgebra")]
 pub use datatypes::dual2_vec::{
     Dual2DVec, Dual2DVec32, Dual2DVec64, Dual2SVec, Dual2SVec32, Dual2SVec64, Dual2Vec, Dual2Vec32,
     Dual2Vec64,
 };
 pub use datatypes::dual3::{Dual3, Dual3_32, Dual3_64};
 pub use datatypes::hyperdual::{HyperDual, HyperDual32, HyperDual64};
+#[cfg(feature = "nalgebra")]
 pub use datatypes::hyperdual_vec::{
     HyperDualDVec32, HyperDualDVec64, HyperDualSVec32, HyperDualSVec64, HyperDualVec,
     HyperDualVec32, HyperDualVec64,
 };
 pub use datatypes::hyperhyperdual::{HyperHyperDual, HyperHyperDual32, HyperHyperDual64};
 pub use datatypes::real::Real;
+#[cfg(feature = "nalgebra")]
+pub use explicit::{Gradients, gradient, hessian, jacobian, partial_hessian};
 pub use explicit::{
-    Gradients, first_derivative, gradient, hessian, jacobian, partial, partial_hessian, partial2,
-    partial3, second_derivative, second_partial_derivative, third_derivative,
-    third_partial_derivative, third_partial_derivative_vec, zeroth_derivative,
+    first_derivative, partial, partial2, partial3, second_derivative, second_partial_derivative,
+    third_derivative, third_partial_derivative, third_partial_derivative_vec, zeroth_derivative,
 };
-pub use implicit::{
-    ImplicitDerivative, ImplicitFunction, implicit_derivative, implicit_derivative_binary,
-    implicit_derivative_sp, implicit_derivative_vec,
-};
+pub use implicit::{ImplicitDerivative, ImplicitFunction, implicit_derivative};
+#[cfg(feature = "nalgebra")]
+pub use implicit::{implicit_derivative_binary, implicit_derivative_sp, implicit_derivative_vec};
 
+#[cfg(feature = "nalgebra")]
 pub mod linalg;
 
 #[cfg(feature = "python")]
@@ -301,6 +313,7 @@ pub trait DualNum:
     + ScalarOperand
     + 'static
 {
+    /// The underlying primitive data type (mostly f64 or f32)
     type Primitive: DualNumFloat;
 
     /// Highest derivative that can be calculated with this struct
@@ -438,6 +451,7 @@ pub trait DualNum:
     + fmt::Debug
     + 'static
 {
+    /// The underlying primitive data type (mostly f64 or f32)
     type Primitive: DualNumFloat;
 
     /// Highest derivative that can be calculated with this struct
@@ -980,6 +994,7 @@ impl<D, T: Mappable<D>, K: Eq + Hash> Mappable<D> for HashMap<K, T> {
     }
 }
 
+#[cfg(feature = "nalgebra")]
 impl<D: DualNum, R: Dim, C: Dim> DualStruct for OMatrix<D, R, C>
 where
     DefaultAllocator: Allocator<R, C>,
@@ -994,6 +1009,7 @@ where
     }
 }
 
+#[cfg(feature = "nalgebra")]
 impl<D: Scalar, R: Dim, C: Dim> Mappable<Self> for OMatrix<D, R, C>
 where
     DefaultAllocator: Allocator<R, C>,

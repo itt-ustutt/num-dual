@@ -1,5 +1,5 @@
 use crate::{DualNum, DualNumFloat, DualStruct};
-use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use num_traits::{FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -189,6 +189,7 @@ impl_dual!(
     HyperHyperDual,
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]
 );
+#[cfg(feature = "nalgebra")]
 impl_nalgebra!(
     HyperHyperDual,
     [eps1, eps2, eps3, eps1eps2, eps1eps3, eps2eps3, eps1eps2eps3]

@@ -1,10 +1,14 @@
+#[cfg(feature = "nalgebra")]
 pub mod derivative;
 pub mod dual;
 pub mod dual2;
+#[cfg(feature = "nalgebra")]
 pub mod dual2_vec;
 pub mod dual3;
+#[cfg(feature = "nalgebra")]
 pub mod dual_vec;
 pub mod hyperdual;
+#[cfg(feature = "nalgebra")]
 pub mod hyperdual_vec;
 pub mod hyperhyperdual;
 pub mod real;

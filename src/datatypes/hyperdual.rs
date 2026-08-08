@@ -1,5 +1,5 @@
 use crate::{DualNum, DualNumFloat, DualStruct};
-use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use num_traits::{FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -136,4 +136,5 @@ impl<T: DualNum> fmt::Display for HyperDual<T> {
 
 impl_second_derivatives!(HyperDual, [eps1, eps2, eps1eps2]);
 impl_dual!(HyperDual, [eps1, eps2, eps1eps2]);
+#[cfg(feature = "nalgebra")]
 impl_nalgebra!(HyperDual, [eps1, eps2, eps1eps2]);
