@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-08-12
+### Changed
+- Changed the underlying primitive data type of `DualNum` from a type parameter to an associated type. [#115](https://github.com/itt-ustutt/num-dual/pull/115)
+
+### Packaging
+- Added `nalgebra` as a default Cargo feature, so that users can opt out and build the library for scalar dual numbers with minimal dependencies. [#115](https://github.com/itt-ustutt/num-dual/pull/115)
+
 ## [0.14.2] - 2026-07-28
 ### Fixed
 - Fixed the evaluation of spherical Bessel functions for negative inputs. [#113](https://github.com/itt-ustutt/num-dual/pull/113)

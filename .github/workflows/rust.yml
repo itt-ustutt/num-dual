@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        features: ["", "ndarray", "serde", "numpy", "python_macro"]
+        features: ["", "nalgebra", "ndarray", "serde", "python", "python_macro"]
 
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cargo build --release --features "${{ matrix.features }}"
+        run: cargo build --release --no-default-features --features "${{ matrix.features }}"
       - name: Run tests
-        run: cargo test --release --features "${{ matrix.features }}"
+        run: cargo test --release --no-default-features --features "${{ matrix.features }}"

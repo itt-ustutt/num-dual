@@ -1,7 +1,7 @@
 use crate::{Derivative, DualNum, DualNumFloat, DualStruct};
 use nalgebra::allocator::Allocator;
 use nalgebra::{Const, DefaultAllocator, Dim, Dyn, Scalar, U1};
-use num_traits::{Float, FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
+use num_traits::{FloatConst, FromPrimitive, Inv, Num, One, Signed, Zero};
 use std::fmt;
 use std::iter::{Product, Sum};
 use std::ops::{

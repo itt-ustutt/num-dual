@@ -1,3 +1,4 @@
+#![cfg(feature = "nalgebra")]
 use nalgebra::{Const, RowSVector, SVector};
 use num_dual::*;
 

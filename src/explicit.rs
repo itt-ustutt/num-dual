@@ -1,4 +1,5 @@
 use crate::*;
+#[cfg(feature = "nalgebra")]
 use nalgebra::{Const, DMatrix, DVector, Dyn, OVector, SVector, U1};
 
 /// Evaluate the function `g` with extra arguments `args` that are automatically adjusted to the correct
@@ -100,6 +101,7 @@ where
 /// assert_relative_eq!(g[2], 0.5);
 /// assert_relative_eq!(g[3], 0.5);
 /// ```
+#[cfg(feature = "nalgebra")]
 pub fn gradient<G, T: DualNum, D: Dim, O: Mappable<DualVec<T, D>>>(
     g: G,
     x: &OVector<T, D>,
@@ -136,6 +138,7 @@ where
 /// assert_eq!(jac[(1,2)], 300.0);     // 2x²yz
 /// ```
 #[expect(clippy::type_complexity)]
+#[cfg(feature = "nalgebra")]
 pub fn jacobian<G, T: DualNum, M: Dim, N: Dim, O: Mappable<OVector<DualVec<T, N>, M>>>(
     g: G,
     x: &OVector<T, N>,
@@ -192,7 +195,6 @@ where
 /// ```
 /// # use approx::assert_relative_eq;
 /// # use num_dual::{second_partial_derivative, DualNum, HyperDual64};
-/// # use nalgebra::SVector;
 /// let fun = |(x, y): (HyperDual64, HyperDual64)| (x.powi(2) + y.powi(2)).sqrt();
 /// let (f, dfdx, dfdy, d2fdxdy) = second_partial_derivative(fun, (4.0, 3.0));
 /// assert_eq!(f, 5.0);
@@ -229,6 +231,7 @@ where
 /// assert_relative_eq!(h[(1,1)], 0.128);
 /// ```
 #[expect(clippy::type_complexity)]
+#[cfg(feature = "nalgebra")]
 pub fn hessian<G, T: DualNum, D: Dim, O: Mappable<Dual2Vec<T, D>>>(
     g: G,
     x: &OVector<T, D>,
@@ -269,6 +272,7 @@ where
 /// assert_relative_eq!(d2fdxdy[1], -0.024);
 /// ```
 #[expect(clippy::type_complexity)]
+#[cfg(feature = "nalgebra")]
 pub fn partial_hessian<G, T: DualNum, M: Dim, N: Dim, O: Mappable<HyperDualVec<T, M, N>>>(
     g: G,
     (x, y): (&OVector<T, M>, &OVector<T, N>),
@@ -323,7 +327,6 @@ where
 /// ```
 /// # use approx::assert_relative_eq;
 /// # use num_dual::{third_partial_derivative, DualNum, HyperHyperDual64};
-/// # use nalgebra::SVector;
 /// let fun = |(x, y, z): (HyperHyperDual64, HyperHyperDual64, HyperHyperDual64)| (x.powi(2) + y.powi(2) + z.powi(2)).powi(3);
 /// let (f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz) = third_partial_derivative(fun, (1.0, 2.0, 3.0));
 /// println!("{:?}", third_partial_derivative(fun, (1.0, 2.0, 3.0)));
@@ -366,7 +369,6 @@ where
 /// ```
 /// # use approx::assert_relative_eq;
 /// # use num_dual::{third_partial_derivative_vec, DualNum, HyperHyperDual64};
-/// # use nalgebra::SVector;
 /// let fun = |x: &[HyperHyperDual64]| x[0].powi(3)*x[1].powi(2);
 /// let (f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz) = third_partial_derivative_vec(fun, &[1.0, 2.0], 0, 0, 1);
 /// # println!("{:?}", third_partial_derivative_vec(fun, &[1.0, 2.0, 3.0], 0, 0, 1));
@@ -413,6 +415,7 @@ where
 
 /// Evaluation of gradients, hessians, and partial (Nx1) hessians that is generic over the dimensionality
 /// of the input vector.
+#[cfg(feature = "nalgebra")]
 pub trait Gradients: Dim
 where
     DefaultAllocator: Allocator<Self>,
@@ -459,6 +462,7 @@ where
         DefaultAllocator: Allocator<Self, Self>;
 }
 
+#[cfg(feature = "nalgebra")]
 impl<const N: usize> Gradients for Const<N> {
     type Dual<T: DualNum + Copy> = DualSVec<T, N>;
     type Dual2<T: DualNum + Copy> = Dual2Vec<T, Const<N>>;
@@ -518,6 +522,7 @@ impl<const N: usize> Gradients for Const<N> {
     }
 }
 
+#[cfg(feature = "nalgebra")]
 impl Gradients for Dyn {
     type Dual<T: DualNum + Copy> = Dual<T>;
     type Dual2<T: DualNum + Copy> = HyperDual<T>;

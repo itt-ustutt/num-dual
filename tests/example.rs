@@ -1,3 +1,4 @@
+#![cfg(feature = "nalgebra")]
 //! The test that is used in the README as a file that will be executed
 //! to make sure that the example stays up to date.
 use nalgebra::SMatrix;
