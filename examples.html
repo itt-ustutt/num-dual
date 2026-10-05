@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; num_dual 0.15.0 documentation</title>
+  <title>Examples &mdash; num_dual 0.15.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=ef97403f"></script>
+      <script src="_static/documentation_options.js?v=4befc426"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
@@ -83,7 +83,7 @@
 <section id="first-second-and-third-derivatives">
 <h2>First, second and third derivatives<a class="headerlink" href="#first-second-and-third-derivatives" title="Link to this heading"></a></h2>
 <p>Let’s define a simple, scalar valued function for which we want to compute the first, second and third derivative.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># f(x) = x**3, f&#39;(x) = 3 * x**2, f&#39;&#39;(x) = 6 * x</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># f(x) = x**3, f'(x) = 3 * x**2, f''(x) = 6 * x</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span>
 </pre></div>
@@ -126,11 +126,11 @@ helper functions that can be used to simply declare which derivative you want to
 <p>Let’s compute the second and third derivatives!</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">num_dual</span><span class="w"> </span><span class="kn">import</span> <span class="n">third_derivative</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f0</span><span class="p">,</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fxx</span><span class="p">,</span> <span class="n">fxxx</span><span class="p">)</span> <span class="o">=</span> <span class="n">third_derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;f(x)   = </span><span class="si">{</span><span class="n">f0</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;(X)  = </span><span class="si">{</span><span class="n">fx</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;&#39;(x) = </span><span class="si">{</span><span class="n">fxx</span><span class="si">}</span><span class="se">\n</span><span class="s2">f&#39;&#39;&#39;(x)= </span><span class="si">{</span><span class="n">fxxx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"f(x)   = </span><span class="si">{</span><span class="n">f0</span><span class="si">}</span><span class="se">\n</span><span class="s2">f'(X)  = </span><span class="si">{</span><span class="n">fx</span><span class="si">}</span><span class="se">\n</span><span class="s2">f''(x) = </span><span class="si">{</span><span class="n">fxx</span><span class="si">}</span><span class="se">\n</span><span class="s2">f'''(x)= </span><span class="si">{</span><span class="n">fxxx</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="go">f(x)    = 8.0</span>
-<span class="go">f&#39;(x)   = 12.0</span>
-<span class="go">f&#39;&#39;(x)  = 12.0</span>
-<span class="go">f&#39;&#39;&#39;(x) = 6.0</span>
+<span class="go">f'(x)   = 12.0</span>
+<span class="go">f''(x)  = 12.0</span>
+<span class="go">f'''(x) = 6.0</span>
 </pre></div>
 </div>
 </section>
