@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-05
+### Added
+- Added `DualNum::scale` which scales a (recursive) dual number with a scalar of its inner type. [#116](https://github.com/itt-ustutt/num-dual/pull/116)
+
 ## [0.15.0] - 2026-08-12
 ### Changed
 - Changed the underlying primitive data type of `DualNum` from a type parameter to an associated type. [#115](https://github.com/itt-ustutt/num-dual/pull/115)

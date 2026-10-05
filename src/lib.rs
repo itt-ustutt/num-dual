@@ -325,6 +325,9 @@ pub trait DualNum:
     /// Build a dual number from its real part, setting all other values to 0
     fn from_re(re: Self::InnerDual) -> Self;
 
+    /// Multiply all parts of the dual number with a value of the inner dual type
+    fn scale(self, factor: &Self::InnerDual) -> Self;
+
     /// Reciprocal (inverse) of a number `1/x`
     fn recip(&self) -> Self;
 
@@ -463,6 +466,9 @@ pub trait DualNum:
     /// Build a dual number from its real part, setting all other values to 0
     fn from_re(re: Self::InnerDual) -> Self;
 
+    /// Multiply all parts of the dual number with a value of the inner dual type
+    fn scale(self, factor: &Self::InnerDual) -> Self;
+
     /// Reciprocal (inverse) of a number `1/x`
     fn recip(&self) -> Self;
 
@@ -592,6 +598,10 @@ macro_rules! impl_dual_num_float {
             type InnerDual = $float;
             fn from_re(re: $float) -> Self {
                 re
+            }
+
+            fn scale(self, factor: &Self::InnerDual) -> Self {
+                self * factor
             }
 
             fn mul_add(&self, a: Self, b: Self) -> Self {

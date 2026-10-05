@@ -168,6 +168,17 @@ where
     }
 }
 
+impl<T: DualNum, R: Dim, C: Dim> Mul<&T> for Derivative<T, R, C>
+where
+    DefaultAllocator: Allocator<R, C>,
+{
+    type Output = Self;
+
+    fn mul(self, rhs: &T) -> Self::Output {
+        Derivative::new(self.0.map(|x| x * rhs.clone()))
+    }
+}
+
 impl<T: DualNum, R: Dim, C: Dim, R2: Dim, C2: Dim> Mul<&Derivative<T, R2, C2>>
     for &Derivative<T, R, C>
 where
