@@ -15,6 +15,11 @@ macro_rules! impl_derivatives {
             }
 
             #[inline]
+            fn scale(self, factor: &Self::InnerDual) -> Self {
+                Self::new(self.re * factor, $(self.$im * factor),*)
+            }
+
+            #[inline]
             fn recip(&self) -> Self {
                 let rec = self.re.recip();
                 let f0 = rec.clone();
