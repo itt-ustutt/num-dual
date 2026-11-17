@@ -161,7 +161,7 @@ where
 /// An implicit function g(x, args) = 0 for which derivatives of x can be
 /// calculated with the [ImplicitDerivative] struct.
 pub trait ImplicitFunction {
-    /// data type of the parameter struct, needs to implement [DualStruct<F>].
+    /// data type of the parameter struct, needs to implement [`DualStruct`].
     type Parameters<D>;
 
     /// data type of the variable `x`, needs to be either `D`, `[D; 2]`, or `SVector<D, N>`.
